@@ -1,0 +1,10 @@
+server:
+  port: 80
+#  context-path: /springBoot
+#mconfig:
+#  swagger-ui-open: true
+spring:
+  profiles:
+    include: jdbc
+logging:
+  config: classpath:log4j2-test.xml
