@@ -1,8 +1,8 @@
 package org.jiahuan.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
-import com.baomidou.mybatisplus.annotation.TableId;
+
 import java.time.LocalDateTime;
 import java.io.Serializable;
 
@@ -29,8 +29,10 @@ public class Bookmark extends Model<Bookmark> {
 
     private String openmode;
 
+    @TableField(fill = FieldFill.UPDATE)
     private String username;
 
+    @TableField(fill = FieldFill.UPDATE)
     private String password;
 
     private Integer parentId;
