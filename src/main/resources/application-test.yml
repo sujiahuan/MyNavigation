@@ -1,10 +1,22 @@
+server:
+  port: 7001
+#  context-path: /springBoot
+#mconfig:
+#  swagger-ui-open: true
+#spring:
+#  profiles:
+#    include: jdbc
+logging:
+  config: classpath:log4j2-test.xml
+
+
 #数据源
 spring:
   security:
     basic:
       enabled: false
   datasource:
-    url: jdbc:mysql://127.0.0.1:3306/my_navigation?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Hongkong
+    url: jdbc:mysql://127.0.0.1:3306/my_navigation?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Hongkong&&allowPublicKeyRetrieval=true
     username: root
     password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -51,7 +63,7 @@ spring:
 # ====================MybatisPlus====================
 mybatis-plus:
   # 如果是放在src/main/java目录下 classpath:/com/yourpackage/*/mapper/*Mapper.xml
-#   如果是放在resource目录 classpath:/mapper/*Mapper.xml
+  #   如果是放在resource目录 classpath:/mapper/*Mapper.xml
   mapper-locations: classpath:/mapper/*Mapper.xml
   #实体扫描，多个package用逗号或者分号分隔
   typeAliasesPackage: org.jiahuan.entity
