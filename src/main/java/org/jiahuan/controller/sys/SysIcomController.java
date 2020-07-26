@@ -1,4 +1,4 @@
-package org.jiahuan.controller;
+package org.jiahuan.controller.sys;
 
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -9,10 +9,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.jiahuan.common.model.RetMsgData;
 import org.jiahuan.common.model.State;
 import org.jiahuan.common.util.VerdictUtil;
-import org.jiahuan.entity.Icom;
-import org.jiahuan.entity.Navigation;
-import org.jiahuan.service.IIcomService;
-import org.jiahuan.service.INavigationService;
+import org.jiahuan.entity.sys.SysIcom;
+import org.jiahuan.entity.sys.SysNavigation;
+import org.jiahuan.service.sys.ISysIcomService;
+import org.jiahuan.service.sys.ISysNavigationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,16 +30,16 @@ import java.util.List;
 @RestController
 @RequestMapping("/icom")
 @Slf4j
-public class IcomController {
+public class SysIcomController {
 
     @Autowired
-    private IIcomService iIcomService;
+    private ISysIcomService iIcomService;
     @Autowired
-    private INavigationService iNavigationService;
+    private ISysNavigationService iNavigationService;
 
     @PostMapping("/add")
-    public RetMsgData<Icom> addIcom(@RequestBody Icom icom){
-        RetMsgData<Icom> icomRetMsgData = new RetMsgData<>();
+    public RetMsgData<SysIcom> addIcom(@RequestBody SysIcom icom){
+        RetMsgData<SysIcom> icomRetMsgData = new RetMsgData<>();
         if(VerdictUtil.isNull(icom.getName())){
             icomRetMsgData.setMsg("name为空");
         }
@@ -58,14 +58,14 @@ public class IcomController {
     }
 
     @DeleteMapping("/deleteById")
-    public RetMsgData<Icom> deleteIcom(@RequestParam Integer id){
-        RetMsgData<Icom> icomRetMsgData = new RetMsgData<>();
+    public RetMsgData<SysIcom> deleteIcom(@RequestParam Integer id){
+        RetMsgData<SysIcom> icomRetMsgData = new RetMsgData<>();
         if(VerdictUtil.isNull(id)){
             icomRetMsgData.setMsg("id为空");
         }
-        QueryWrapper<Navigation> queryWrapper = new QueryWrapper<>();
+        QueryWrapper<SysNavigation> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("icom_id",id);
-        List<Navigation> navigations = iNavigationService.getNavigations(queryWrapper);
+        List<SysNavigation> navigations = iNavigationService.getNavigations(queryWrapper);
         if(navigations.size()!=0){
             icomRetMsgData.setMsg("该图标已关联侧边栏，请删除关联");
             return icomRetMsgData;
@@ -81,8 +81,8 @@ public class IcomController {
     }
 
     @GetMapping("/getById")
-    public RetMsgData<Icom> getIcom(@RequestParam Integer id){
-        RetMsgData<Icom> icomRetMsgData = new RetMsgData<>();
+    public RetMsgData<SysIcom> getIcom(@RequestParam Integer id){
+        RetMsgData<SysIcom> icomRetMsgData = new RetMsgData<>();
         if(VerdictUtil.isNull(id)){
             icomRetMsgData.setMsg("id为空");
         }
@@ -97,9 +97,9 @@ public class IcomController {
     }
 
     @GetMapping("/getAll")
-    public RetMsgData<List<Icom>> getAll(){
-        RetMsgData<List<Icom>> icomRetMsgData = new RetMsgData<>();
-        QueryWrapper<Icom> icomQueryWrapper = new QueryWrapper<>();
+    public RetMsgData<List<SysIcom>> getAll(){
+        RetMsgData<List<SysIcom>> icomRetMsgData = new RetMsgData<>();
+        QueryWrapper<SysIcom> icomQueryWrapper = new QueryWrapper<>();
         try{
             icomRetMsgData.setData(iIcomService.list(icomQueryWrapper));
             return icomRetMsgData;
@@ -111,15 +111,15 @@ public class IcomController {
     }
 
     @GetMapping("/getPage")
-    public RetMsgData<IPage<Icom>> getPageIcom(@RequestParam Integer page,@RequestParam Integer size,@RequestParam(required=false)String name){
-        RetMsgData<IPage<Icom>> icomRetMsgData = new RetMsgData<>();
-        Page<Icom> icomPage = new Page<>(page, size);
-        QueryWrapper<Icom> IcomQueryWrapper = new QueryWrapper<>();
+    public RetMsgData<IPage<SysIcom>> getPageIcom(@RequestParam Integer page, @RequestParam Integer size, @RequestParam(required=false)String name){
+        RetMsgData<IPage<SysIcom>> icomRetMsgData = new RetMsgData<>();
+        Page<SysIcom> icomPage = new Page<>(page, size);
+        QueryWrapper<SysIcom> IcomQueryWrapper = new QueryWrapper<>();
         if(VerdictUtil.isNotNull(name)){
             IcomQueryWrapper.like("name",name);
         }
         try{
-            IPage<Icom> page1 = iIcomService.page(icomPage, IcomQueryWrapper);
+            IPage<SysIcom> page1 = iIcomService.page(icomPage, IcomQueryWrapper);
             icomRetMsgData.setData(page1);
             return icomRetMsgData;
         }catch (Exception e){
@@ -130,10 +130,10 @@ public class IcomController {
     }
 
     @PostMapping("/update")
-    public RetMsgData<IPage<Icom>> updateIcom(@RequestBody Icom icom){
-        RetMsgData<IPage<Icom>> icomRetMsgData = new RetMsgData<>();
+    public RetMsgData<IPage<SysIcom>> updateIcom(@RequestBody SysIcom icom){
+        RetMsgData<IPage<SysIcom>> icomRetMsgData = new RetMsgData<>();
 
-        Icom byId = iIcomService.getById(icom.getId());
+        SysIcom byId = iIcomService.getById(icom.getId());
         if(VerdictUtil.isNull(byId)){
             icomRetMsgData.setMsg("找不到要修改的Icom信息");
             return icomRetMsgData;
@@ -143,7 +143,7 @@ public class IcomController {
             icomRetMsgData.setMsg("name为空");
             return icomRetMsgData;
         }
-        UpdateWrapper<Icom> updateWrapper = new UpdateWrapper<>();
+        UpdateWrapper<SysIcom> updateWrapper = new UpdateWrapper<>();
         updateWrapper.eq("id",icom.getId());
 
         icom.setGmtModified(LocalDateTime.now());

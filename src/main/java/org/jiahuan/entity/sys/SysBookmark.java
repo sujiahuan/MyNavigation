@@ -1,4 +1,4 @@
-package org.jiahuan.entity;
+package org.jiahuan.entity.sys;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
@@ -8,13 +8,13 @@ import java.io.Serializable;
 
 /**
  * <p>
- * 
+ *
  * </p>
  *
  * @author wj
  * @since 2020-06-16
  */
-public class Bookmark extends Model<Bookmark> {
+public class SysBookmark extends Model<SysBookmark> {
 
     private static final long serialVersionUID = 1L;
 

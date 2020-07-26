@@ -1,4 +1,4 @@
-package org.jiahuan.controller;
+package org.jiahuan.controller.sys;
 
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -9,11 +9,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.jiahuan.common.model.RetMsgData;
 import org.jiahuan.common.model.State;
 import org.jiahuan.common.util.VerdictUtil;
-import org.jiahuan.entity.Icom;
-import org.jiahuan.entity.Navigation;
-import org.jiahuan.service.IBookmarkService;
-import org.jiahuan.service.IIcomService;
-import org.jiahuan.service.INavigationService;
+import org.jiahuan.entity.sys.SysIcom;
+import org.jiahuan.entity.sys.SysNavigation;
+import org.jiahuan.service.sys.ISysBookmarkService;
+import org.jiahuan.service.sys.ISysIcomService;
+import org.jiahuan.service.sys.ISysNavigationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,18 +31,18 @@ import java.util.List;
 @RestController
 @RequestMapping("/navigation")
 @Slf4j
-public class NavigationController {
+public class SysNavigationController {
 
     @Autowired
-    private INavigationService iNavigationService;
+    private ISysNavigationService iNavigationService;
     @Autowired
-    private IBookmarkService iBookmarkService;
+    private ISysBookmarkService iBookmarkService;
     @Autowired
-    private IIcomService iIcomService;
+    private ISysIcomService iIcomService;
 
     @PostMapping("/add")
-    public RetMsgData<Navigation> add(@RequestBody Navigation navigation){
-        RetMsgData<Navigation> retMsgData = new RetMsgData<>();
+    public RetMsgData<SysNavigation> add(@RequestBody SysNavigation navigation){
+        RetMsgData<SysNavigation> retMsgData = new RetMsgData<>();
 
         navigation.setGmtCreate(LocalDateTime.now());
 
@@ -58,8 +58,8 @@ public class NavigationController {
     }
 
     @DeleteMapping("/deleteById")
-    public RetMsgData<Navigation> deleteById(@RequestParam Integer id){
-        RetMsgData<Navigation> retMsgData = new RetMsgData<>();
+    public RetMsgData<SysNavigation> deleteById(@RequestParam Integer id){
+        RetMsgData<SysNavigation> retMsgData = new RetMsgData<>();
         if(VerdictUtil.isNull(id)){
             retMsgData.setMsg("id为空");
         }
@@ -75,11 +75,11 @@ public class NavigationController {
     }
 
     @GetMapping("/getAll")
-    public RetMsgData<List<Navigation>> getAll(){
-        RetMsgData<List<Navigation>> retMsgData = new RetMsgData<>();
-        QueryWrapper<Navigation> queryWrapper = new QueryWrapper<>();
+    public RetMsgData<List<SysNavigation>> getAll(){
+        RetMsgData<List<SysNavigation>> retMsgData = new RetMsgData<>();
+        QueryWrapper<SysNavigation> queryWrapper = new QueryWrapper<>();
         try{
-            List<Navigation> navigations = iNavigationService.getNavigations(queryWrapper);
+            List<SysNavigation> navigations = iNavigationService.getNavigations(queryWrapper);
             retMsgData.setData(navigations);
             return retMsgData;
         }catch (Exception e){
@@ -90,10 +90,10 @@ public class NavigationController {
     }
 
     @GetMapping("/getById")
-    public RetMsgData<Navigation> getById(@RequestParam Integer id){
-        RetMsgData<Navigation> retMsgData = new RetMsgData<>();
+    public RetMsgData<SysNavigation> getById(@RequestParam Integer id){
+        RetMsgData<SysNavigation> retMsgData = new RetMsgData<>();
         try{
-            Navigation navigation = iNavigationService.getById(id);
+            SysNavigation navigation = iNavigationService.getById(id);
             retMsgData.setData(navigation);
             return retMsgData;
         }catch (Exception e){
@@ -104,18 +104,18 @@ public class NavigationController {
     }
 
     @GetMapping("/getPage")
-    public RetMsgData<IPage<Navigation>> getPageIcom(@RequestParam Integer page, @RequestParam Integer size, @RequestParam(required=false)String name){
-        RetMsgData<IPage<Navigation>> pageRetMsgData = new RetMsgData<>();
-        Page<Navigation> navigationPage = new Page<>(page, size);
-        QueryWrapper<Navigation> navigationQueryWrapper = new QueryWrapper<>();
+    public RetMsgData<IPage<SysNavigation>> getPageIcom(@RequestParam Integer page, @RequestParam Integer size, @RequestParam(required=false)String name){
+        RetMsgData<IPage<SysNavigation>> pageRetMsgData = new RetMsgData<>();
+        Page<SysNavigation> navigationPage = new Page<>(page, size);
+        QueryWrapper<SysNavigation> navigationQueryWrapper = new QueryWrapper<>();
         if(VerdictUtil.isNotNull(name)){
             navigationQueryWrapper.like("name",name);
         }
         try{
-            IPage<Navigation> page1 = iNavigationService.page(navigationPage, navigationQueryWrapper);
-            for (Navigation navigation:page1.getRecords()
+            IPage<SysNavigation> page1 = iNavigationService.page(navigationPage, navigationQueryWrapper);
+            for (SysNavigation navigation:page1.getRecords()
             ) {
-                Icom icom = iIcomService.getById(navigation.getIcomId());
+                SysIcom icom = iIcomService.getById(navigation.getIcomId());
                 navigation.setIcomName(icom.getName());
             }
             pageRetMsgData.setData(page1);
@@ -128,16 +128,16 @@ public class NavigationController {
     }
 
     @PostMapping("/update")
-    public RetMsgData<IPage<Navigation>> update(@RequestBody Navigation navigation){
-        RetMsgData<IPage<Navigation>> retMsgData = new RetMsgData<>();
+    public RetMsgData<IPage<SysNavigation>> update(@RequestBody SysNavigation navigation){
+        RetMsgData<IPage<SysNavigation>> retMsgData = new RetMsgData<>();
 
-        Navigation byId = iNavigationService.getById(navigation.getId());
+        SysNavigation byId = iNavigationService.getById(navigation.getId());
         if(VerdictUtil.isNull(byId)){
             retMsgData.setMsg("找不到要修改的信息");
             return retMsgData;
         }
 
-        UpdateWrapper<Navigation> updateWrapper = new UpdateWrapper<>();
+        UpdateWrapper<SysNavigation> updateWrapper = new UpdateWrapper<>();
         updateWrapper.eq("id",navigation.getId());
 
         navigation.setGmtModified(LocalDateTime.now());

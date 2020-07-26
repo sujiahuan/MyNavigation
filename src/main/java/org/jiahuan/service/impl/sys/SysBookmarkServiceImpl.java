@@ -1,9 +1,9 @@
-package org.jiahuan.service.impl;
+package org.jiahuan.service.impl.sys;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import org.jiahuan.entity.Bookmark;
-import org.jiahuan.mapper.BookmarkMapper;
-import org.jiahuan.service.IBookmarkService;
+import org.jiahuan.entity.sys.SysBookmark;
+import org.jiahuan.mapper.sys.SysBookmarkMapper;
+import org.jiahuan.service.sys.ISysBookmarkService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,18 +19,18 @@ import java.util.List;
  * @since 2020-06-16
  */
 @Service
-public class BookmarkServiceImpl extends ServiceImpl<BookmarkMapper, Bookmark> implements IBookmarkService {
+public class SysBookmarkServiceImpl extends ServiceImpl<SysBookmarkMapper, SysBookmark> implements ISysBookmarkService {
 
     @Autowired
-    private IBookmarkService iBookmarkService;
+    private ISysBookmarkService iBookmarkService;
 
     @Override
     public void deleteByParentId(Integer parentId) {
-        QueryWrapper<Bookmark> queryWrapper = new QueryWrapper<>();
+        QueryWrapper<SysBookmark> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("parent_id",parentId);
-        List<Bookmark> bookmarks = iBookmarkService.list(queryWrapper);
+        List<SysBookmark> bookmarks = iBookmarkService.list(queryWrapper);
 
-        for (Bookmark bookmark:bookmarks
+        for (SysBookmark bookmark:bookmarks
              ) {
             iBookmarkService.removeById(bookmark.getId());
         }

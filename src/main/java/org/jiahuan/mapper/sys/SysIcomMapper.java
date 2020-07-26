@@ -1,6 +1,6 @@
-package org.jiahuan.mapper;
+package org.jiahuan.mapper.sys;
 
-import org.jiahuan.entity.Navigation;
+import org.jiahuan.entity.sys.SysIcom;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**
@@ -11,6 +11,6 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  * @author wj
  * @since 2020-06-16
  */
-public interface NavigationMapper extends BaseMapper<Navigation> {
+public interface SysIcomMapper extends BaseMapper<SysIcom> {
 
 }

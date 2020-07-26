@@ -1,4 +1,4 @@
-package org.jiahuan.entity;
+package org.jiahuan.entity.sys;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
  * @author wj
  * @since 2020-06-16
  */
-public class Navigation extends Model<Navigation> {
+public class SysNavigation extends Model<SysNavigation> {
 
     private static final long serialVersionUID = 1L;
 

@@ -1,6 +1,6 @@
-package org.jiahuan.service;
+package org.jiahuan.service.sys;
 
-import org.jiahuan.entity.Icom;
+import org.jiahuan.entity.sys.SysIcom;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
@@ -11,6 +11,6 @@ import com.baomidou.mybatisplus.extension.service.IService;
  * @author wj
  * @since 2020-06-16
  */
-public interface IIcomService extends IService<Icom> {
+public interface ISysIcomService extends IService<SysIcom> {
 
 }

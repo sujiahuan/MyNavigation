@@ -1,4 +1,4 @@
-package org.jiahuan.controller;
+package org.jiahuan.controller.sys;
 
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -9,8 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.jiahuan.common.model.RetMsgData;
 import org.jiahuan.common.model.State;
 import org.jiahuan.common.util.VerdictUtil;
-import org.jiahuan.entity.Bookmark;
-import org.jiahuan.service.IBookmarkService;
+import org.jiahuan.entity.sys.SysBookmark;
+import org.jiahuan.service.sys.ISysBookmarkService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,14 +28,14 @@ import java.util.List;
 @RestController
 @RequestMapping("/bookmark")
 @Slf4j
-public class BookmarkController {
+public class SysBookmarkController {
 
     @Autowired
-    private IBookmarkService iBookmarkService;
+    private ISysBookmarkService iBookmarkService;
 
         @PostMapping("/add")
-    public RetMsgData<Bookmark> addBookmark(@RequestBody Bookmark bookmark){
-        RetMsgData<Bookmark> retMsgData = new RetMsgData<>();
+    public RetMsgData<SysBookmark> addBookmark(@RequestBody SysBookmark bookmark){
+        RetMsgData<SysBookmark> retMsgData = new RetMsgData<>();
 
         if(VerdictUtil.isNull(bookmark.getParentId())){
             retMsgData.setMsg("ParentId为空");
@@ -56,8 +56,8 @@ public class BookmarkController {
     }
 
     @DeleteMapping("/deleteById")
-    public RetMsgData<Bookmark> deleteBookmar(@RequestParam Integer id){
-        RetMsgData<Bookmark> retMsgData = new RetMsgData<>();
+    public RetMsgData<SysBookmark> deleteBookmar(@RequestParam Integer id){
+        RetMsgData<SysBookmark> retMsgData = new RetMsgData<>();
         if(VerdictUtil.isNull(id)){
             retMsgData.setMsg("id为空");
         }
@@ -72,13 +72,13 @@ public class BookmarkController {
     }
 
     @GetMapping("/getById")
-    public RetMsgData<Bookmark> getById(@RequestParam Integer id){
-        RetMsgData<Bookmark> retMsgData = new RetMsgData<>();
+    public RetMsgData<SysBookmark> getById(@RequestParam Integer id){
+        RetMsgData<SysBookmark> retMsgData = new RetMsgData<>();
         if(VerdictUtil.isNull(id)){
             retMsgData.setMsg("id为空");
         }
         try{
-            Bookmark bookmarks = iBookmarkService.getById(id);
+            SysBookmark bookmarks = iBookmarkService.getById(id);
             retMsgData.setData(bookmarks);
             return retMsgData;
         }catch (Exception e){
@@ -89,18 +89,18 @@ public class BookmarkController {
     }
 
     @GetMapping("/getBookmark")
-    public RetMsgData<List<Bookmark>> getBookmark(@RequestParam Integer parenId,@RequestParam(required=false)String title){
-        RetMsgData<List<Bookmark>> retMsgData = new RetMsgData<>();
+    public RetMsgData<List<SysBookmark>> getBookmark(@RequestParam Integer parenId, @RequestParam(required=false)String title){
+        RetMsgData<List<SysBookmark>> retMsgData = new RetMsgData<>();
         if(VerdictUtil.isNull(parenId)){
             retMsgData.setMsg("id为空");
         }
-        QueryWrapper<Bookmark> queryWrapper = new QueryWrapper<>();
+        QueryWrapper<SysBookmark> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("parent_id",parenId);
         if(VerdictUtil.isNotNull(title)){
         queryWrapper.like("title","%"+title+"%");
         }
         try{
-            List<Bookmark> bookmarks = iBookmarkService.list(queryWrapper);
+            List<SysBookmark> bookmarks = iBookmarkService.list(queryWrapper);
             retMsgData.setData(bookmarks);
             return retMsgData;
         }catch (Exception e){
@@ -111,11 +111,11 @@ public class BookmarkController {
     }
 
     @GetMapping("/getPage")
-    public RetMsgData<IPage<Bookmark>> getPageBookmark(@RequestParam Integer page,@RequestParam Integer size){
-        RetMsgData<IPage<Bookmark>> BookmarkRetMsgData = new RetMsgData<>();
-        Page<Bookmark> bookmarkPage = new Page<>(page, size);
-        QueryWrapper<Bookmark> bookmarkQueryWrapper = new QueryWrapper<>();
-        IPage<Bookmark> page1 = iBookmarkService.page(bookmarkPage, bookmarkQueryWrapper);
+    public RetMsgData<IPage<SysBookmark>> getPageBookmark(@RequestParam Integer page, @RequestParam Integer size){
+        RetMsgData<IPage<SysBookmark>> BookmarkRetMsgData = new RetMsgData<>();
+        Page<SysBookmark> bookmarkPage = new Page<>(page, size);
+        QueryWrapper<SysBookmark> bookmarkQueryWrapper = new QueryWrapper<>();
+        IPage<SysBookmark> page1 = iBookmarkService.page(bookmarkPage, bookmarkQueryWrapper);
         try{
             BookmarkRetMsgData.setData(page1);
             return BookmarkRetMsgData;
@@ -127,16 +127,16 @@ public class BookmarkController {
     }
 
     @PostMapping("/update")
-    public RetMsgData<IPage<Bookmark>> updateBookmark(@RequestBody Bookmark bookmark){
-        RetMsgData<IPage<Bookmark>> retMsgData = new RetMsgData<>();
+    public RetMsgData<IPage<SysBookmark>> updateBookmark(@RequestBody SysBookmark bookmark){
+        RetMsgData<IPage<SysBookmark>> retMsgData = new RetMsgData<>();
 
-        Bookmark byId = iBookmarkService.getById(bookmark.getId());
+        SysBookmark byId = iBookmarkService.getById(bookmark.getId());
         if(VerdictUtil.isNull(byId)){
             retMsgData.setMsg("找不到要修改的信息");
             return retMsgData;
         }
 
-        UpdateWrapper<Bookmark> updateWrapper = new UpdateWrapper<>();
+        UpdateWrapper<SysBookmark> updateWrapper = new UpdateWrapper<>();
         updateWrapper.eq("id",bookmark.getId());
 
         bookmark.setGmtModified(LocalDateTime.now());

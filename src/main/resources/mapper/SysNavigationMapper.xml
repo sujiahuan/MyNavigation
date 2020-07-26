@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="org.jiahuan.mapper.IcomMapper">
+<mapper namespace="org.jiahuan.mapper.sys.SysNavigationMapper">
 
     <!-- 通用查询映射结果 -->
-    <resultMap id="BaseResultMap" type="org.jiahuan.entity.Icom">
+    <resultMap id="BaseResultMap" type="org.jiahuan.entity.sys.SysNavigation">
         <id column="id" property="id" />
+        <result column="icom_id" property="icomId" />
         <result column="name" property="name" />
+        <result column="parent_id" property="parentId" />
+        <result column="type" property="type" />
+        <result column="top_id" property="topId" />
         <result column="gmt_create" property="gmtCreate" />
         <result column="gmt_modified" property="gmtModified" />
     </resultMap>

@@ -1,7 +1,7 @@
-package org.jiahuan.service;
+package org.jiahuan.service.sys;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import org.jiahuan.entity.Bookmark;
+import org.jiahuan.entity.sys.SysBookmark;
 
 /**
  * <p>
@@ -11,7 +11,7 @@ import org.jiahuan.entity.Bookmark;
  * @author wj
  * @since 2020-06-16
  */
-public interface IBookmarkService extends IService<Bookmark> {
+public interface ISysBookmarkService extends IService<SysBookmark> {
 
 
     void deleteByParentId(Integer parentId);
