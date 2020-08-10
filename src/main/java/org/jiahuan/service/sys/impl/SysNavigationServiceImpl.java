@@ -1,4 +1,4 @@
-package org.jiahuan.service.impl.sys;
+package org.jiahuan.service.sys.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;

@@ -1,4 +1,4 @@
-package org.jiahuan.service.impl.sys;
+package org.jiahuan.service.sys.impl;
 
 import org.jiahuan.entity.sys.SysIcom;
 import org.jiahuan.mapper.sys.SysIcomMapper;

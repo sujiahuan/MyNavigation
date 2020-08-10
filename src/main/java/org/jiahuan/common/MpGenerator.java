@@ -33,7 +33,7 @@ public class MpGenerator {
         gc.setEnableCache(false);// XML 二级缓存
         gc.setBaseResultMap(true);// XML ResultMap
         gc.setBaseColumnList(false);// XML columList
-        gc.setAuthor("wj");
+        gc.setAuthor("jh");
 
         // 自定义文件命名，注意 %s 会自动填充表实体属性！
         // gc.setMapperName("%sDao");
@@ -56,7 +56,7 @@ public class MpGenerator {
         StrategyConfig strategy = new StrategyConfig();
         strategy.setTablePrefix(new String[]{"test_"});// 此处可以修改为您的表前缀
         strategy.setNaming(NamingStrategy.underline_to_camel);// 表名生成策略
-        strategy.setInclude(new String[]{"bookmark","icom","navigation"
+        strategy.setInclude(new String[]{"coun_countercharge"
         }); // 需要生成的表
         // strategy.setExclude(new String[]{"test"}); // 排除生成的表
         // 字段名生成策略
