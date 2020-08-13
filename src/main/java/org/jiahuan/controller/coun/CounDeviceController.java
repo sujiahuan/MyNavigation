@@ -79,7 +79,7 @@ public class CounDeviceController {
         RetMsgData<CounDevice> msgData = new RetMsgData<>();
 
         try{
-            iCounDeviceService.removeById(id);
+            iCounDeviceService.deleteInitById(id);
             return msgData;
         }catch (Exception e){
             msgData.setState(State.RET_STATE_SYSTEM_ERROR);
@@ -112,13 +112,13 @@ public class CounDeviceController {
         }
     }
 
-    @GetMapping("/getPageByMn")
+    @GetMapping("/getPage")
     public RetMsgData<IPage<CounDevice>> getPage(@RequestParam Integer page, @RequestParam Integer size,@RequestParam String mn){
         RetMsgData<IPage<CounDevice>> msgData = new RetMsgData<>();
         Page<CounDevice> page1 = new Page<>(page, size);
         QueryWrapper<CounDevice> queryWrapper = new QueryWrapper<>();
         if(VerdictUtil.isNotNull(mn)){
-            queryWrapper.eq("mn",mn);
+            queryWrapper.like("mn",mn);
         }
         try{
             msgData.setData(iCounDeviceService.page(page1, queryWrapper));

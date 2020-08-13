@@ -6,6 +6,7 @@ import org.jiahuan.service.coun.*;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * <p>
@@ -27,6 +28,7 @@ public class CounDeviceServiceImpl extends ServiceImpl<CounDeviceMapper, CounDev
     @Autowired
     private ICounCounterchargeService iCounCounterchargeService;
 
+    @Transactional
     @Override
     public void addInitCounDevice(CounDevice counDvice) {
         iCounDeviceService.save(counDvice);
@@ -36,8 +38,9 @@ public class CounDeviceServiceImpl extends ServiceImpl<CounDeviceMapper, CounDev
         iCounCounterchargeService.addInitByDeviceId(counDvice.getId());
     }
 
+    @Transactional
     @Override
-    public void deleteAllById(Integer deviceId) {
+    public void deleteInitById(Integer deviceId) {
         iCounDivisorService.deleteByDeviceId(deviceId);
         iCounDataTypeService.deleteByDeviceId(deviceId);
         iCounCounterchargeService.deleteByDeviceId(deviceId);
