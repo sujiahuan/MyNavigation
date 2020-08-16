@@ -38,8 +38,6 @@ public class CounDivisor extends Model<CounDivisor> {
 
     private String zavg;
 
-    private String zcou;
-
     private String zmax;
 
     private String zmin;
@@ -123,14 +121,6 @@ public class CounDivisor extends Model<CounDivisor> {
         this.zavg = zavg;
     }
 
-    public String getZcou() {
-        return zcou;
-    }
-
-    public void setZcou(String zcou) {
-        this.zcou = zcou;
-    }
-
     public String getZmax() {
         return zmax;
     }
@@ -188,7 +178,6 @@ public class CounDivisor extends Model<CounDivisor> {
         ", min=" + min +
         ", cou=" + cou +
         ", zavg=" + zavg +
-        ", zcou=" + zcou +
         ", zmax=" + zmax +
         ", zmin=" + zmin +
         ", flag=" + flag +
