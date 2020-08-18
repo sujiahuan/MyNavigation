@@ -27,6 +27,8 @@ public class CounDevice extends Model<CounDevice> {
      */
          private String ip;
 
+    private String name;
+
         /**
      * 端口
      */
@@ -121,11 +123,20 @@ public class CounDevice extends Model<CounDevice> {
         this.agreement = agreement;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
     @Override
     public String toString() {
         return "CounDevice{" +
                 "id=" + id +
                 ", ip='" + ip + '\'' +
+                ", name='" + name + '\'' +
                 ", port=" + port +
                 ", mn='" + mn + '\'' +
                 ", monitoringType='" + monitoringType + '\'' +
