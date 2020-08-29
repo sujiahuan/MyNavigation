@@ -1,7 +1,11 @@
 package org.jiahuan.entity.coun;
 
 import com.baomidou.mybatisplus.extension.activerecord.Model;
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.util.Date;
 
 /**
  * <p>
@@ -41,6 +45,12 @@ public class CounDataType extends Model<CounDataType> {
      * 补发数据间隔
      */
     private Integer dateInterval;
+
+    @JsonFormat(locale="zh", timezone="GMT+8", pattern="yyyy-MM-dd HH:mm:ss")
+    private Date startTime;
+
+    @JsonFormat(locale="zh", timezone="GMT+8", pattern="yyyy-MM-dd HH:mm:ss")
+    private Date endTime;
 
     public CounDataType() {
     }
@@ -98,12 +108,28 @@ public class CounDataType extends Model<CounDataType> {
         this.dataType = dataType;
     }
 
-    public Integer getDataInterval() {
+    public Integer getDateInterval() {
         return dateInterval;
     }
 
-    public void setDataInterval(Integer dateInterval) {
+    public void setDateInterval(Integer dateInterval) {
         this.dateInterval = dateInterval;
+    }
+
+    public Date getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(Date startTime) {
+        this.startTime = startTime;
+    }
+
+    public Date getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(Date endTime) {
+        this.endTime = endTime;
     }
 
     @Override
@@ -114,7 +140,9 @@ public class CounDataType extends Model<CounDataType> {
                 ", dataType=" + dataType +
                 ", isTiming=" + isTiming +
                 ", zs='" + zs + '\'' +
-                ", interval=" + dateInterval +
+                ", dateInterval=" + dateInterval +
+                ", startTime=" + startTime +
+                ", endTime=" + endTime +
                 '}';
     }
 }

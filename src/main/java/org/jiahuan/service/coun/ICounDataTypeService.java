@@ -49,7 +49,7 @@ public interface ICounDataTypeService extends IService<CounDataType> {
      * @throws ParseException
      * @throws IOException
      */
-    void sendSupplyAgain(Integer deviceId,String agreement,Integer dataType,String startTime,String endTime) throws ParseException, IOException;
+    void sendSupplyAgain(Integer deviceId,String agreement,Integer dataType) throws ParseException, IOException;
 
     /**
      * 发送3020数据包

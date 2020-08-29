@@ -167,7 +167,7 @@ public class SendTcpToolsTest {
 		//手动
 //		RealTime.manuallySend();
 
-		RemoteCounteraccusation.connectionService("", 9011, 2);
+//		RemoteCounteraccusation.connectionService("", 9011, 2);
 	}
 
 

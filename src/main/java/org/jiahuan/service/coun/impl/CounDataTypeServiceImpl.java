@@ -95,19 +95,19 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
 
 
     @Override
-    public void sendSupplyAgain(Integer deviceId, String agreement, Integer dataType, String startTime, String endTime) throws ParseException, IOException {
+    public void sendSupplyAgain(Integer deviceId, String agreement, Integer dataType) throws ParseException, IOException {
 
         CounDataType counDataType = iCounDataTypeService.getCounDataTypeByDeviceId(deviceId, dataType);
         CounDevice counDevice = iCounDeviceService.getById(deviceId);
         //处理时间
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-ddHH:mm:ss");
-        Date startDate = simpleDateFormat.parse(startTime);
-        Date endDate = simpleDateFormat.parse(endTime);
+//        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-ddHH:mm:ss");
+//        Date startDate = simpleDateFormat.parse(startTime);
+//        Date endDate = simpleDateFormat.parse(endTime);
         Calendar startCalendar = Calendar.getInstance();
         Calendar endCalendar = Calendar.getInstance();
-        startCalendar.setTime(startDate);
-        endCalendar.setTime(endDate);
-        endCalendar.add(Calendar.SECOND,counDataType.getDataInterval());
+        startCalendar.setTime(counDataType.getStartTime());
+        endCalendar.setTime(counDataType.getEndTime());
+        endCalendar.add(Calendar.SECOND,counDataType.getDateInterval());
         //时间遍历
         while(startCalendar.getTime().before(endCalendar.getTime())) {
             //获取补发数据包
@@ -115,7 +115,7 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
             //发送消息
             iCounDataTypeService.sendMessage(counDevice,dataPackage);
             //添加时间
-            startCalendar.add(Calendar.SECOND,counDataType.getDataInterval());
+            startCalendar.add(Calendar.SECOND,counDataType.getDateInterval());
         }
     }
 
@@ -136,6 +136,7 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
         OutputStream outputStream = socket.getOutputStream();
         message += "\r\n";
         outputStream.write(message.getBytes());
+
         log.info(message);
         outputStream.close();
         socket.close();
@@ -274,21 +275,21 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
             case 1:
                 link= "##0235QN=" + Common.getTime("millisecond") + ";ST=" + counDevice.getMonitoringType() + ";CN=2011;PW=123456;MN="
                         + counDevice.getMn() + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatTime(date,"second") + ";"
-                        + getParameterPackage(divisorParameter, "status",counDataType.getZs()) + "&&B381";
+                        + getParameterPackage(divisorParameter, "realTime",counDataType.getZs()) + "&&B381";
                 break;
             case 2:
                 link= "##0178QN=" + Common.getTime("millisecond") + ";ST=" + counDevice.getMonitoringType() + ";CN=2051;PW=123456;MN="
                         + counDevice.getMn() + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatTime(date,"minute") + ";"
-                        + getParameterPackage(divisorParameter, "status", counDataType.getZs()) + "&&B381";
+                        + getParameterPackage(divisorParameter, "history", counDataType.getZs()) + "&&B381";
                 break;
             case 3:
                 link= "##0160QN=" + Common.getTime("millisecond") + ";ST=" + counDevice.getMonitoringType() + ";CN=2061;PW=123456;MN="
-                        + counDevice.getMn() + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatTime(date,"hour") + ";" + getParameterPackage(divisorParameter, "status", counDataType.getZs())
+                        + counDevice.getMn() + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatTime(date,"hour") + ";" + getParameterPackage(divisorParameter, "history", counDataType.getZs())
                         + "&&B381";
                 break;
             case 4:
                 link= "##0171QN=" + Common.getTime("millisecond") + ";ST=" + counDevice.getMonitoringType() + ";CN=2031;PW=123456;MN="
-                        + counDevice.getMn() + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatTime(date,"day") + ";" + getParameterPackage(divisorParameter, "status", counDataType.getZs())
+                        + counDevice.getMn() + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatTime(date,"day") + ";" + getParameterPackage(divisorParameter, "history", counDataType.getZs())
                         + "&&B381";
                 break;
             case 5:
