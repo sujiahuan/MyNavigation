@@ -8,7 +8,6 @@ import org.jiahuan.entity.coun.CounDevice;
 import org.jiahuan.service.coun.ICounCounterchargeService;
 import org.jiahuan.service.coun.ICounDataTypeService;
 import org.jiahuan.service.coun.ICounDeviceService;
-import org.jiahuan.service.coun.ICounDivisorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -26,7 +25,7 @@ public class TransmitterData {
     @Autowired
     private ICounCounterchargeService iCounCounterchargeService;
 
-    @Scheduled(cron="0 0/1 * * * ?")
+    @Scheduled(cron="0,30 * * * * ? ")
     public void send2011Data() throws IOException {
         System.out.println("实时数据运行啦："+ TimeUtil.getFormatCurrentTime("millisecond",0));
         QueryWrapper<CounDataType> queryWrapper = new QueryWrapper<>();
@@ -61,7 +60,7 @@ public class TransmitterData {
         List<CounDataType> listCountDataType = iCounDataTypeService.list(queryWrapper);
         for (CounDataType counDataType : listCountDataType) {
             CounDevice counDevice = iCounDeviceService.getById(counDataType.getDeviceId());
-            iCounDataTypeService.sendRealTime(counDataType.getDeviceId(),counDevice.getAgreement(),3);
+            iCounDataTypeService.sendRealTime(counDataType.getDeviceId(),counDevice.getAgreement(),0);
         }
     }
 

@@ -1,14 +1,10 @@
 package org.jiahuan.crc;
 
-import java.net.Socket;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
 import lombok.extern.slf4j.Slf4j;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
+
+import java.util.*;
 
 /**
  * 油烟系统自动发送脚本
@@ -141,6 +137,28 @@ public class SendTcpToolsTest {
 //		// 净化器状态
 //		pointDivisor.put("a01022",
 //				"{'Avg':'"+Common.getRandom(0,1)+"','Cou':'0','Max':'0','Min':'0','ZsAvg':'10','ZsMin':'5','ZsMax':'6','Flag':'N'}");
+	}
+
+	@Test
+	private void testName2()throws Exception {
+		HashMap<String, Set<String>> objectObjectHashMap = new HashMap<>();
+		Set<String> dev1 = new HashSet<>();
+		dev1.add("1");
+		dev1.add("2");
+		dev1.add("3");
+		dev1.add("2");
+		objectObjectHashMap.put("设备1", dev1);
+		Iterator<String> iterator = dev1.iterator();
+		while (iterator.hasNext()){
+			String next = iterator.next();
+			if(next.equals("1")){
+				iterator.remove();
+			}
+		}
+
+		for (String s : dev1) {
+			System.out.println(s);
+		}
 	}
 
 

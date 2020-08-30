@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.extension.activerecord.Model;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
 import java.util.Date;
 
 /**
@@ -55,12 +54,14 @@ public class CounDataType extends Model<CounDataType> {
     public CounDataType() {
     }
 
-    public CounDataType(Integer deviceId, Integer dataType, Integer isTiming, String zs, Integer dateInterval) {
+    public CounDataType(Integer deviceId, Integer dataType, Integer isTiming, String zs, Integer dateInterval, Date startTime, Date endTime) {
         this.deviceId = deviceId;
         this.dataType = dataType;
         this.isTiming = isTiming;
         this.zs = zs;
         this.dateInterval = dateInterval;
+        this.startTime = startTime;
+        this.endTime = endTime;
     }
 
     public Integer getId() {

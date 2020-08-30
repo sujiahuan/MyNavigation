@@ -1,18 +1,21 @@
 package org.jiahuan.service.coun.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
+import org.jiahuan.common.config.CustomWebSocketConfig;
 import org.jiahuan.common.util.DataPackageUtils;
+import org.jiahuan.common.util.VerdictUtil;
 import org.jiahuan.crc.Common;
 import org.jiahuan.entity.coun.CounCountercharge;
 import org.jiahuan.entity.coun.CounDevice;
 import org.jiahuan.mapper.coun.CounCounterchargeMapper;
 import org.jiahuan.service.coun.ICounCounterchargeService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.jiahuan.service.coun.ICounDataTypeService;
 import org.jiahuan.service.coun.ICounDeviceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.socket.TextMessage;
 
 import java.io.*;
 import java.net.Socket;
@@ -23,7 +26,7 @@ import java.util.regex.Pattern;
 
 /**
  * <p>
- *  服务实现类
+ * 服务实现类
  * </p>
  *
  * @author jh
@@ -39,53 +42,57 @@ public class CounCounterchargeServiceImpl extends ServiceImpl<CounCounterchargeM
     private ICounDataTypeService iCounDataTypeService;
     @Autowired
     private ICounCounterchargeService iCounCounterchargeService;
+    @Autowired
+    private CustomWebSocketConfig customWebSocketConfig;
 
-//    private static Map<String,Socket> socketMap=new HashMap<>();
-    private static Map<String,Integer> connetionStatus=new HashMap<>();
+    //    private static Map<String,Socket> socketMap=new HashMap<>();
+    private static Map<String, Integer> connetionStatus = new HashMap<>();
 
     @Override
     public CounCountercharge getCounCounterchargeByDeviceId(Integer deviceId) {
         QueryWrapper<CounCountercharge> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("device_id",deviceId);
+        queryWrapper.eq("device_id", deviceId);
         CounCountercharge countercharge = iCounCounterchargeService.getOne(queryWrapper);
         return countercharge;
     }
 
     @Override
     public void openConnection(Integer deviceId) throws IOException {
+        CustomWebSocketHandler customWebSocketHandler = customWebSocketConfig.customWebSocketHandler();
         CounDevice counDevice = iCounDeviceService.getById(deviceId);
         CounCountercharge countercharge = iCounCounterchargeService.getCounCounterchargeByDeviceId(deviceId);
-        Socket socket = new Socket(counDevice.getIp(),counDevice.getPort());
+        Socket socket = new Socket(counDevice.getIp(), counDevice.getPort());
 //        socketMap.put(counDevice.getMn(),socket);
-        connetionStatus.put(counDevice.getMn(),1);
+        connetionStatus.put(counDevice.getMn(), 1);
 //        log.info("连接成功:{}", mnTypeAgreement);
+        customWebSocketHandler.sendMessageToAllUsers(new TextMessage("连接成功\r\n"));
         //获取输入流和输出流
         OutputStream outputStream = socket.getOutputStream();
         InputStream inputStream = socket.getInputStream();
         InputStreamReader reader = new InputStreamReader(inputStream);
         BufferedReader bufferedReader = new BufferedReader(reader);
 
-        new Thread(()->{
-
-            try {
-                closeConnection(deviceId);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }).start();
+//        new Thread(() -> {
+//            try {
+//                closeConnection(deviceId);
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }).start();
 
         //获取一条实时数据包
         String dataPackage = iCounDataTypeService.getRealTimeDataPackage(counDevice, counDevice.getAgreement(), 1, false);
         //发送
         outputStream.write(dataPackage.getBytes());
+        customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("发送一条实时数据让设备在线\r\n"));
 
         //修改连接状态
         CounCountercharge counCountercharge = iCounCounterchargeService.getCounCounterchargeByDeviceId(deviceId);
         counCountercharge.setConnetionStatus(1);
-        iCounCounterchargeService.save(counCountercharge);
+        iCounCounterchargeService.updateById(counCountercharge);
 
         //
-        while (connetionStatus.get(counDevice.getMn())==1) {
+        while (connetionStatus.get(counDevice.getMn()) == 1) {
             StringBuffer stringBuffer = new StringBuffer();
 
             while (inputStream.available() != 0) {
@@ -97,18 +104,21 @@ public class CounCounterchargeServiceImpl extends ServiceImpl<CounCounterchargeM
                 continue;
             }
 
+            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("获取到平台下发的反控命令："+ stringBuffer.toString()+"\r\n"));
             log.info("获取到平台下发的反控命令：{}", stringBuffer.toString());
 
             //校验平台命令
             switch (counDevice.getAgreement()) {
                 case "05":
-                    if (!check05ControlCommand(counDevice,stringBuffer.toString())) {
+                    if (!check05ControlCommand(counDevice, stringBuffer.toString())) {
+                        customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("校验平台05命令格式失败:"+ stringBuffer.toString()+"\r\n"));
                         log.error("校验平台命令格式失败:{}", stringBuffer.toString());
                         continue;
                     }
                     break;
                 case "17":
                     if (!check17ControlCommand(counDevice, stringBuffer.toString())) {
+                        customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("校验平台17命令格式失败:"+ stringBuffer.toString()+"\r\n"));
                         log.error("校验平台命令格式失败:{}", stringBuffer.toString());
                         continue;
                     }
@@ -117,8 +127,9 @@ public class CounCounterchargeServiceImpl extends ServiceImpl<CounCounterchargeM
             log.info("校验平台下发的命令格式正确：{}", stringBuffer.toString());
 
             //校验CN号
-            if (!"".equals(countercharge.getVerifyCn())) {
+            if (VerdictUtil.isNotNull(countercharge.getVerifyCn())) {
                 if (!getLinkConstant("CN", stringBuffer.toString()).equals(countercharge.getVerifyCn())) {
+                    customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("校验CN号失败:"+ countercharge.getVerifyCn()+"\r\n"));
                     log.error("校验CN号失败:{}", countercharge.getVerifyCn());
                     continue;
                 }
@@ -130,12 +141,14 @@ public class CounCounterchargeServiceImpl extends ServiceImpl<CounCounterchargeM
             switch (counDevice.getAgreement()) {
                 case "05":
 
-                    if ("2012".equals(getLinkConstant("CN", stringBuffer.toString())) || "2022".equals(getLinkConstant("CN", stringBuffer.toString()))) {
+                    if ("2012".equals(getLinkConstant("CN", stringBuffer.toString())) || "2022".equals(getLinkConstant("CN", stringBuffer.toString()+"\r\n"))) {
                         String agreement9013ControlCommand = get05Agreement9013ControlCommand(stringBuffer.toString());
                         if (!"".equals(agreement9013ControlCommand)) {
                             outputStream.write(agreement9013ControlCommand.getBytes());
+                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("发送9013成功:"+ agreement9013ControlCommand+"\r\n"));
                             log.info("发送9013成功:{}", agreement9013ControlCommand);
                         } else {
+                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("9013命令为空:"+ agreement9013ControlCommand+"\r\n"));
                             log.warn("9013命令为空:{}", agreement9013ControlCommand);
                         }
                         break;
@@ -145,8 +158,10 @@ public class CounCounterchargeServiceImpl extends ServiceImpl<CounCounterchargeM
                         String agreement9011ControlCommand = get05Agreement9011ControlCommand(stringBuffer.toString(), counCountercharge.getResponseStatus());
                         if (!"".equals(agreement9011ControlCommand)) {
                             outputStream.write(agreement9011ControlCommand.getBytes());
+                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("发送9011命令成功:"+ agreement9011ControlCommand+"\r\n"));
                             log.info("发送9011命令成功:{}", agreement9011ControlCommand);
                         } else {
+                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("获取9011反控命令为空:"+ stringBuffer.toString()+"\r\n"));
                             log.warn("获取9011反控命令为空:{}", stringBuffer.toString());
                         }
                     } else if (counCountercharge.getResponseParameter() == 9012) {
@@ -157,28 +172,36 @@ public class CounCounterchargeServiceImpl extends ServiceImpl<CounCounterchargeM
 
                         if (!"".equals(agreement9011ControlCommand)) {
                             outputStream.write(agreement9011ControlCommand.getBytes());
+                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("发送9011成功:"+agreement9011ControlCommand+"\r\n"));
                             log.info("发送9011成功:{}", agreement9011ControlCommand);
                         } else {
+                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("获取9011命令为空:"+agreement9011ControlCommand+"\r\n"));
                             log.warn("获取9011命令为空:{}", agreement9011ControlCommand);
                         }
 
                         if (!"".equals(agreementDataReportedCommand) && 1 == counCountercharge.getResponseStatus()) {
                             outputStream.write(agreementDataReportedCommand.getBytes());
+                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("发送提取数据成功:"+agreementDataReportedCommand+"\r\n"));
                             log.info("发送提取数据成功:{}", agreementDataReportedCommand);
                         } else if (1 != counCountercharge.getResponseStatus()) {
+                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("9012状态不等于1，不发送提取数据:"+ agreementDataReportedCommand+"\r\n"));
                             log.info("9012状态不等于1，不发送提取数据:{}", agreementDataReportedCommand);
                         } else {
+                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("本次为设置反控，所以没有提取数据，请核对:"+agreementDataReportedCommand+"\r\n"));
                             log.warn("本次为设置反控，所以没有提取数据，请核对:{}", agreementDataReportedCommand);
                         }
 
                         if (!"".equals(agreement9012ControlCommand)) {
                             outputStream.write(agreement9012ControlCommand.getBytes());
+                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("发送9012成功:"+agreement9012ControlCommand+"\r\n"));
                             log.info("发送9012成功:{}", agreement9012ControlCommand);
                         } else {
+                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("9012命令为空:"+ agreement9012ControlCommand+"\r\n"));
                             log.warn("9012命令为空:{}", agreement9012ControlCommand);
                         }
 
                     } else {
+                        customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("传的RequestResponseCommand参数有问题，请核对:"+ counCountercharge.getResponseParameter()+"\r\n"));
                         log.warn("传的RequestResponseCommand参数有问题，请核对:{}", counCountercharge.getResponseParameter());
                     }
                     break;
@@ -189,50 +212,62 @@ public class CounCounterchargeServiceImpl extends ServiceImpl<CounCounterchargeM
                         String agreement9013ControlCommand = get17Agreement9013ControlCommand(stringBuffer.toString());
                         if (!"".equals(agreement9013ControlCommand)) {
                             outputStream.write(agreement9013ControlCommand.getBytes());
+                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("发送9013成功:"+ agreement9013ControlCommand+"\r\n"));
                             log.info("发送9013成功:{}", agreement9013ControlCommand);
                         } else {
+                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("9013命令为空:"+ agreement9013ControlCommand+"\r\n"));
                             log.warn("9013命令为空:{}", agreement9013ControlCommand);
                         }
                         break;
                     }
 
                     if (counCountercharge.getResponseParameter() == 9011) {
-                        String agreement9011ControlCommand = get17Agreement9011ControlCommand(stringBuffer.toString(),  counCountercharge.getResponseStatus());
+                        String agreement9011ControlCommand = get17Agreement9011ControlCommand(stringBuffer.toString(), counCountercharge.getResponseStatus());
                         if (!"".equals(agreement9011ControlCommand)) {
                             outputStream.write(agreement9011ControlCommand.getBytes());
+                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("发送9011命令成功:"+ agreement9011ControlCommand+"\r\n"));
                             log.info("发送9011命令成功:{}", agreement9011ControlCommand);
                         } else {
+                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("获取9011反控命令为空:"+ stringBuffer.toString()+"\r\n"));
                             log.warn("获取9011反控命令为空:{}", stringBuffer.toString());
                         }
                     } else if (counCountercharge.getResponseParameter() == 9012) {
                         String agreement9011ControlCommand = get17Agreement9011ControlCommand(stringBuffer.toString(), 1);
                         String agreementDataReportedCommand = get17AgreementDataReportedCommand(stringBuffer.toString());
-                        String agreement9012ControlCommand = get17Agreement9012ControlCommand(stringBuffer.toString(),  counCountercharge.getResponseStatus());
+                        String agreement9012ControlCommand = get17Agreement9012ControlCommand(stringBuffer.toString(), counCountercharge.getResponseStatus());
 
                         if (!"".equals(agreement9011ControlCommand)) {
                             outputStream.write(agreement9011ControlCommand.getBytes());
+                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("发送9011成功:"+ agreement9011ControlCommand+"\r\n"));
                             log.info("发送9011成功:{}", agreement9011ControlCommand);
                         } else {
+                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("获取9011命令为空:"+ agreement9011ControlCommand+"\r\n"));
                             log.warn("获取9011命令为空:{}", agreement9011ControlCommand);
                         }
 
-                        if (!"".equals(agreementDataReportedCommand) && 1 ==  counCountercharge.getResponseStatus()) {
+                        if (!"".equals(agreementDataReportedCommand) && 1 == counCountercharge.getResponseStatus()) {
                             outputStream.write(agreementDataReportedCommand.getBytes());
+                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("发送提取数据成功:"+ agreementDataReportedCommand+"\r\n"));
                             log.info("发送提取数据成功:{}", agreementDataReportedCommand);
-                        } else if (1 !=  counCountercharge.getResponseStatus()) {
+                        } else if (1 != counCountercharge.getResponseStatus()) {
+                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("9012状态不等于1，不发送提取数据:"+ agreementDataReportedCommand+"\r\n"));
                             log.info("9012状态不等于1，不发送提取数据:{}", agreementDataReportedCommand);
                         } else {
+                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("本次为设置反控，所以没有提取数据，请核对:"+ agreementDataReportedCommand+"\r\n"));
                             log.warn("本次为设置反控，所以没有提取数据，请核对:{}", agreementDataReportedCommand);
                         }
 
                         if (!"".equals(agreement9012ControlCommand)) {
                             outputStream.write(agreement9012ControlCommand.getBytes());
+                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("发送9012成功:"+ agreement9012ControlCommand+"\r\n"));
                             log.info("发送9012成功:{}", agreement9012ControlCommand);
                         } else {
+                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("9012命令为空:"+ agreement9012ControlCommand+"\r\n"));
                             log.warn("9012命令为空:{}", agreement9012ControlCommand);
                         }
 
                     } else {
+                        customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("传的RequestResponseCommand参数有问题，请核对:"+ counCountercharge.getResponseParameter()+"\r\n"));
                         log.warn("传的RequestResponseCommand参数有问题，请核对:{}", counCountercharge.getResponseParameter());
                     }
                     break;
@@ -251,10 +286,10 @@ public class CounCounterchargeServiceImpl extends ServiceImpl<CounCounterchargeM
     @Override
     public void closeConnection(Integer deviceId) throws IOException {
         CounDevice counDevice = iCounDeviceService.getById(deviceId);
-        connetionStatus.put(counDevice.getMn(),0);
+        connetionStatus.put(counDevice.getMn(), 0);
         CounCountercharge countercharge = iCounCounterchargeService.getCounCounterchargeByDeviceId(deviceId);
         countercharge.setConnetionStatus(0);
-        iCounCounterchargeService.save(countercharge);
+        iCounCounterchargeService.updateById(countercharge);
     }
 
     @Override
@@ -266,86 +301,86 @@ public class CounCounterchargeServiceImpl extends ServiceImpl<CounCounterchargeM
     @Override
     public void deleteByDeviceId(Integer deviceId) {
         QueryWrapper<CounCountercharge> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("device_id",deviceId);
+        queryWrapper.eq("device_id", deviceId);
         iCounCounterchargeService.remove(queryWrapper);
     }
 
 
-    private  boolean check05ControlCommand(CounDevice counDevice, String datagram) {
+    private boolean check05ControlCommand(CounDevice counDevice, String datagram) {
         String regex = "";
 
-        switch (getLinkConstant("CN", datagram)){
+        switch (getLinkConstant("CN", datagram)) {
             case "1011":
-                regex="QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=1011;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&&&";
+                regex = "QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=1011;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&&&";
                 break;
             case "1012":
-                regex="QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=1012;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&SystemTime=[\\d]{14}&&";
+                regex = "QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=1012;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&SystemTime=[\\d]{14}&&";
                 break;
             case "1021":
-                regex="QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=1021;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&(PolId=[\\w]+;?)+&&";
+                regex = "QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=1021;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&(PolId=[\\w]+;?)+&&";
                 break;
             case "1022":
-                regex="QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=1022;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&([\\w]+-LowValue=[\\d\\.]+,[\\w]+-UpValue=[\\d\\.]+;?)+&&";
+                regex = "QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=1022;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&([\\w]+-LowValue=[\\d\\.]+,[\\w]+-UpValue=[\\d\\.]+;?)+&&";
                 break;
             case "1031":
-                regex="QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=1031;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&&&";
+                regex = "QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=1031;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&&&";
                 break;
             case "1032":
-                regex="QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=1032;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&AlarmTarget=[\\d]+&&";
+                regex = "QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=1032;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&AlarmTarget=[\\d]+&&";
                 break;
             case "1041":
-                regex="QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=1041;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&&&";
+                regex = "QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=1041;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&&&";
                 break;
             case "1042":
-                regex="QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=1042;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&ReportTime=[\\d]{4}&&";
+                regex = "QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=1042;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&ReportTime=[\\d]{4}&&";
                 break;
             case "1061":
-                regex="QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=1061;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&&&";
+                regex = "QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=1061;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&&&";
                 break;
             case "1062":
-                regex="QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=1062;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&RtdInterval=[\\d]+&&";
+                regex = "QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=1062;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&RtdInterval=[\\d]+&&";
                 break;
             case "1072":
-                regex="QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=1072;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&PW=[\\w]+&&";
+                regex = "QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=1072;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&PW=[\\w]+&&";
                 break;
             case "2011":
-                regex="QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=2011;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&&&";
+                regex = "QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=2011;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&&&";
                 break;
             case "2012":
-                regex="QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=2012;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&&&";
+                regex = "QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=2012;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&&&";
                 break;
             case "2021":
-                regex="QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=2021;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&&&";
+                regex = "QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=2021;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&&&";
                 break;
             case "2022":
-                regex="QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=2022;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&&&";
+                regex = "QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=2022;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&&&";
                 break;
             case "2031":
-                regex="QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=2031;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&BeginTime=[\\d]{14},EndTime=[\\d]{14}&&";
+                regex = "QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=2031;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&BeginTime=[\\d]{14},EndTime=[\\d]{14}&&";
                 break;
             case "2041":
-                regex="QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=1041;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&BeginTime=[\\d]{14},EndTime=[\\d]{14}&&";
+                regex = "QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=1041;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&BeginTime=[\\d]{14},EndTime=[\\d]{14}&&";
                 break;
             case "2051":
-                regex="QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=2051;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&BeginTime=[\\d]{14},EndTime=[\\d]{14}&&";
+                regex = "QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=2051;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&BeginTime=[\\d]{14},EndTime=[\\d]{14}&&";
                 break;
             case "2061":
-                regex="QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=2061;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&BeginTime=[\\d]{14},EndTime=[\\d]{14}&&";
+                regex = "QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=2061;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&BeginTime=[\\d]{14},EndTime=[\\d]{14}&&";
                 break;
             case "2071":
-                regex="QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=2071;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&BeginTime=[\\d]{14},EndTime=[\\d]{14}&&";
+                regex = "QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=2071;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&BeginTime=[\\d]{14},EndTime=[\\d]{14}&&";
                 break;
             case "3011":
-                regex="QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=3011;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&PolID=[\\w]+&&";
+                regex = "QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=3011;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&PolID=[\\w]+&&";
                 break;
             case "3012":
-                regex="QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=1031;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&PolID=[\\w]+&&";
+                regex = "QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=1031;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&PolID=[\\w]+&&";
                 break;
             case "3013":
-                regex="QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=3013;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&PolID=[\\w]+&&";
+                regex = "QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=3013;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&PolID=[\\w]+&&";
                 break;
             case "3014":
-                regex="QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=3014;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&PolID=[\\w]+(,CTime=[\\d]{2})+&&";
+                regex = "QN=[\\d]{17};ST=" + counDevice.getMonitoringType() + ";CN=3014;PW=[\\w]+;MN=" + counDevice.getMn() + ";Flag=3;CP=&&PolID=[\\w]+(,CTime=[\\d]{2})+&&";
                 break;
         }
 
@@ -359,7 +394,7 @@ public class CounCounterchargeServiceImpl extends ServiceImpl<CounCounterchargeM
     }
 
 
-    private  boolean check17ControlCommand(CounDevice counDevice, String datagram) {
+    private boolean check17ControlCommand(CounDevice counDevice, String datagram) {
         String regex = "";
 
         switch (getLinkConstant("CN", datagram)) {
@@ -485,14 +520,14 @@ public class CounCounterchargeServiceImpl extends ServiceImpl<CounCounterchargeM
         return null;
     }
 
-    private  String get05Agreement9011ControlCommand(String datagram, int status) {
+    private String get05Agreement9011ControlCommand(String datagram, int status) {
         String msg = "";
         switch (getLinkConstant("CN", datagram)) {
             case "2012":
             case "2022":
                 break;
             default:
-                msg = "ST=91;CN=9011;PW=123456;MN=" + getLinkConstant("MN", datagram) + ";Flag=0;CP=&&QN=" + getLinkConstant("QN", datagram)+";QnRtn="+ status + "&&";
+                msg = "ST=91;CN=9011;PW=123456;MN=" + getLinkConstant("MN", datagram) + ";Flag=0;CP=&&QN=" + getLinkConstant("QN", datagram) + ";QnRtn=" + status + "&&";
                 break;
         }
         if ("".equals(msg)) {
@@ -508,7 +543,7 @@ public class CounCounterchargeServiceImpl extends ServiceImpl<CounCounterchargeM
      * @param status   1（执行成功）/2（执行失败，但不知道原因）/3（命令请求条件错误）/4（通讯超时）/5（系统繁忙不能执行）/6（系统故障）/100（没有数据）
      * @return 有则返回CNC校验反控命令，无则返回为空
      */
-    private  String get17Agreement9011ControlCommand(String datagram, int status) {
+    private String get17Agreement9011ControlCommand(String datagram, int status) {
         String msg = "";
         switch (getLinkConstant("CN", datagram)) {
             case "2012":
@@ -524,14 +559,14 @@ public class CounCounterchargeServiceImpl extends ServiceImpl<CounCounterchargeM
         return DataPackageUtils.composeDataPackage(msg, false);
     }
 
-    private  String get05AgreementDataReportedCommand(String datagram) {
+    private String get05AgreementDataReportedCommand(String datagram) {
         String msg = "";
-        switch (getLinkConstant("CN", datagram)){
+        switch (getLinkConstant("CN", datagram)) {
             case "1011":
-                msg = "ST=" + getLinkConstant("ST", datagram) + ";CN=1011;PW=123456;MN=" + getLinkConstant("MN", datagram) + ";Flag=4;CP=&&QN=" + getLinkConstant("QN", datagram) + ";SystemTime="+ Common.getTime("second")+"&&";
+                msg = "ST=" + getLinkConstant("ST", datagram) + ";CN=1011;PW=123456;MN=" + getLinkConstant("MN", datagram) + ";Flag=4;CP=&&QN=" + getLinkConstant("QN", datagram) + ";SystemTime=" + Common.getTime("second") + "&&";
                 break;
             case "1021":
-                msg = "ST=" + getLinkConstant("ST", datagram) + ";CN=1021;PW=123456;MN=" + getLinkConstant("MN", datagram) + ";Flag=4;CP=&&QN=" + getLinkConstant("QN", datagram) + ";"+getLinkConstant("PolId",datagram)+"-LowValue=1.1,"+getLinkConstant("PolId",datagram)+"-UpValue=9.9&&";
+                msg = "ST=" + getLinkConstant("ST", datagram) + ";CN=1021;PW=123456;MN=" + getLinkConstant("MN", datagram) + ";Flag=4;CP=&&QN=" + getLinkConstant("QN", datagram) + ";" + getLinkConstant("PolId", datagram) + "-LowValue=1.1," + getLinkConstant("PolId", datagram) + "-UpValue=9.9&&";
                 break;
             case "1031":
                 msg = "ST=" + getLinkConstant("ST", datagram) + ";CN=1031;PW=123456;MN=" + getLinkConstant("MN", datagram) + ";Flag=4;CP=&&QN=" + getLinkConstant("QN", datagram) + ";AlarmTarget=6666666&&";
@@ -561,7 +596,7 @@ public class CounCounterchargeServiceImpl extends ServiceImpl<CounCounterchargeM
                 //提取小数数据，暂不考虑
                 break;
             case "2071":
-                msg = "ST=" + getLinkConstant("ST", datagram) + ";CN=1011;PW=123456;MN=" + getLinkConstant("MN", datagram) + ";Flag=4;CP=&&QN=" + getLinkConstant("QN", datagram) + ";"+getLinkConstant("PolId",datagram)+"-Ala=6.6&&";
+                msg = "ST=" + getLinkConstant("ST", datagram) + ";CN=1011;PW=123456;MN=" + getLinkConstant("MN", datagram) + ";Flag=4;CP=&&QN=" + getLinkConstant("QN", datagram) + ";" + getLinkConstant("PolId", datagram) + "-Ala=6.6&&";
                 break;
         }
         if ("".equals(msg)) {
@@ -570,7 +605,7 @@ public class CounCounterchargeServiceImpl extends ServiceImpl<CounCounterchargeM
         return DataPackageUtils.composeDataPackage(msg, false);
     }
 
-    private  String get17AgreementDataReportedCommand(String datagram) {
+    private String get17AgreementDataReportedCommand(String datagram) {
         String msg = "";
         switch (getLinkConstant("CN", datagram)) {
             //参数命令
@@ -619,14 +654,14 @@ public class CounCounterchargeServiceImpl extends ServiceImpl<CounCounterchargeM
         return DataPackageUtils.composeDataPackage(msg, false);
     }
 
-    private  String get05Agreement9012ControlCommand(String datagram, int status) {
+    private String get05Agreement9012ControlCommand(String datagram, int status) {
         String msg = "";
         switch (getLinkConstant("CN", datagram)) {
             case "2012":
             case "2022":
                 break;
             default:
-                msg = "ST=91;CN=9012;PW=123456;MN=" + getLinkConstant("MN", datagram) + ";Flag=4;CP=&&QN=" + getLinkConstant("QN", datagram) +";ExeRtn=" + status + "&&";
+                msg = "ST=91;CN=9012;PW=123456;MN=" + getLinkConstant("MN", datagram) + ";Flag=4;CP=&&QN=" + getLinkConstant("QN", datagram) + ";ExeRtn=" + status + "&&";
                 break;
         }
         if ("".equals(msg)) {
@@ -636,7 +671,7 @@ public class CounCounterchargeServiceImpl extends ServiceImpl<CounCounterchargeM
         return DataPackageUtils.composeDataPackage(msg, false);
     }
 
-    private  String get17Agreement9012ControlCommand(String datagram, int status) {
+    private String get17Agreement9012ControlCommand(String datagram, int status) {
         String msg = "";
         switch (getLinkConstant("CN", datagram)) {
             case "2012":
@@ -653,12 +688,12 @@ public class CounCounterchargeServiceImpl extends ServiceImpl<CounCounterchargeM
         return DataPackageUtils.composeDataPackage(msg, false);
     }
 
-    private  String get05Agreement9013ControlCommand(String datagram) {
+    private String get05Agreement9013ControlCommand(String datagram) {
         String msg = "";
         switch (getLinkConstant("CN", datagram)) {
             case "2012":
             case "2022":
-                msg = "ST=91;CN=9013;PW=123456;MN=" + getLinkConstant("MN", datagram) + ";CP=&&QN="+ getLinkConstant("QN", datagram)+"&&";
+                msg = "ST=91;CN=9013;PW=123456;MN=" + getLinkConstant("MN", datagram) + ";CP=&&QN=" + getLinkConstant("QN", datagram) + "&&";
                 break;
         }
         if ("".equals(msg)) {
@@ -668,7 +703,7 @@ public class CounCounterchargeServiceImpl extends ServiceImpl<CounCounterchargeM
     }
 
 
-    private  String get17Agreement9013ControlCommand(String datagram) {
+    private String get17Agreement9013ControlCommand(String datagram) {
         String msg = "";
         switch (getLinkConstant("CN", datagram)) {
             case "2012":

@@ -3,13 +3,10 @@ package org.jiahuan.controller.coun;
 
 import org.jiahuan.common.model.RetMsgData;
 import org.jiahuan.common.model.State;
-import org.jiahuan.entity.coun.CounCode;
 import org.jiahuan.entity.coun.CounCountercharge;
 import org.jiahuan.service.coun.ICounCounterchargeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import org.springframework.stereotype.Controller;
 
 import java.io.IOException;
 
@@ -35,6 +32,19 @@ public class CounCounterchargeController {
         try {
             CounCountercharge counCountercharge = iCounCounterchargeService.getCounCounterchargeByDeviceId(deviceId);
             msgData.setData(counCountercharge);
+            return msgData;
+        } catch (Exception e) {
+            msgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            return msgData;
+        }
+    }
+
+    @GetMapping("/update")
+    public RetMsgData<CounCountercharge> updateCounCountercharge(@RequestBody CounCountercharge counCountercharge){
+        RetMsgData<CounCountercharge> msgData = new RetMsgData<>();
+
+        try {
+            iCounCounterchargeService.updateById(counCountercharge);
             return msgData;
         } catch (Exception e) {
             msgData.setState(State.RET_STATE_SYSTEM_ERROR);
