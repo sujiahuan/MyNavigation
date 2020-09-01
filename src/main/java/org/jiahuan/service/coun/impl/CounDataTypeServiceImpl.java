@@ -154,7 +154,7 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
         message += "\r\n";
         outputStream.write(message.getBytes());
 //        customWebSocketHandler.sendMessageToAllUsers();
-        customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage(message));
+        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()),new TextMessage(message));
         log.info(message);
         outputStream.close();
         socket.close();

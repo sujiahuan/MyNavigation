@@ -2,6 +2,7 @@ package org.jiahuan.service.coun.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.jiahuan.common.config.CustomWebSocketConfig;
 import org.jiahuan.common.util.DataPackageUtils;
@@ -14,13 +15,13 @@ import org.jiahuan.service.coun.ICounCounterchargeService;
 import org.jiahuan.service.coun.ICounDataTypeService;
 import org.jiahuan.service.coun.ICounDeviceService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.TextMessage;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -46,7 +47,7 @@ public class CounCounterchargeServiceImpl extends ServiceImpl<CounCounterchargeM
     private CustomWebSocketConfig customWebSocketConfig;
 
     //    private static Map<String,Socket> socketMap=new HashMap<>();
-    private static Map<String, Integer> connetionStatus = new HashMap<>();
+    private static Set<String> connetionStatus = new HashSet<>();
 
     @Override
     public CounCountercharge getCounCounterchargeByDeviceId(Integer deviceId) {
@@ -57,236 +58,235 @@ public class CounCounterchargeServiceImpl extends ServiceImpl<CounCounterchargeM
     }
 
     @Override
-    public void openConnection(Integer deviceId) throws IOException {
+    public void openConnection(Integer deviceId) throws Exception {
         CustomWebSocketHandler customWebSocketHandler = customWebSocketConfig.customWebSocketHandler();
+
+        if (connetionStatus.size() > 5) {
+            throw new Exception("当前远程反控设备数已有5个了，请关闭部分后再来");
+        }
+
         CounDevice counDevice = iCounDeviceService.getById(deviceId);
+
+        if (connetionStatus.contains(counDevice.getMn())) {
+            throw new Exception("当前设备已在运行中，请勿重复操作");
+        }
+        connetionStatus.add(counDevice.getMn());
         CounCountercharge countercharge = iCounCounterchargeService.getCounCounterchargeByDeviceId(deviceId);
         Socket socket = new Socket(counDevice.getIp(), counDevice.getPort());
-//        socketMap.put(counDevice.getMn(),socket);
-        connetionStatus.put(counDevice.getMn(), 1);
-//        log.info("连接成功:{}", mnTypeAgreement);
-        customWebSocketHandler.sendMessageToAllUsers(new TextMessage("连接成功\r\n"));
+        customWebSocketHandler.sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("连接成功\r\n"));
         //获取输入流和输出流
         OutputStream outputStream = socket.getOutputStream();
         InputStream inputStream = socket.getInputStream();
         InputStreamReader reader = new InputStreamReader(inputStream);
         BufferedReader bufferedReader = new BufferedReader(reader);
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                try{
+                    while(true){
+                        //获取一条实时数据包
+                        String dataPackage = iCounDataTypeService.getRealTimeDataPackage(counDevice, counDevice.getAgreement(), 2, false);
+                        //发送
+                        outputStream.write(dataPackage.getBytes());
+                        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("定时发送分钟数据："+dataPackage+"\r\n"));
+                        Thread.sleep(1000*60*10);
+                    }
+                }catch (Exception e){
+                    log.info("已停止");
+                }
 
-//        new Thread(() -> {
-//            try {
-//                closeConnection(deviceId);
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }).start();
+            }
+        };
 
-        //获取一条实时数据包
-        String dataPackage = iCounDataTypeService.getRealTimeDataPackage(counDevice, counDevice.getAgreement(), 1, false);
-        //发送
-        outputStream.write(dataPackage.getBytes());
-        customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("发送一条实时数据让设备在线\r\n"));
+        Thread thread = new Thread(runnable);
+        thread.start();
 
         //修改连接状态
         CounCountercharge counCountercharge = iCounCounterchargeService.getCounCounterchargeByDeviceId(deviceId);
         counCountercharge.setConnetionStatus(1);
         iCounCounterchargeService.updateById(counCountercharge);
 
-        //
-        while (connetionStatus.get(counDevice.getMn()) == 1) {
-            StringBuffer stringBuffer = new StringBuffer();
 
-            while (inputStream.available() != 0) {
-                stringBuffer.append(bufferedReader.readLine());
-            }
 
-            //判断是否取到平台命令
-            if ("".equals(stringBuffer.toString())) {
-                continue;
-            }
 
-            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("获取到平台下发的反控命令："+ stringBuffer.toString()+"\r\n"));
-            log.info("获取到平台下发的反控命令：{}", stringBuffer.toString());
+        Runnable runnable1 = new Runnable() {
+            @SneakyThrows
+            @Override
+            public void run() {
+                while (connetionStatus.contains(counDevice.getMn())) {
+                    StringBuffer stringBuffer = new StringBuffer();
 
-            //校验平台命令
-            switch (counDevice.getAgreement()) {
-                case "05":
-                    if (!check05ControlCommand(counDevice, stringBuffer.toString())) {
-                        customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("校验平台05命令格式失败:"+ stringBuffer.toString()+"\r\n"));
-                        log.error("校验平台命令格式失败:{}", stringBuffer.toString());
+                    while (inputStream.available() != 0) {
+                        stringBuffer.append(bufferedReader.readLine());
+                    }
+
+                    //判断是否取到平台命令
+                    if ("".equals(stringBuffer.toString())) {
                         continue;
                     }
-                    break;
-                case "17":
-                    if (!check17ControlCommand(counDevice, stringBuffer.toString())) {
-                        customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("校验平台17命令格式失败:"+ stringBuffer.toString()+"\r\n"));
-                        log.error("校验平台命令格式失败:{}", stringBuffer.toString());
-                        continue;
-                    }
-                    break;
-            }
-            log.info("校验平台下发的命令格式正确：{}", stringBuffer.toString());
 
-            //校验CN号
-            if (VerdictUtil.isNotNull(countercharge.getVerifyCn())) {
-                if (!getLinkConstant("CN", stringBuffer.toString()).equals(countercharge.getVerifyCn())) {
-                    customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("校验CN号失败:"+ countercharge.getVerifyCn()+"\r\n"));
-                    log.error("校验CN号失败:{}", countercharge.getVerifyCn());
-                    continue;
+                    customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("获取到平台下发的反控命令：" + stringBuffer.toString() + "\r\n"));
+
+                    //校验平台命令
+                    switch (counDevice.getAgreement()) {
+                        case "05":
+                            if (!check05ControlCommand(counDevice, stringBuffer.toString())) {
+                                customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("校验平台05命令格式失败:" + stringBuffer.toString() + "\r\n"));
+                                continue;
+                            }
+                            break;
+                        case "17":
+                            if (!check17ControlCommand(counDevice, stringBuffer.toString())) {
+                                customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("校验平台17命令格式失败:" + stringBuffer.toString() + "\r\n"));
+                                continue;
+                            }
+                            break;
+                    }
+                    customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("校验平台下发的命令格式正确："+stringBuffer.toString() + "\r\n"));
+
+                    //校验CN号
+                    if (VerdictUtil.isNotNull(countercharge.getVerifyCn())) {
+                        if (!getLinkConstant("CN", stringBuffer.toString()).equals(countercharge.getVerifyCn())) {
+                            customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("校验CN号失败：" + countercharge.getVerifyCn() + "\r\n"));
+                            continue;
+                        }
+                        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("校验指定CN号成功："+ countercharge.getVerifyCn()+ "\r\n"));
+                    } else {
+                        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("不需要校验CN号："+countercharge.getVerifyCn()+ "\r\n"));
+                    }
+
+                    switch (counDevice.getAgreement()) {
+                        case "05":
+
+                            if ("2012".equals(getLinkConstant("CN", stringBuffer.toString())) || "2022".equals(getLinkConstant("CN", stringBuffer.toString() + "\r\n"))) {
+                                String agreement9013ControlCommand = get05Agreement9013ControlCommand(stringBuffer.toString());
+                                if (!"".equals(agreement9013ControlCommand)) {
+                                    outputStream.write(agreement9013ControlCommand.getBytes());
+                                    customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("发送9013成功:" + agreement9013ControlCommand + "\r\n"));
+                                } else {
+                                    customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("9013命令为空:" + agreement9013ControlCommand + "\r\n"));
+                                }
+                                break;
+                            }
+
+                            if (counCountercharge.getResponseParameter() == 9011) {
+                                String agreement9011ControlCommand = get05Agreement9011ControlCommand(stringBuffer.toString(), counCountercharge.getResponseStatus());
+                                if (!"".equals(agreement9011ControlCommand)) {
+                                    outputStream.write(agreement9011ControlCommand.getBytes());
+                                    customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("发送9011命令成功:" + agreement9011ControlCommand + "\r\n"));
+                                } else {
+                                    customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("获取9011反控命令为空:" + stringBuffer.toString() + "\r\n"));
+                                }
+                            } else if (counCountercharge.getResponseParameter() == 9012) {
+                                String agreement9011ControlCommand = get05Agreement9011ControlCommand(stringBuffer.toString(), 1);
+                                String agreementDataReportedCommand = get05AgreementDataReportedCommand(stringBuffer.toString());
+                                String agreement9012ControlCommand = get05Agreement9012ControlCommand(stringBuffer.toString(), counCountercharge.getResponseStatus());
+
+
+                                if (!"".equals(agreement9011ControlCommand)) {
+                                    outputStream.write(agreement9011ControlCommand.getBytes());
+                                    customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("发送9011成功:" + agreement9011ControlCommand + "\r\n"));
+                                } else {
+                                    customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("获取9011命令为空:" + agreement9011ControlCommand + "\r\n"));
+                                }
+
+                                if (!"".equals(agreementDataReportedCommand) && 1 == counCountercharge.getResponseStatus()) {
+                                    outputStream.write(agreementDataReportedCommand.getBytes());
+                                    customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("发送提取数据成功:" + agreementDataReportedCommand + "\r\n"));
+                                } else if (1 != counCountercharge.getResponseStatus()) {
+                                    customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("9012状态不等于1，不发送提取数据:" + agreementDataReportedCommand + "\r\n"));
+                                } else {
+                                    customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("本次为设置反控，所以没有提取数据，请核对:" + agreementDataReportedCommand + "\r\n"));
+                                }
+
+                                if (!"".equals(agreement9012ControlCommand)) {
+                                    outputStream.write(agreement9012ControlCommand.getBytes());
+                                    customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("发送9012成功:" + agreement9012ControlCommand + "\r\n"));
+                                } else {
+                                    customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("9012命令为空:" + agreement9012ControlCommand + "\r\n"));
+                                }
+
+                            } else {
+                                customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("传的RequestResponseCommand参数有问题，请核对:" + counCountercharge.getResponseParameter() + "\r\n"));
+                            }
+                            break;
+
+                        case "17":
+
+                            if ("2012".equals(getLinkConstant("CN", stringBuffer.toString())) || "2022".equals(getLinkConstant("CN", stringBuffer.toString()))) {
+                                String agreement9013ControlCommand = get17Agreement9013ControlCommand(stringBuffer.toString());
+                                if (!"".equals(agreement9013ControlCommand)) {
+                                    outputStream.write(agreement9013ControlCommand.getBytes());
+                                    customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("发送9013成功:" + agreement9013ControlCommand + "\r\n"));
+                                } else {
+                                    customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("9013命令为空:" + agreement9013ControlCommand + "\r\n"));
+                                }
+                                break;
+                            }
+
+                            if (counCountercharge.getResponseParameter() == 9011) {
+                                String agreement9011ControlCommand = get17Agreement9011ControlCommand(stringBuffer.toString(), counCountercharge.getResponseStatus());
+                                if (!"".equals(agreement9011ControlCommand)) {
+                                    outputStream.write(agreement9011ControlCommand.getBytes());
+                                    customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("发送9011命令成功:" + agreement9011ControlCommand + "\r\n"));
+                                } else {
+                                    customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("获取9011反控命令为空:" + stringBuffer.toString() + "\r\n"));
+                                }
+                            } else if (counCountercharge.getResponseParameter() == 9012) {
+                                String agreement9011ControlCommand = get17Agreement9011ControlCommand(stringBuffer.toString(), 1);
+                                String agreementDataReportedCommand = get17AgreementDataReportedCommand(stringBuffer.toString());
+                                String agreement9012ControlCommand = get17Agreement9012ControlCommand(stringBuffer.toString(), counCountercharge.getResponseStatus());
+
+                                if (!"".equals(agreement9011ControlCommand)) {
+                                    outputStream.write(agreement9011ControlCommand.getBytes());
+                                    customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("发送9011成功:" + agreement9011ControlCommand + "\r\n"));
+                                } else {
+                                    customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("获取9011命令为空:" + agreement9011ControlCommand + "\r\n"));
+                                }
+
+                                if (!"".equals(agreementDataReportedCommand) && 1 == counCountercharge.getResponseStatus()) {
+                                    outputStream.write(agreementDataReportedCommand.getBytes());
+                                    customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("发送提取数据成功:" + agreementDataReportedCommand + "\r\n"));
+                                } else if (1 != counCountercharge.getResponseStatus()) {
+                                    customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("9012状态不等于1，不发送提取数据:" + agreementDataReportedCommand + "\r\n"));
+                                } else {
+                                    customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("本次为设置反控，所以没有提取数据，请核对:" + agreementDataReportedCommand + "\r\n"));
+                                }
+
+                                if (!"".equals(agreement9012ControlCommand)) {
+                                    outputStream.write(agreement9012ControlCommand.getBytes());
+                                    customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("发送9012成功:" + agreement9012ControlCommand + "\r\n"));
+                                } else {
+                                    customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("9012命令为空:" + agreement9012ControlCommand + "\r\n"));
+                                }
+
+                            } else {
+                                customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("传的RequestResponseCommand参数有问题，请核对:" + counCountercharge.getResponseParameter() + "\r\n"));
+                            }
+                            break;
+                    }
+
                 }
-                log.info("校验指定CN号成功：", countercharge.getVerifyCn());
-            } else {
-                log.info("不需要校验CN号", countercharge.getVerifyCn());
+                thread.interrupt();
+                bufferedReader.close();
+                reader.close();
+                inputStream.close();
+                outputStream.close();
+                socket.close();
             }
-
-            switch (counDevice.getAgreement()) {
-                case "05":
-
-                    if ("2012".equals(getLinkConstant("CN", stringBuffer.toString())) || "2022".equals(getLinkConstant("CN", stringBuffer.toString()+"\r\n"))) {
-                        String agreement9013ControlCommand = get05Agreement9013ControlCommand(stringBuffer.toString());
-                        if (!"".equals(agreement9013ControlCommand)) {
-                            outputStream.write(agreement9013ControlCommand.getBytes());
-                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("发送9013成功:"+ agreement9013ControlCommand+"\r\n"));
-                            log.info("发送9013成功:{}", agreement9013ControlCommand);
-                        } else {
-                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("9013命令为空:"+ agreement9013ControlCommand+"\r\n"));
-                            log.warn("9013命令为空:{}", agreement9013ControlCommand);
-                        }
-                        break;
-                    }
-
-                    if (counCountercharge.getResponseParameter() == 9011) {
-                        String agreement9011ControlCommand = get05Agreement9011ControlCommand(stringBuffer.toString(), counCountercharge.getResponseStatus());
-                        if (!"".equals(agreement9011ControlCommand)) {
-                            outputStream.write(agreement9011ControlCommand.getBytes());
-                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("发送9011命令成功:"+ agreement9011ControlCommand+"\r\n"));
-                            log.info("发送9011命令成功:{}", agreement9011ControlCommand);
-                        } else {
-                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("获取9011反控命令为空:"+ stringBuffer.toString()+"\r\n"));
-                            log.warn("获取9011反控命令为空:{}", stringBuffer.toString());
-                        }
-                    } else if (counCountercharge.getResponseParameter() == 9012) {
-                        String agreement9011ControlCommand = get05Agreement9011ControlCommand(stringBuffer.toString(), 1);
-                        String agreementDataReportedCommand = get05AgreementDataReportedCommand(stringBuffer.toString());
-                        String agreement9012ControlCommand = get05Agreement9012ControlCommand(stringBuffer.toString(), counCountercharge.getResponseStatus());
+        };
 
 
-                        if (!"".equals(agreement9011ControlCommand)) {
-                            outputStream.write(agreement9011ControlCommand.getBytes());
-                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("发送9011成功:"+agreement9011ControlCommand+"\r\n"));
-                            log.info("发送9011成功:{}", agreement9011ControlCommand);
-                        } else {
-                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("获取9011命令为空:"+agreement9011ControlCommand+"\r\n"));
-                            log.warn("获取9011命令为空:{}", agreement9011ControlCommand);
-                        }
+        new Thread(runnable1).start();
 
-                        if (!"".equals(agreementDataReportedCommand) && 1 == counCountercharge.getResponseStatus()) {
-                            outputStream.write(agreementDataReportedCommand.getBytes());
-                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("发送提取数据成功:"+agreementDataReportedCommand+"\r\n"));
-                            log.info("发送提取数据成功:{}", agreementDataReportedCommand);
-                        } else if (1 != counCountercharge.getResponseStatus()) {
-                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("9012状态不等于1，不发送提取数据:"+ agreementDataReportedCommand+"\r\n"));
-                            log.info("9012状态不等于1，不发送提取数据:{}", agreementDataReportedCommand);
-                        } else {
-                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("本次为设置反控，所以没有提取数据，请核对:"+agreementDataReportedCommand+"\r\n"));
-                            log.warn("本次为设置反控，所以没有提取数据，请核对:{}", agreementDataReportedCommand);
-                        }
-
-                        if (!"".equals(agreement9012ControlCommand)) {
-                            outputStream.write(agreement9012ControlCommand.getBytes());
-                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("发送9012成功:"+agreement9012ControlCommand+"\r\n"));
-                            log.info("发送9012成功:{}", agreement9012ControlCommand);
-                        } else {
-                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("9012命令为空:"+ agreement9012ControlCommand+"\r\n"));
-                            log.warn("9012命令为空:{}", agreement9012ControlCommand);
-                        }
-
-                    } else {
-                        customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("传的RequestResponseCommand参数有问题，请核对:"+ counCountercharge.getResponseParameter()+"\r\n"));
-                        log.warn("传的RequestResponseCommand参数有问题，请核对:{}", counCountercharge.getResponseParameter());
-                    }
-                    break;
-
-                case "17":
-
-                    if ("2012".equals(getLinkConstant("CN", stringBuffer.toString())) || "2022".equals(getLinkConstant("CN", stringBuffer.toString()))) {
-                        String agreement9013ControlCommand = get17Agreement9013ControlCommand(stringBuffer.toString());
-                        if (!"".equals(agreement9013ControlCommand)) {
-                            outputStream.write(agreement9013ControlCommand.getBytes());
-                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("发送9013成功:"+ agreement9013ControlCommand+"\r\n"));
-                            log.info("发送9013成功:{}", agreement9013ControlCommand);
-                        } else {
-                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("9013命令为空:"+ agreement9013ControlCommand+"\r\n"));
-                            log.warn("9013命令为空:{}", agreement9013ControlCommand);
-                        }
-                        break;
-                    }
-
-                    if (counCountercharge.getResponseParameter() == 9011) {
-                        String agreement9011ControlCommand = get17Agreement9011ControlCommand(stringBuffer.toString(), counCountercharge.getResponseStatus());
-                        if (!"".equals(agreement9011ControlCommand)) {
-                            outputStream.write(agreement9011ControlCommand.getBytes());
-                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("发送9011命令成功:"+ agreement9011ControlCommand+"\r\n"));
-                            log.info("发送9011命令成功:{}", agreement9011ControlCommand);
-                        } else {
-                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("获取9011反控命令为空:"+ stringBuffer.toString()+"\r\n"));
-                            log.warn("获取9011反控命令为空:{}", stringBuffer.toString());
-                        }
-                    } else if (counCountercharge.getResponseParameter() == 9012) {
-                        String agreement9011ControlCommand = get17Agreement9011ControlCommand(stringBuffer.toString(), 1);
-                        String agreementDataReportedCommand = get17AgreementDataReportedCommand(stringBuffer.toString());
-                        String agreement9012ControlCommand = get17Agreement9012ControlCommand(stringBuffer.toString(), counCountercharge.getResponseStatus());
-
-                        if (!"".equals(agreement9011ControlCommand)) {
-                            outputStream.write(agreement9011ControlCommand.getBytes());
-                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("发送9011成功:"+ agreement9011ControlCommand+"\r\n"));
-                            log.info("发送9011成功:{}", agreement9011ControlCommand);
-                        } else {
-                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("获取9011命令为空:"+ agreement9011ControlCommand+"\r\n"));
-                            log.warn("获取9011命令为空:{}", agreement9011ControlCommand);
-                        }
-
-                        if (!"".equals(agreementDataReportedCommand) && 1 == counCountercharge.getResponseStatus()) {
-                            outputStream.write(agreementDataReportedCommand.getBytes());
-                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("发送提取数据成功:"+ agreementDataReportedCommand+"\r\n"));
-                            log.info("发送提取数据成功:{}", agreementDataReportedCommand);
-                        } else if (1 != counCountercharge.getResponseStatus()) {
-                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("9012状态不等于1，不发送提取数据:"+ agreementDataReportedCommand+"\r\n"));
-                            log.info("9012状态不等于1，不发送提取数据:{}", agreementDataReportedCommand);
-                        } else {
-                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("本次为设置反控，所以没有提取数据，请核对:"+ agreementDataReportedCommand+"\r\n"));
-                            log.warn("本次为设置反控，所以没有提取数据，请核对:{}", agreementDataReportedCommand);
-                        }
-
-                        if (!"".equals(agreement9012ControlCommand)) {
-                            outputStream.write(agreement9012ControlCommand.getBytes());
-                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("发送9012成功:"+ agreement9012ControlCommand+"\r\n"));
-                            log.info("发送9012成功:{}", agreement9012ControlCommand);
-                        } else {
-                            customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("9012命令为空:"+ agreement9012ControlCommand+"\r\n"));
-                            log.warn("9012命令为空:{}", agreement9012ControlCommand);
-                        }
-
-                    } else {
-                        customWebSocketConfig.customWebSocketHandler().sendMessageToAllUsers(new TextMessage("传的RequestResponseCommand参数有问题，请核对:"+ counCountercharge.getResponseParameter()+"\r\n"));
-                        log.warn("传的RequestResponseCommand参数有问题，请核对:{}", counCountercharge.getResponseParameter());
-                    }
-                    break;
-            }
-
-        }
-
-        bufferedReader.close();
-        reader.close();
-        inputStream.close();
-        outputStream.close();
-        socket.close();
-        connetionStatus.remove(counDevice.getMn());
     }
 
     @Override
     public void closeConnection(Integer deviceId) throws IOException {
         CounDevice counDevice = iCounDeviceService.getById(deviceId);
-        connetionStatus.put(counDevice.getMn(), 0);
+        if(connetionStatus.contains(counDevice.getMn())){
+            connetionStatus.remove(counDevice.getMn());
+        }
         CounCountercharge countercharge = iCounCounterchargeService.getCounCounterchargeByDeviceId(deviceId);
         countercharge.setConnetionStatus(0);
         iCounCounterchargeService.updateById(countercharge);

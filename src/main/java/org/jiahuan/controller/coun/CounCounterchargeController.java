@@ -59,9 +59,9 @@ public class CounCounterchargeController {
         try {
             iCounCounterchargeService.openConnection(deviceId);
             return msgData;
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
-            msgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             return msgData;
         }
     }

@@ -77,16 +77,4 @@ public class TransmitterData {
         }
     }
 
-    @Scheduled(cron="0 0/10 * * * ?")
-    public void send2051CounterchargeData() throws IOException {
-        QueryWrapper<CounCountercharge> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("connetion_status",1);
-        List<CounCountercharge> countercharges = iCounCounterchargeService.list(queryWrapper);
-
-        for (CounCountercharge countercharge : countercharges) {
-            CounDevice counDevice = iCounDeviceService.getById(countercharge.getDeviceId());
-            iCounDataTypeService.sendRealTime(countercharge.getDeviceId(),counDevice.getAgreement(),2);
-        }
-    }
-
 }

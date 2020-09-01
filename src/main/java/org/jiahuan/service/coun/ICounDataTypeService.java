@@ -44,8 +44,6 @@ public interface ICounDataTypeService extends IService<CounDataType> {
      * @param deviceId 设备id
      * @param agreement 协议17/05
      * @param dataType 发的数据类型 实时（1）\分钟（2）\小时（3）\日（4）
-     * @param startTime 开始时间  "yyyy-MM-ddHH:mm:ss"
-     * @param endTime 结束时间 "yyyy-MM-ddHH:mm:ss"
      * @throws ParseException
      * @throws IOException
      */

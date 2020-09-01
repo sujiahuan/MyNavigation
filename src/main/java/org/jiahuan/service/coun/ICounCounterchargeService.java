@@ -20,7 +20,7 @@ public interface ICounCounterchargeService extends IService<CounCountercharge> {
 
     CounCountercharge getCounCounterchargeByDeviceId(Integer deviceId);
 
-    void openConnection(Integer deviceId) throws IOException;
+    void openConnection(Integer deviceId) throws Exception;
 
     void closeConnection(Integer deviceId) throws IOException;
 
