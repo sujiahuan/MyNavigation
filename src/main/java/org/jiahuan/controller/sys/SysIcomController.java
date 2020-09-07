@@ -39,80 +39,79 @@ public class SysIcomController {
 
     @PostMapping("/add")
     public RetMsgData<SysIcom> addIcom(@RequestBody SysIcom icom){
-        RetMsgData<SysIcom> icomRetMsgData = new RetMsgData<>();
+        RetMsgData<SysIcom> retMsgData = new RetMsgData<>();
         if(VerdictUtil.isNull(icom.getName())){
-            icomRetMsgData.setMsg("name为空");
+            retMsgData.setMsg("name为空");
         }
 
         icom.setGmtCreate(LocalDateTime.now());
 
         try{
             iIcomService.save(icom);
-            icomRetMsgData.setData(icom);
-            return icomRetMsgData;
+            retMsgData.setData(icom);
+            return retMsgData;
         }catch (Exception e){
-            icomRetMsgData.setState(State.RET_STATE_SYSTEM_ERROR);
-            log.error("新增Icom失败：{}",e);
-            return icomRetMsgData;
+            retMsgData.setMsg(e.getMessage());
+            return retMsgData;
         }
     }
 
     @DeleteMapping("/deleteById")
     public RetMsgData<SysIcom> deleteIcom(@RequestParam Integer id){
-        RetMsgData<SysIcom> icomRetMsgData = new RetMsgData<>();
+        RetMsgData<SysIcom> msgData = new RetMsgData<>();
         if(VerdictUtil.isNull(id)){
-            icomRetMsgData.setMsg("id为空");
+            msgData.setMsg("id为空");
         }
         QueryWrapper<SysNavigation> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("icom_id",id);
         List<SysNavigation> navigations = iNavigationService.getNavigations(queryWrapper);
         if(navigations.size()!=0){
-            icomRetMsgData.setMsg("该图标已关联侧边栏，请删除关联");
-            return icomRetMsgData;
+            msgData.setMsg("该图标已关联侧边栏，请删除关联");
+            return msgData;
         }
         try{
             iIcomService.removeById(id);
-            return icomRetMsgData;
+            return msgData;
         }catch (Exception e){
-            icomRetMsgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             log.error("删除Icom失败：{}",e);
-            return icomRetMsgData;
+            return msgData;
         }
     }
 
     @GetMapping("/getById")
     public RetMsgData<SysIcom> getIcom(@RequestParam Integer id){
-        RetMsgData<SysIcom> icomRetMsgData = new RetMsgData<>();
+        RetMsgData<SysIcom> msgData = new RetMsgData<>();
         if(VerdictUtil.isNull(id)){
-            icomRetMsgData.setMsg("id为空");
+            msgData.setMsg("id为空");
         }
         try{
-            icomRetMsgData.setData(iIcomService.getById(id));
-            return icomRetMsgData;
+            msgData.setData(iIcomService.getById(id));
+            return msgData;
         }catch (Exception e){
-            icomRetMsgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             log.error("{}",e);
-            return icomRetMsgData;
+            return msgData;
         }
     }
 
     @GetMapping("/getAll")
     public RetMsgData<List<SysIcom>> getAll(){
-        RetMsgData<List<SysIcom>> icomRetMsgData = new RetMsgData<>();
+        RetMsgData<List<SysIcom>> msgData = new RetMsgData<>();
         QueryWrapper<SysIcom> icomQueryWrapper = new QueryWrapper<>();
         try{
-            icomRetMsgData.setData(iIcomService.list(icomQueryWrapper));
-            return icomRetMsgData;
+            msgData.setData(iIcomService.list(icomQueryWrapper));
+            return msgData;
         }catch (Exception e){
-            icomRetMsgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             log.error("{}",e);
-            return icomRetMsgData;
+            return msgData;
         }
     }
 
     @GetMapping("/getPage")
     public RetMsgData<IPage<SysIcom>> getPageIcom(@RequestParam Integer page, @RequestParam Integer size, @RequestParam(required=false)String name){
-        RetMsgData<IPage<SysIcom>> icomRetMsgData = new RetMsgData<>();
+        RetMsgData<IPage<SysIcom>> msgData = new RetMsgData<>();
         Page<SysIcom> icomPage = new Page<>(page, size);
         QueryWrapper<SysIcom> IcomQueryWrapper = new QueryWrapper<>();
         if(VerdictUtil.isNotNull(name)){
@@ -120,28 +119,28 @@ public class SysIcomController {
         }
         try{
             IPage<SysIcom> page1 = iIcomService.page(icomPage, IcomQueryWrapper);
-            icomRetMsgData.setData(page1);
-            return icomRetMsgData;
+            msgData.setData(page1);
+            return msgData;
         }catch (Exception e){
-            icomRetMsgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             log.error("{}",e);
-            return icomRetMsgData;
+            return msgData;
         }
     }
 
     @PostMapping("/update")
     public RetMsgData<IPage<SysIcom>> updateIcom(@RequestBody SysIcom icom){
-        RetMsgData<IPage<SysIcom>> icomRetMsgData = new RetMsgData<>();
+        RetMsgData<IPage<SysIcom>> msgData = new RetMsgData<>();
 
         SysIcom byId = iIcomService.getById(icom.getId());
         if(VerdictUtil.isNull(byId)){
-            icomRetMsgData.setMsg("找不到要修改的Icom信息");
-            return icomRetMsgData;
+            msgData.setMsg("找不到要修改的Icom信息");
+            return msgData;
         }
 
         if(VerdictUtil.isNull(icom.getName())){
-            icomRetMsgData.setMsg("name为空");
-            return icomRetMsgData;
+            msgData.setMsg("name为空");
+            return msgData;
         }
         UpdateWrapper<SysIcom> updateWrapper = new UpdateWrapper<>();
         updateWrapper.eq("id",icom.getId());
@@ -150,11 +149,11 @@ public class SysIcomController {
 
         try{
             iIcomService.update(icom,updateWrapper);
-            return icomRetMsgData;
+            return msgData;
         }catch (Exception e){
-            icomRetMsgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             log.error("{}",e);
-            return icomRetMsgData;
+            return msgData;
         }
 
     }

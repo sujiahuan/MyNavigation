@@ -34,7 +34,7 @@ public class CounCounterchargeController {
             msgData.setData(counCountercharge);
             return msgData;
         } catch (Exception e) {
-            msgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             return msgData;
         }
     }
@@ -47,7 +47,7 @@ public class CounCounterchargeController {
             iCounCounterchargeService.updateById(counCountercharge);
             return msgData;
         } catch (Exception e) {
-            msgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             return msgData;
         }
     }
@@ -75,7 +75,7 @@ public class CounCounterchargeController {
             return msgData;
         } catch (IOException e) {
             e.printStackTrace();
-            msgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             return msgData;
         }
     }

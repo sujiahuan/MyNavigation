@@ -28,19 +28,21 @@ public class CounDivisor extends Model<CounDivisor> {
 
     private String code;
 
-    private String avg;
+    private Integer avgMin;
 
-    private String max;
+    private Integer avgMax;
 
-    private String min;
+    private Integer max;
 
-    private String cou;
+    private Integer min;
 
-    private String zavg;
+    private Integer cou;
 
-    private String zmax;
+    private Integer zavg;
 
-    private String zmin;
+    private Integer zmax;
+
+    private Integer zmin;
 
     private String flag;
 
@@ -81,59 +83,52 @@ public class CounDivisor extends Model<CounDivisor> {
         this.code = code;
     }
 
-    public String getAvg() {
-        return avg;
-    }
 
-    public void setAvg(String avg) {
-        this.avg = avg;
-    }
-
-    public String getMax() {
+    public Integer getMax() {
         return max;
     }
 
-    public void setMax(String max) {
+    public void setMax(Integer max) {
         this.max = max;
     }
 
-    public String getMin() {
+    public Integer getMin() {
         return min;
     }
 
-    public void setMin(String min) {
+    public void setMin(Integer min) {
         this.min = min;
     }
 
-    public String getCou() {
+    public Integer getCou() {
         return cou;
     }
 
-    public void setCou(String cou) {
+    public void setCou(Integer cou) {
         this.cou = cou;
     }
 
-    public String getZavg() {
+    public Integer getZavg() {
         return zavg;
     }
 
-    public void setZavg(String zavg) {
+    public void setZavg(Integer zavg) {
         this.zavg = zavg;
     }
 
-    public String getZmax() {
+    public Integer getZmax() {
         return zmax;
     }
 
-    public void setZmax(String zmax) {
+    public void setZmax(Integer zmax) {
         this.zmax = zmax;
     }
 
-    public String getZmin() {
+    public Integer getZmin() {
         return zmin;
     }
 
-    public void setZmin(String zmin) {
+    public void setZmin(Integer zmin) {
         this.zmin = zmin;
     }
 
@@ -166,23 +161,40 @@ public class CounDivisor extends Model<CounDivisor> {
         return this.id;
     }
 
+    public Integer getAvgMin() {
+        return avgMin;
+    }
+
+    public void setAvgMin(Integer avgMin) {
+        this.avgMin = avgMin;
+    }
+
+    public Integer getAvgMax() {
+        return avgMax;
+    }
+
+    public void setAvgMax(Integer avgMax) {
+        this.avgMax = avgMax;
+    }
+
     @Override
     public String toString() {
         return "CounDivisor{" +
-        "id=" + id +
-        ", deviceId=" + deviceId +
-        ", name=" + name +
-        ", code=" + code +
-        ", avg=" + avg +
-        ", max=" + max +
-        ", min=" + min +
-        ", cou=" + cou +
-        ", zavg=" + zavg +
-        ", zmax=" + zmax +
-        ", zmin=" + zmin +
-        ", flag=" + flag +
-        ", gmtCreat=" + gmtCreate +
-        ", gmtModify=" + gmtModified +
-        "}";
+                "id=" + id +
+                ", deviceId=" + deviceId +
+                ", name='" + name + '\'' +
+                ", code='" + code + '\'' +
+                ", avgMin='" + avgMin + '\'' +
+                ", avgMax='" + avgMax + '\'' +
+                ", max='" + max + '\'' +
+                ", min='" + min + '\'' +
+                ", cou='" + cou + '\'' +
+                ", zavg='" + zavg + '\'' +
+                ", zmax='" + zmax + '\'' +
+                ", zmin='" + zmin + '\'' +
+                ", flag='" + flag + '\'' +
+                ", gmtCreate=" + gmtCreate +
+                ", gmtModified=" + gmtModified +
+                '}';
     }
 }

@@ -42,70 +42,70 @@ public class SysNavigationController {
 
     @PostMapping("/add")
     public RetMsgData<SysNavigation> add(@RequestBody SysNavigation navigation){
-        RetMsgData<SysNavigation> retMsgData = new RetMsgData<>();
+        RetMsgData<SysNavigation> msgData = new RetMsgData<>();
 
         navigation.setGmtCreate(LocalDateTime.now());
 
         try{
             iNavigationService.save(navigation);
-            retMsgData.setData(navigation);
-            return retMsgData;
+            msgData.setData(navigation);
+            return msgData;
         }catch (Exception e){
-            retMsgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             log.error("{}",e);
-            return retMsgData;
+            return msgData;
         }
     }
 
     @DeleteMapping("/deleteById")
     public RetMsgData<SysNavigation> deleteById(@RequestParam Integer id){
-        RetMsgData<SysNavigation> retMsgData = new RetMsgData<>();
+        RetMsgData<SysNavigation> msgData = new RetMsgData<>();
         if(VerdictUtil.isNull(id)){
-            retMsgData.setMsg("id为空");
+            msgData.setMsg("id为空");
         }
         try{
             iBookmarkService.deleteByParentId(id);
             iNavigationService.removeById(id);
-            return retMsgData;
+            return msgData;
         }catch (Exception e){
-            retMsgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             log.error("{}",e);
-            return retMsgData;
+            return msgData;
         }
     }
 
     @GetMapping("/getAll")
     public RetMsgData<List<SysNavigation>> getAll(){
-        RetMsgData<List<SysNavigation>> retMsgData = new RetMsgData<>();
+        RetMsgData<List<SysNavigation>> msgData = new RetMsgData<>();
         QueryWrapper<SysNavigation> queryWrapper = new QueryWrapper<>();
         try{
             List<SysNavigation> navigations = iNavigationService.getNavigations(queryWrapper);
-            retMsgData.setData(navigations);
-            return retMsgData;
+            msgData.setData(navigations);
+            return msgData;
         }catch (Exception e){
-            retMsgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             log.error("{}",e);
-            return retMsgData;
+            return msgData;
         }
     }
 
     @GetMapping("/getById")
     public RetMsgData<SysNavigation> getById(@RequestParam Integer id){
-        RetMsgData<SysNavigation> retMsgData = new RetMsgData<>();
+        RetMsgData<SysNavigation> msgData = new RetMsgData<>();
         try{
             SysNavigation navigation = iNavigationService.getById(id);
-            retMsgData.setData(navigation);
-            return retMsgData;
+            msgData.setData(navigation);
+            return msgData;
         }catch (Exception e){
-            retMsgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             log.error("{}",e);
-            return retMsgData;
+            return msgData;
         }
     }
 
     @GetMapping("/getPage")
     public RetMsgData<IPage<SysNavigation>> getPageIcom(@RequestParam Integer page, @RequestParam Integer size, @RequestParam(required=false)String name){
-        RetMsgData<IPage<SysNavigation>> pageRetMsgData = new RetMsgData<>();
+        RetMsgData<IPage<SysNavigation>> msgData = new RetMsgData<>();
         Page<SysNavigation> navigationPage = new Page<>(page, size);
         QueryWrapper<SysNavigation> navigationQueryWrapper = new QueryWrapper<>();
         if(VerdictUtil.isNotNull(name)){
@@ -118,23 +118,23 @@ public class SysNavigationController {
                 SysIcom icom = iIcomService.getById(navigation.getIcomId());
                 navigation.setIcomName(icom.getName());
             }
-            pageRetMsgData.setData(page1);
-            return pageRetMsgData;
+            msgData.setData(page1);
+            return msgData;
         }catch (Exception e){
-            pageRetMsgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             log.error("{}",e);
-            return pageRetMsgData;
+            return msgData;
         }
     }
 
     @PostMapping("/update")
     public RetMsgData<IPage<SysNavigation>> update(@RequestBody SysNavigation navigation){
-        RetMsgData<IPage<SysNavigation>> retMsgData = new RetMsgData<>();
+        RetMsgData<IPage<SysNavigation>> msgData = new RetMsgData<>();
 
         SysNavigation byId = iNavigationService.getById(navigation.getId());
         if(VerdictUtil.isNull(byId)){
-            retMsgData.setMsg("找不到要修改的信息");
-            return retMsgData;
+            msgData.setMsg("找不到要修改的信息");
+            return msgData;
         }
 
         UpdateWrapper<SysNavigation> updateWrapper = new UpdateWrapper<>();
@@ -144,11 +144,11 @@ public class SysNavigationController {
 
         try{
             iNavigationService.update(navigation,updateWrapper);
-            return retMsgData;
+            return msgData;
         }catch (Exception e){
-            retMsgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             log.error("{}",e);
-            return retMsgData;
+            return msgData;
         }
 
     }

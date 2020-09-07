@@ -69,7 +69,7 @@ public class CounDeviceController {
             iCounDeviceService.addInitCounDevice(counDevice);
             return msgData;
         }catch (Exception e){
-            msgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             return msgData;
         }
     }
@@ -82,7 +82,7 @@ public class CounDeviceController {
             iCounDeviceService.deleteInitById(id);
             return msgData;
         }catch (Exception e){
-            msgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             return msgData;
         }
     }
@@ -94,7 +94,7 @@ public class CounDeviceController {
             msgData.setData(iCounDeviceService.getById(id));
             return msgData;
         }catch (Exception e){
-            msgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             return msgData;
         }
     }
@@ -107,7 +107,7 @@ public class CounDeviceController {
             msgData.setData(iCounDeviceService.list(queryWrapper));
             return msgData;
         }catch (Exception e){
-            msgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             return msgData;
         }
     }
@@ -124,7 +124,7 @@ public class CounDeviceController {
             msgData.setData(iCounDeviceService.page(page1, queryWrapper));
             return msgData;
         }catch (Exception e){
-            msgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             return msgData;
         }
     }
@@ -139,7 +139,7 @@ public class CounDeviceController {
             iCounDeviceService.updateById(counDevice);
             return msgData;
         }catch (Exception e){
-            msgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             return msgData;
         }
     }

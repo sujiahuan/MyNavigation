@@ -50,7 +50,7 @@ public class CounDivisorController {
             msgData.setData(obj);
             return msgData;
         }catch (Exception e){
-            msgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             log.error("新增失败：{}",e);
             return msgData;
         }
@@ -75,7 +75,7 @@ public class CounDivisorController {
             iCounDivisorService.removeById(id);
             return msgData;
         }catch (Exception e){
-            msgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             log.error("删除失败：{}",e);
             return msgData;
         }
@@ -91,7 +91,7 @@ public class CounDivisorController {
             msgData.setData(iCounDivisorService.getById(id));
             return msgData;
         }catch (Exception e){
-            msgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             return msgData;
         }
     }
@@ -105,7 +105,7 @@ public class CounDivisorController {
             msgData.setData(iCounDivisorService.list(queryWrapper));
             return msgData;
         }catch (Exception e){
-            msgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             return msgData;
         }
     }
@@ -120,7 +120,7 @@ public class CounDivisorController {
             msgData.setData(iCounDivisorService.page(page1, queryWrapper));
             return msgData;
         }catch (Exception e){
-            msgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             return msgData;
         }
     }
@@ -148,7 +148,7 @@ public class CounDivisorController {
             iCounDivisorService.update(obj,updateWrapper);
             return msgData;
         }catch (Exception e){
-            msgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             return msgData;
         }
     }

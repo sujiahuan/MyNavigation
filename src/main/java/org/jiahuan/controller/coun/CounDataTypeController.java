@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import org.springframework.stereotype.Controller;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -44,7 +45,7 @@ public class CounDataTypeController {
             return msgData;
         } catch (Exception e) {
             e.printStackTrace();
-            msgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             return msgData;
         }
     }
@@ -59,7 +60,7 @@ public class CounDataTypeController {
             return msgData;
         } catch (Exception e) {
             e.printStackTrace();
-            msgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             return msgData;
         }
     }
@@ -77,7 +78,7 @@ public class CounDataTypeController {
             return msgData;
         } catch (Exception e) {
             e.printStackTrace();
-            msgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             return msgData;
         }
     }
@@ -90,8 +91,7 @@ public class CounDataTypeController {
             iCounDataTypeService.sendMessage(counDevice,msg);
             return msgData;
         } catch (Exception e) {
-            e.printStackTrace();
-            msgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             return msgData;
         }
     }
@@ -103,9 +103,8 @@ public class CounDataTypeController {
             String agreement = iCounDeviceService.getById(deviceId).getAgreement();
             iCounDataTypeService.sendSupplyAgain(deviceId,agreement,dataType);
             return msgData;
-        } catch (Exception e) {
-            e.printStackTrace();
-            msgData.setState(State.RET_STATE_SYSTEM_ERROR);
+        } catch (IOException e) {
+            msgData.setMsg(e.getMessage());
             return msgData;
         }
     }
@@ -119,7 +118,7 @@ public class CounDataTypeController {
             return msgData;
         } catch (Exception e) {
             e.printStackTrace();
-            msgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             return msgData;
         }
     }
@@ -133,7 +132,7 @@ public class CounDataTypeController {
             return msgData;
         } catch (Exception e) {
             e.printStackTrace();
-            msgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             return msgData;
         }
     }

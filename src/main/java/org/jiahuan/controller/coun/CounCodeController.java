@@ -38,7 +38,7 @@ public class CounCodeController {
             msgData.setData(counCode);
             return msgData;
         } catch (Exception e) {
-            msgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             return msgData;
         }
     }
@@ -60,7 +60,7 @@ public class CounCodeController {
             iCounCodeService.save(counCode);
             return msgData;
         } catch (Exception e) {
-            msgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             return msgData;
         }
     }
@@ -82,7 +82,7 @@ public class CounCodeController {
             iCounCodeService.updateById(counCode);
             return msgData;
         } catch (Exception e) {
-            msgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             return msgData;
         }
     }
@@ -96,7 +96,7 @@ public class CounCodeController {
             iCounCodeService.removeById(id);
             return msgData;
         } catch (Exception e) {
-            msgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             return msgData;
         }
     }

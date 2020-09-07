@@ -35,64 +35,64 @@ public class SysBookmarkController {
 
         @PostMapping("/add")
     public RetMsgData<SysBookmark> addBookmark(@RequestBody SysBookmark bookmark){
-        RetMsgData<SysBookmark> retMsgData = new RetMsgData<>();
+        RetMsgData<SysBookmark> msgData = new RetMsgData<>();
 
         if(VerdictUtil.isNull(bookmark.getParentId())){
-            retMsgData.setMsg("ParentId为空");
-            return retMsgData;
+            msgData.setMsg("ParentId为空");
+            return msgData;
         }
 
         bookmark.setGmtCreate(LocalDateTime.now());
 
         try{
             iBookmarkService.save(bookmark);
-            retMsgData.setData(bookmark);
-            return retMsgData;
+            msgData.setData(bookmark);
+            return msgData;
         }catch (Exception e){
-            retMsgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             log.error("{}",e);
-            return retMsgData;
+            return msgData;
         }
     }
 
     @DeleteMapping("/deleteById")
     public RetMsgData<SysBookmark> deleteBookmar(@RequestParam Integer id){
-        RetMsgData<SysBookmark> retMsgData = new RetMsgData<>();
+        RetMsgData<SysBookmark> msgData = new RetMsgData<>();
         if(VerdictUtil.isNull(id)){
-            retMsgData.setMsg("id为空");
+            msgData.setMsg("id为空");
         }
         try{
             iBookmarkService.removeById(id);
-            return retMsgData;
+            return msgData;
         }catch (Exception e){
-            retMsgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             log.error("{}",e);
-            return retMsgData;
+            return msgData;
         }
     }
 
     @GetMapping("/getById")
     public RetMsgData<SysBookmark> getById(@RequestParam Integer id){
-        RetMsgData<SysBookmark> retMsgData = new RetMsgData<>();
+        RetMsgData<SysBookmark> msgData = new RetMsgData<>();
         if(VerdictUtil.isNull(id)){
-            retMsgData.setMsg("id为空");
+            msgData.setMsg("id为空");
         }
         try{
             SysBookmark bookmarks = iBookmarkService.getById(id);
-            retMsgData.setData(bookmarks);
-            return retMsgData;
+            msgData.setData(bookmarks);
+            return msgData;
         }catch (Exception e){
-            retMsgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             log.error("{}",e);
-            return retMsgData;
+            return msgData;
         }
     }
 
     @GetMapping("/getBookmark")
     public RetMsgData<List<SysBookmark>> getBookmark(@RequestParam Integer parenId, @RequestParam(required=false)String title){
-        RetMsgData<List<SysBookmark>> retMsgData = new RetMsgData<>();
+        RetMsgData<List<SysBookmark>> msgData = new RetMsgData<>();
         if(VerdictUtil.isNull(parenId)){
-            retMsgData.setMsg("id为空");
+            msgData.setMsg("id为空");
         }
         QueryWrapper<SysBookmark> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("parent_id",parenId);
@@ -101,39 +101,39 @@ public class SysBookmarkController {
         }
         try{
             List<SysBookmark> bookmarks = iBookmarkService.list(queryWrapper);
-            retMsgData.setData(bookmarks);
-            return retMsgData;
+            msgData.setData(bookmarks);
+            return msgData;
         }catch (Exception e){
-            retMsgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             log.error("{}",e);
-            return retMsgData;
+            return msgData;
         }
     }
 
     @GetMapping("/getPage")
     public RetMsgData<IPage<SysBookmark>> getPageBookmark(@RequestParam Integer page, @RequestParam Integer size){
-        RetMsgData<IPage<SysBookmark>> BookmarkRetMsgData = new RetMsgData<>();
+        RetMsgData<IPage<SysBookmark>> msgData = new RetMsgData<>();
         Page<SysBookmark> bookmarkPage = new Page<>(page, size);
         QueryWrapper<SysBookmark> bookmarkQueryWrapper = new QueryWrapper<>();
         IPage<SysBookmark> page1 = iBookmarkService.page(bookmarkPage, bookmarkQueryWrapper);
         try{
-            BookmarkRetMsgData.setData(page1);
-            return BookmarkRetMsgData;
+            msgData.setData(page1);
+            return msgData;
         }catch (Exception e){
-            BookmarkRetMsgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             log.error("{}",e);
-            return BookmarkRetMsgData;
+            return msgData;
         }
     }
 
     @PostMapping("/update")
     public RetMsgData<IPage<SysBookmark>> updateBookmark(@RequestBody SysBookmark bookmark){
-        RetMsgData<IPage<SysBookmark>> retMsgData = new RetMsgData<>();
+        RetMsgData<IPage<SysBookmark>> msgData = new RetMsgData<>();
 
         SysBookmark byId = iBookmarkService.getById(bookmark.getId());
         if(VerdictUtil.isNull(byId)){
-            retMsgData.setMsg("找不到要修改的信息");
-            return retMsgData;
+            msgData.setMsg("找不到要修改的信息");
+            return msgData;
         }
 
         UpdateWrapper<SysBookmark> updateWrapper = new UpdateWrapper<>();
@@ -143,11 +143,11 @@ public class SysBookmarkController {
 
         try{
             iBookmarkService.update(bookmark,updateWrapper);
-            return retMsgData;
+            return msgData;
         }catch (Exception e){
-            retMsgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             log.error("{}",e);
-            return retMsgData;
+            return msgData;
         }
 
     }

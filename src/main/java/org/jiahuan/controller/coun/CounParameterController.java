@@ -50,7 +50,7 @@ public class CounParameterController {
             msgData.setData(obj);
             return msgData;
         }catch (Exception e){
-            msgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             log.error("新增失败：{}",e);
             return msgData;
         }
@@ -75,7 +75,7 @@ public class CounParameterController {
             iCounParameterService.removeById(id);
             return msgData;
         }catch (Exception e){
-            msgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             log.error("删除失败：{}",e);
             return msgData;
         }
@@ -91,7 +91,7 @@ public class CounParameterController {
             msgData.setData(iCounParameterService.getById(id));
             return msgData;
         }catch (Exception e){
-            msgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             log.error("{}",e);
             return msgData;
         }
@@ -105,7 +105,7 @@ public class CounParameterController {
             msgData.setData(iCounParameterService.list(queryWrapper));
             return msgData;
         }catch (Exception e){
-            msgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             log.error("{}",e);
             return msgData;
         }
@@ -123,7 +123,7 @@ public class CounParameterController {
             msgData.setData(iCounParameterService.page(page1, queryWrapper));
             return msgData;
         }catch (Exception e){
-            msgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             log.error("{}",e);
             return msgData;
         }
@@ -152,7 +152,7 @@ public class CounParameterController {
             iCounParameterService.update(obj,updateWrapper);
             return msgData;
         }catch (Exception e){
-            msgData.setState(State.RET_STATE_SYSTEM_ERROR);
+            msgData.setMsg(e.getMessage());
             log.error("{}",e);
             return msgData;
         }

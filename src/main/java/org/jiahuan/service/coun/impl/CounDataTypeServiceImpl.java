@@ -6,8 +6,10 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import net.bytebuddy.implementation.bytecode.Throw;
 import org.jiahuan.common.config.CustomWebSocketConfig;
 import org.jiahuan.common.util.DataPackageUtils;
+import org.jiahuan.common.util.RandomUtil;
 import org.jiahuan.common.util.TimeUtil;
 import org.jiahuan.crc.Common;
 import org.jiahuan.entity.coun.*;
@@ -96,7 +98,7 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
 
 
     @Override
-    public void sendSupplyAgain(Integer deviceId, String agreement, Integer dataType) throws ParseException, IOException {
+    public void sendSupplyAgain(Integer deviceId, String agreement, Integer dataType) throws IOException {
 
         CounDataType counDataType = iCounDataTypeService.getCounDataTypeByDeviceId(deviceId, dataType);
         CounDevice counDevice = iCounDeviceService.getById(deviceId);
@@ -117,9 +119,6 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
                 break;
         }
         //处理时间
-//        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-ddHH:mm:ss");
-//        Date startDate = simpleDateFormat.parse(startTime);
-//        Date endDate = simpleDateFormat.parse(endTime);
         Calendar startCalendar = Calendar.getInstance();
         Calendar endCalendar = Calendar.getInstance();
         startCalendar.setTime(counDataType.getStartTime());
@@ -149,15 +148,22 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
 
     @Override
     public void sendMessage(CounDevice counDevice, String message) throws IOException {
-        Socket socket = new Socket(counDevice.getIp(), counDevice.getPort());
-        OutputStream outputStream = socket.getOutputStream();
-        message += "\r\n";
-        outputStream.write(message.getBytes());
+        try(
+                Socket socket = new Socket(counDevice.getIp(), counDevice.getPort());
+                OutputStream outputStream = socket.getOutputStream();
+                ){
+            message += "\r\n";
+            outputStream.write(message.getBytes());
 //        customWebSocketHandler.sendMessageToAllUsers();
-        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()),new TextMessage(message));
-        log.info(message);
-        outputStream.close();
-        socket.close();
+            customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()),new TextMessage(message));
+            log.info(message);
+            outputStream.close();
+            socket.close();
+        }catch (IOException e){
+            throw new IOException("发送失败:"+e.getMessage());
+        }
+
+
     }
 
     /**
@@ -199,13 +205,13 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
             List<CounDivisor> counDivisors = iCounDivisorService.getCounDivisorByDeviceId(deviceId);
             for (CounDivisor counDivisor : counDivisors) {
                 HashMap<String, String> property = new HashMap<>();
-                property.put("Avg", counDivisor.getAvg());
-                property.put("Max", counDivisor.getMax());
-                property.put("Min", counDivisor.getMin());
-                property.put("Cou", counDivisor.getCou());
-                property.put("ZsAvg", counDivisor.getZavg());
-                property.put("ZsMax", counDivisor.getZmax());
-                property.put("ZsMin", counDivisor.getZmin());
+                property.put("Avg", String.valueOf(RandomUtil.getRandomInt(Integer.valueOf(counDivisor.getAvgMin()),Integer.valueOf(counDivisor.getAvgMax()))));
+                property.put("Max", String.valueOf(counDivisor.getMax()));
+                property.put("Min", String.valueOf(counDivisor.getMin()));
+                property.put("Cou", String.valueOf(counDivisor.getCou()));
+                property.put("ZsAvg", String.valueOf(counDivisor.getZavg()));
+                property.put("ZsMax", String.valueOf(counDivisor.getZmax()));
+                property.put("ZsMin", String.valueOf(counDivisor.getZmin()));
                 property.put("Flag", counDivisor.getFlag());
 
                 divisorParameter.put(counDivisor.getCode(), property);

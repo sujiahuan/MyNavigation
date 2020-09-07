@@ -9,8 +9,8 @@ public class RandomUtil {
      * @param max 最大范围值
      * @return 随机值
      */
-    public static String getRandomInt(int min, int max) {
+    public static Integer getRandomInt(int min, int max) {
         int index = min + (int) (Math.random() * (max - min + 1));
-        return String.valueOf(index);
+        return index;
     }
 }
