@@ -69,10 +69,10 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
 
     @Override
     public void addInitByDeviceId(Integer deviceId) {
-        CounDataType counDataType2011 = new CounDataType(deviceId, 1, 0, "none", 30,TimeUtil.getProcessedCurrentTime("second", -30),TimeUtil.getProcessedCurrentTime("second", 0));
-        CounDataType counDataType2051 = new CounDataType(deviceId, 2, 0, "none", 10,TimeUtil.getProcessedCurrentTime("minute", -10),TimeUtil.getProcessedCurrentTime("minute", 0));
-        CounDataType counDataType2061 = new CounDataType(deviceId, 3, 0, "none", 1,TimeUtil.getProcessedCurrentTime("hour", -1),TimeUtil.getProcessedCurrentTime("hour", 0));
-        CounDataType counDataType2031 = new CounDataType(deviceId, 4, 0, "none", 1,TimeUtil.getProcessedCurrentTime("day", -1),TimeUtil.getProcessedCurrentTime("day", 0));
+        CounDataType counDataType2011 = new CounDataType(deviceId, 1, 0, "none", 30, TimeUtil.getProcessedCurrentTime("second", -30), TimeUtil.getProcessedCurrentTime("second", 0));
+        CounDataType counDataType2051 = new CounDataType(deviceId, 2, 0, "none", 10, TimeUtil.getProcessedCurrentTime("minute", -10), TimeUtil.getProcessedCurrentTime("minute", 0));
+        CounDataType counDataType2061 = new CounDataType(deviceId, 3, 0, "none", 1, TimeUtil.getProcessedCurrentTime("hour", -1), TimeUtil.getProcessedCurrentTime("hour", 0));
+        CounDataType counDataType2031 = new CounDataType(deviceId, 4, 0, "none", 1, TimeUtil.getProcessedCurrentTime("day", -1), TimeUtil.getProcessedCurrentTime("day", 0));
 
         iCounDataTypeService.save(counDataType2011);
         iCounDataTypeService.save(counDataType2051);
@@ -102,7 +102,7 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
 
         CounDataType counDataType = iCounDataTypeService.getCounDataTypeByDeviceId(deviceId, dataType);
         CounDevice counDevice = iCounDeviceService.getById(deviceId);
-        int field=13;
+        int field = 13;
 
         switch (dataType) {
             case 1:
@@ -125,7 +125,7 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
         endCalendar.setTime(counDataType.getEndTime());
 //        endCalendar.add(field, counDataType.getDateInterval());
         //时间遍历
-        while (startCalendar.getTimeInMillis()-endCalendar.getTimeInMillis()<=0) {
+        while (startCalendar.getTimeInMillis() - endCalendar.getTimeInMillis() <= 0) {
             //获取补发数据包
             String dataPackage = getSupplyAgainDataPackage(counDevice, startCalendar.getTime(), agreement, dataType, false);
             //发送消息
@@ -148,22 +148,13 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
 
     @Override
     public void sendMessage(CounDevice counDevice, String message) throws IOException {
-        try(
-                Socket socket = new Socket(counDevice.getIp(), counDevice.getPort());
-                OutputStream outputStream = socket.getOutputStream();
-                ){
-            message += "\r\n";
-            outputStream.write(message.getBytes());
-//        customWebSocketHandler.sendMessageToAllUsers();
-            customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()),new TextMessage(message));
-            log.info(message);
-            outputStream.close();
-            socket.close();
-        }catch (IOException e){
-            throw new IOException("发送失败:"+e.getMessage());
-        }
-
-
+        Socket socket = new Socket(counDevice.getIp(), counDevice.getPort());
+        OutputStream outputStream = socket.getOutputStream();
+        message += "\r\n";
+        outputStream.write(message.getBytes());
+        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage(message));
+        outputStream.close();
+        socket.close();
     }
 
     /**
@@ -205,7 +196,7 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
             List<CounDivisor> counDivisors = iCounDivisorService.getCounDivisorByDeviceId(deviceId);
             for (CounDivisor counDivisor : counDivisors) {
                 HashMap<String, String> property = new HashMap<>();
-                property.put("Avg", String.valueOf(RandomUtil.getRandomInt(Integer.valueOf(counDivisor.getAvgMin()),Integer.valueOf(counDivisor.getAvgMax()))));
+                property.put("Avg", String.valueOf(RandomUtil.getRandomInt(Integer.valueOf(counDivisor.getAvgMin()), Integer.valueOf(counDivisor.getAvgMax()))));
                 property.put("Max", String.valueOf(counDivisor.getMax()));
                 property.put("Min", String.valueOf(counDivisor.getMin()));
                 property.put("Cou", String.valueOf(counDivisor.getCou()));
