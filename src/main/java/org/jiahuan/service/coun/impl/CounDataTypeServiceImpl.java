@@ -93,6 +93,7 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
         CounDevice counDevice = iCounDeviceService.getById(deviceId);
         //获取实时数据包
         String message = getRealTimeDataPackage(counDevice, agreement, dataType, false);
+        System.out.println("发送的数据类型："+dataType+"；数据报文："+message);
         iCounDataTypeService.sendMessage(counDevice, message);
     }
 
@@ -233,7 +234,7 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
                 break;
             case 2:
                 link = "##0178QN=" + TimeUtil.getFormatCurrentTime("millisecond", 0) + ";ST=" + counDevice.getMonitoringType() + ";CN=2051;PW=123456;MN="
-                        + counDevice.getMn() + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatCurrentTime("minute", -1) + ";"
+                        + counDevice.getMn() + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatCurrentTime("minute", -10) + ";"
                         + getParameterPackage(divisorParameter, "history", counDataType.getZs()) + "&&B381";
                 break;
             case 3:

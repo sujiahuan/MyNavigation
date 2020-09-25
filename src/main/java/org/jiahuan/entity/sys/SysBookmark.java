@@ -25,7 +25,7 @@ public class SysBookmark extends Model<SysBookmark> {
 
     private String link;
 
-    private Double version;
+    private String version;
 
     private String openmode;
 
@@ -66,11 +66,11 @@ public class SysBookmark extends Model<SysBookmark> {
         this.link = link;
     }
 
-    public Double getVersion() {
+    public String getVersion() {
         return version;
     }
 
-    public void setVersion(Double version) {
+    public void setVersion(String version) {
         this.version = version;
     }
 

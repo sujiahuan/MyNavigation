@@ -25,8 +25,8 @@ public class TransmitterData {
     @Autowired
     private ICounCounterchargeService iCounCounterchargeService;
 
-    @Scheduled(cron="0,30 * * * * ? ")
-    public void send2011Data() throws IOException {
+    @Scheduled(cron="0,30 * * * * ?")
+    public void send2011Data() {
         System.out.println("实时数据运行啦："+ TimeUtil.getFormatCurrentTime("millisecond",0));
         QueryWrapper<CounDataType> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("is_timing",1);
@@ -34,12 +34,16 @@ public class TransmitterData {
         List<CounDataType> listCountDataType = iCounDataTypeService.list(queryWrapper);
         for (CounDataType counDataType : listCountDataType) {
             CounDevice counDevice = iCounDeviceService.getById(counDataType.getDeviceId());
-            iCounDataTypeService.sendRealTime(counDataType.getDeviceId(),counDevice.getAgreement(),1);
+            try {
+                iCounDataTypeService.sendRealTime(counDataType.getDeviceId(),counDevice.getAgreement(),1);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
     @Scheduled(cron="0 0/10 * * * ?")
-    public void send2051Data() throws IOException {
+    public void send2051Data() {
         System.out.println("分钟数据运行啦："+ TimeUtil.getFormatCurrentTime("millisecond",0));
         QueryWrapper<CounDataType> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("is_timing",1);
@@ -47,12 +51,16 @@ public class TransmitterData {
         List<CounDataType> listCountDataType = iCounDataTypeService.list(queryWrapper);
         for (CounDataType counDataType : listCountDataType) {
             CounDevice counDevice = iCounDeviceService.getById(counDataType.getDeviceId());
-            iCounDataTypeService.sendRealTime(counDataType.getDeviceId(),counDevice.getAgreement(),2);
+            try {
+                iCounDataTypeService.sendRealTime(counDataType.getDeviceId(),counDevice.getAgreement(),2);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
     @Scheduled(cron="0 0 0/1 * * ?")
-    public void send2061Data() throws IOException {
+    public void send2061Data(){
         System.out.println("小时数据运行啦："+ TimeUtil.getFormatCurrentTime("millisecond",0));
         QueryWrapper<CounDataType> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("is_timing",1);
@@ -60,12 +68,16 @@ public class TransmitterData {
         List<CounDataType> listCountDataType = iCounDataTypeService.list(queryWrapper);
         for (CounDataType counDataType : listCountDataType) {
             CounDevice counDevice = iCounDeviceService.getById(counDataType.getDeviceId());
-            iCounDataTypeService.sendRealTime(counDataType.getDeviceId(),counDevice.getAgreement(),0);
+            try {
+                iCounDataTypeService.sendRealTime(counDataType.getDeviceId(),counDevice.getAgreement(),3);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
-    @Scheduled(cron="0 0 0 0/1 * ?")
-    public void send2031Data() throws IOException {
+    @Scheduled(cron="0 0 0 * * ? ")
+    public void send2031Data(){
         System.out.println("日数据运行啦："+ TimeUtil.getFormatCurrentTime("millisecond",0));
         QueryWrapper<CounDataType> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("is_timing",1);
@@ -73,7 +85,11 @@ public class TransmitterData {
         List<CounDataType> listCountDataType = iCounDataTypeService.list(queryWrapper);
         for (CounDataType counDataType : listCountDataType) {
             CounDevice counDevice = iCounDeviceService.getById(counDataType.getDeviceId());
-            iCounDataTypeService.sendRealTime(counDataType.getDeviceId(),counDevice.getAgreement(),4);
+            try {
+                iCounDataTypeService.sendRealTime(counDataType.getDeviceId(),counDevice.getAgreement(),4);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 

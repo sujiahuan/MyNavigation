@@ -68,7 +68,7 @@
 
         <root level="DEBUG">
             <appender-ref ref="Console" />
-            <appender-ref ref="RollingFileWarn" level="ERROR"/>
+<!--            <appender-ref ref="RollingFileWarn" level="ERROR"/>-->
             <!-- <appender-ref ref="RollingFileInfo" />
             <appender-ref ref="RollingFileWarn" />
             <appender-ref ref="RollingFileError" /> -->

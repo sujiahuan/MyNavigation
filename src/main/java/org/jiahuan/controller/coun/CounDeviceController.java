@@ -113,12 +113,15 @@ public class CounDeviceController {
     }
 
     @GetMapping("/getPage")
-    public RetMsgData<IPage<CounDevice>> getPage(@RequestParam Integer page, @RequestParam Integer size,@RequestParam String mn){
+    public RetMsgData<IPage<CounDevice>> getPage(@RequestParam Integer page, @RequestParam Integer size,@RequestParam String mn,@RequestParam Integer id){
         RetMsgData<IPage<CounDevice>> msgData = new RetMsgData<>();
         Page<CounDevice> page1 = new Page<>(page, size);
         QueryWrapper<CounDevice> queryWrapper = new QueryWrapper<>();
         if(VerdictUtil.isNotNull(mn)){
-            queryWrapper.like("mn",mn);
+            queryWrapper.eq("mn",mn);
+        }
+        if(VerdictUtil.isNotNull(id)){
+            queryWrapper.eq("id",id);
         }
         try{
             msgData.setData(iCounDeviceService.page(page1, queryWrapper));
