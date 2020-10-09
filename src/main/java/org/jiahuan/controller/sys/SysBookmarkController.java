@@ -114,8 +114,9 @@ public class SysBookmarkController {
     public RetMsgData<IPage<SysBookmark>> getPageBookmark(@RequestParam Integer page, @RequestParam Integer size){
         RetMsgData<IPage<SysBookmark>> msgData = new RetMsgData<>();
         Page<SysBookmark> bookmarkPage = new Page<>(page, size);
-        QueryWrapper<SysBookmark> bookmarkQueryWrapper = new QueryWrapper<>();
-        IPage<SysBookmark> page1 = iBookmarkService.page(bookmarkPage, bookmarkQueryWrapper);
+        QueryWrapper<SysBookmark> queryWrapper = new QueryWrapper<>();
+        queryWrapper.orderByDesc("gmt_create");
+        IPage<SysBookmark> page1 = iBookmarkService.page(bookmarkPage, queryWrapper);
         try{
             msgData.setData(page1);
             return msgData;

@@ -123,6 +123,9 @@ public class CounDeviceController {
         if(VerdictUtil.isNotNull(id)){
             queryWrapper.eq("id",id);
         }
+
+        queryWrapper.orderByDesc("gmt_create");
+
         try{
             msgData.setData(iCounDeviceService.page(page1, queryWrapper));
             return msgData;

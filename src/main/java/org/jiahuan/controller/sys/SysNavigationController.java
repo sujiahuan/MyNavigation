@@ -107,12 +107,13 @@ public class SysNavigationController {
     public RetMsgData<IPage<SysNavigation>> getPageIcom(@RequestParam Integer page, @RequestParam Integer size, @RequestParam(required=false)String name){
         RetMsgData<IPage<SysNavigation>> msgData = new RetMsgData<>();
         Page<SysNavigation> navigationPage = new Page<>(page, size);
-        QueryWrapper<SysNavigation> navigationQueryWrapper = new QueryWrapper<>();
+        QueryWrapper<SysNavigation> queryWrapper = new QueryWrapper<>();
         if(VerdictUtil.isNotNull(name)){
-            navigationQueryWrapper.like("name",name);
+            queryWrapper.like("name",name);
         }
+        queryWrapper.orderByDesc("gmt_create");
         try{
-            IPage<SysNavigation> page1 = iNavigationService.page(navigationPage, navigationQueryWrapper);
+            IPage<SysNavigation> page1 = iNavigationService.page(navigationPage, queryWrapper);
             for (SysNavigation navigation:page1.getRecords()
             ) {
                 SysIcom icom = iIcomService.getById(navigation.getIcomId());

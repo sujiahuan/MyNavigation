@@ -116,6 +116,7 @@ public class CounDivisorController {
         Page<CounDivisor> page1 = new Page<>(page, size);
         QueryWrapper<CounDivisor> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("device_id",deviceId);
+        queryWrapper.orderByDesc("gmt_create");
         try{
             msgData.setData(iCounDivisorService.page(page1, queryWrapper));
             return msgData;

@@ -24,9 +24,7 @@ public class CounDivisor extends Model<CounDivisor> {
 
     private Integer deviceId;
 
-    private String name;
-
-    private String code;
+    private Integer codeId;
 
     private Integer avgMin;
 
@@ -67,20 +65,12 @@ public class CounDivisor extends Model<CounDivisor> {
         this.deviceId = deviceId;
     }
 
-    public String getName() {
-        return name;
+    public Integer getCodeId() {
+        return codeId;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
+    public void setCodeId(Integer codeId) {
+        this.codeId = codeId;
     }
 
 
@@ -182,8 +172,7 @@ public class CounDivisor extends Model<CounDivisor> {
         return "CounDivisor{" +
                 "id=" + id +
                 ", deviceId=" + deviceId +
-                ", name='" + name + '\'' +
-                ", code='" + code + '\'' +
+                ", codeId='" + codeId + '\'' +
                 ", avgMin='" + avgMin + '\'' +
                 ", avgMax='" + avgMax + '\'' +
                 ", max='" + max + '\'' +

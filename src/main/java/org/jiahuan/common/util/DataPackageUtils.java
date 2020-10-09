@@ -10,8 +10,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.jiahuan.crc.Crc16;
-import org.jiahuan.crc.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -97,7 +95,7 @@ public class DataPackageUtils {
 	 */
 	public static String generateCrc(String msg) {
 		int len = 4;
-		Crc16 crc16 = new Crc16();
+//		Crc16 crc16 = new Crc16();
 		int crc = tocrc16(msg.getBytes());
 		String gethexstr = Integer.toHexString(crc);
 		if (gethexstr.length() < len) {

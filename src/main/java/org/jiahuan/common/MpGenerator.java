@@ -49,14 +49,14 @@ public class MpGenerator {
         dsc.setDriverName("com.mysql.cj.jdbc.Driver");
         dsc.setUsername("root");
         dsc.setPassword("root");
-        dsc.setUrl("jdbc:mysql://localhost:3306/my_navigation?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true");
+        dsc.setUrl("jdbc:mysql://localhost:3306/my_navigation_test?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true");
         mpg.setDataSource(dsc);
 
         // 策略配置
         StrategyConfig strategy = new StrategyConfig();
         strategy.setTablePrefix(new String[]{"test_"});// 此处可以修改为您的表前缀
         strategy.setNaming(NamingStrategy.underline_to_camel);// 表名生成策略
-        strategy.setInclude(new String[]{"coun_countercharge"
+        strategy.setInclude(new String[]{"sys_divisor"
         }); // 需要生成的表
         // strategy.setExclude(new String[]{"test"}); // 排除生成的表
         // 字段名生成策略

@@ -6,15 +6,14 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import net.bytebuddy.implementation.bytecode.Throw;
 import org.jiahuan.common.config.CustomWebSocketConfig;
 import org.jiahuan.common.util.DataPackageUtils;
 import org.jiahuan.common.util.RandomUtil;
 import org.jiahuan.common.util.TimeUtil;
-import org.jiahuan.crc.Common;
 import org.jiahuan.entity.coun.*;
 import org.jiahuan.mapper.coun.CounDataTypeMapper;
 import org.jiahuan.service.coun.*;
+import org.jiahuan.service.sys.ISysDivisorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.TextMessage;
@@ -22,7 +21,6 @@ import org.springframework.web.socket.TextMessage;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.text.ParseException;
 import java.util.*;
 
 /**
@@ -49,6 +47,8 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
     private ICounCodeService iCounCodeService;
     @Autowired
     private CustomWebSocketConfig customWebSocketConfig;
+    @Autowired
+    private ISysDivisorService iSysDivisorService;
 
     @Override
     public CounDataType getCounDataTypeByDeviceId(Integer deviceId, Integer dataType) {
@@ -206,7 +206,7 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
                 property.put("ZsMin", String.valueOf(counDivisor.getZmin()));
                 property.put("Flag", counDivisor.getFlag());
 
-                divisorParameter.put(counDivisor.getCode(), property);
+                divisorParameter.put(iSysDivisorService.getById(counDivisor.getCodeId()).getCode(), property);
             }
         }
         return divisorParameter;
@@ -292,36 +292,36 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
         String polId;
         switch (dataType) {
             case 1:
-                link = "##0235QN=" + Common.getTime("millisecond") + ";ST=" + counDevice.getMonitoringType() + ";CN=2011;PW=123456;MN="
+                link = "##0235QN=" + TimeUtil.getFormatCurrentTime("millisecond",0)  + ";ST=" + counDevice.getMonitoringType() + ";CN=2011;PW=123456;MN="
                         + counDevice.getMn() + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatTime(date, "second") + ";"
                         + getParameterPackage(divisorParameter, "realTime", counDataType.getZs()) + "&&B381";
                 break;
             case 2:
-                link = "##0178QN=" + Common.getTime("millisecond") + ";ST=" + counDevice.getMonitoringType() + ";CN=2051;PW=123456;MN="
+                link = "##0178QN=" + TimeUtil.getFormatCurrentTime("millisecond",0) + ";ST=" + counDevice.getMonitoringType() + ";CN=2051;PW=123456;MN="
                         + counDevice.getMn() + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatTime(date, "minute") + ";"
                         + getParameterPackage(divisorParameter, "history", counDataType.getZs()) + "&&B381";
                 break;
             case 3:
-                link = "##0160QN=" + Common.getTime("millisecond") + ";ST=" + counDevice.getMonitoringType() + ";CN=2061;PW=123456;MN="
+                link = "##0160QN=" + TimeUtil.getFormatCurrentTime("millisecond",0) + ";ST=" + counDevice.getMonitoringType() + ";CN=2061;PW=123456;MN="
                         + counDevice.getMn() + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatTime(date, "hour") + ";" + getParameterPackage(divisorParameter, "history", counDataType.getZs())
                         + "&&B381";
                 break;
             case 4:
-                link = "##0171QN=" + Common.getTime("millisecond") + ";ST=" + counDevice.getMonitoringType() + ";CN=2031;PW=123456;MN="
+                link = "##0171QN=" + TimeUtil.getFormatCurrentTime("millisecond",0) + ";ST=" + counDevice.getMonitoringType() + ";CN=2031;PW=123456;MN="
                         + counDevice.getMn() + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatTime(date, "day") + ";" + getParameterPackage(divisorParameter, "history", counDataType.getZs())
                         + "&&B381";
                 break;
             case 5:
                 //获取编码，只考虑一个的情况
                 polId = divisorParameter.keySet().iterator().next();
-                link = "##0171QN=" + Common.getTime("millisecond") + ";ST=" + counDevice.getMonitoringType() + ";CN=3020;PW=123456;MN="
+                link = "##0171QN=" + TimeUtil.getFormatCurrentTime("millisecond",0) + ";ST=" + counDevice.getMonitoringType() + ";CN=3020;PW=123456;MN="
                         + counDevice.getMn() + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatTime(date, "second") + ";PolId=" + polId + ";"
                         + getParameterPackage(divisorParameter, "parameter", counDataType.getZs()) + "&&B381";
                 break;
             case 6:
                 //获取编码，只考虑一个的情况
                 polId = divisorParameter.keySet().iterator().next();
-                link = "##0171QN=" + Common.getTime("millisecond") + ";ST=" + counDevice.getMonitoringType() + ";CN=3020;PW=123456;MN="
+                link = "##0171QN=" + TimeUtil.getFormatCurrentTime("millisecond",0) + ";ST=" + counDevice.getMonitoringType() + ";CN=3020;PW=123456;MN="
                         + counDevice.getMn() + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatTime(date, "second") + ";PolId=" + polId + ";"
                         + getParameterPackage(divisorParameter, "status", counDataType.getZs()) + "&&B381";
                 break;

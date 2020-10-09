@@ -113,12 +113,13 @@ public class SysIcomController {
     public RetMsgData<IPage<SysIcom>> getPageIcom(@RequestParam Integer page, @RequestParam Integer size, @RequestParam(required=false)String name){
         RetMsgData<IPage<SysIcom>> msgData = new RetMsgData<>();
         Page<SysIcom> icomPage = new Page<>(page, size);
-        QueryWrapper<SysIcom> IcomQueryWrapper = new QueryWrapper<>();
+        QueryWrapper<SysIcom> queryWrapper = new QueryWrapper<>();
         if(VerdictUtil.isNotNull(name)){
-            IcomQueryWrapper.like("name",name);
+            queryWrapper.like("name",name);
         }
+        queryWrapper.orderByDesc("gmt_create");
         try{
-            IPage<SysIcom> page1 = iIcomService.page(icomPage, IcomQueryWrapper);
+            IPage<SysIcom> page1 = iIcomService.page(icomPage, queryWrapper);
             msgData.setData(page1);
             return msgData;
         }catch (Exception e){
