@@ -197,7 +197,7 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
             List<CounDivisor> counDivisors = iCounDivisorService.getCounDivisorByDeviceId(deviceId);
             for (CounDivisor counDivisor : counDivisors) {
                 HashMap<String, String> property = new HashMap<>();
-                property.put("Avg", String.valueOf(RandomUtil.getRandomInt(Integer.valueOf(counDivisor.getAvgMin()), Integer.valueOf(counDivisor.getAvgMax()))));
+                property.put("Avg", RandomUtil.getRandomString(4,counDivisor.getAvgMin(),counDivisor.getAvgMax()));
                 property.put("Max", String.valueOf(counDivisor.getMax()));
                 property.put("Min", String.valueOf(counDivisor.getMin()));
                 property.put("Cou", String.valueOf(counDivisor.getCou()));

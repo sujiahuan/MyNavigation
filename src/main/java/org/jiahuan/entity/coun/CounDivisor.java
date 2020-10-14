@@ -26,21 +26,21 @@ public class CounDivisor extends Model<CounDivisor> {
 
     private Integer codeId;
 
-    private Integer avgMin;
+    private Double avgMin;
 
-    private Integer avgMax;
+    private Double avgMax;
 
-    private Integer max;
+    private Double max;
 
-    private Integer min;
+    private Double min;
 
-    private Integer cou;
+    private Double cou;
 
-    private Integer zavg;
+    private Double zavg;
 
-    private Integer zmax;
+    private Double zmax;
 
-    private Integer zmin;
+    private Double zmin;
 
     private String flag;
 
@@ -74,51 +74,51 @@ public class CounDivisor extends Model<CounDivisor> {
     }
 
 
-    public Integer getMax() {
+    public Double getMax() {
         return max;
     }
 
-    public void setMax(Integer max) {
+    public void setMax(Double max){
         this.max = max;
     }
 
-    public Integer getMin() {
+    public Double getMin() {
         return min;
     }
 
-    public void setMin(Integer min) {
+    public void setMin(Double min) {
         this.min = min;
     }
 
-    public Integer getCou() {
+    public Double getCou() {
         return cou;
     }
 
-    public void setCou(Integer cou) {
+    public void setCou(Double cou) {
         this.cou = cou;
     }
 
-    public Integer getZavg() {
+    public Double getZavg() {
         return zavg;
     }
 
-    public void setZavg(Integer zavg) {
+    public void setZavg(Double zavg) {
         this.zavg = zavg;
     }
 
-    public Integer getZmax() {
+    public Double getZmax() {
         return zmax;
     }
 
-    public void setZmax(Integer zmax) {
+    public void setZmax(Double zmax) {
         this.zmax = zmax;
     }
 
-    public Integer getZmin() {
+    public Double getZmin() {
         return zmin;
     }
 
-    public void setZmin(Integer zmin) {
+    public void setZmin(Double zmin) {
         this.zmin = zmin;
     }
 
@@ -151,19 +151,19 @@ public class CounDivisor extends Model<CounDivisor> {
         return this.id;
     }
 
-    public Integer getAvgMin() {
+    public Double getAvgMin() {
         return avgMin;
     }
 
-    public void setAvgMin(Integer avgMin) {
+    public void setAvgMin(Double avgMin) {
         this.avgMin = avgMin;
     }
 
-    public Integer getAvgMax() {
+    public Double getAvgMax() {
         return avgMax;
     }
 
-    public void setAvgMax(Integer avgMax) {
+    public void setAvgMax(Double avgMax) {
         this.avgMax = avgMax;
     }
 
