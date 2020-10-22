@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.net.ConnectException;
 
 /**
  * <p>
@@ -39,7 +40,7 @@ public class CounCounterchargeController {
         }
     }
 
-    @GetMapping("/update")
+    @PostMapping("/update")
     public RetMsgData<CounCountercharge> updateCounCountercharge(@RequestBody CounCountercharge counCountercharge){
         RetMsgData<CounCountercharge> msgData = new RetMsgData<>();
 
@@ -58,6 +59,15 @@ public class CounCounterchargeController {
 
         try {
             iCounCounterchargeService.openConnection(deviceId);
+            return msgData;
+        }catch (ConnectException e) {
+            if(e.getMessage().equals("Connection timed out: connect")){
+                msgData.setMsg(" 连接服务器超时，请检查");
+            }else if(e.getMessage().equals("Connection refused: connect")){
+                msgData.setMsg(" 服务器连接不上，请检查");
+            }else{
+                msgData.setMsg(e.getMessage());
+            }
             return msgData;
         } catch (Exception e) {
             e.printStackTrace();

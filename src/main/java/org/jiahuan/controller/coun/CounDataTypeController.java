@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.stereotype.Controller;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -42,6 +43,15 @@ public class CounDataTypeController {
         try {
             String agreement = iCounDeviceService.getById(deviceId).getAgreement();
             iCounDataTypeService.sendRealTime(deviceId,agreement,dataType);
+            return msgData;
+        }catch (ConnectException e) {
+            if(e.getMessage().equals("Connection timed out: connect")){
+                msgData.setMsg(" 连接服务器超时，请检查");
+            }else if(e.getMessage().equals("Connection refused: connect")){
+                msgData.setMsg(" 服务器连接不上，请检查");
+            }else{
+                msgData.setMsg(e.getMessage());
+            }
             return msgData;
         } catch (Exception e) {
             e.printStackTrace();
@@ -90,6 +100,15 @@ public class CounDataTypeController {
             CounDevice counDevice = iCounDeviceService.getById(deviceId);
             iCounDataTypeService.sendMessage(counDevice,msg);
             return msgData;
+        }catch (ConnectException e) {
+            if(e.getMessage().equals("Connection timed out: connect")){
+                msgData.setMsg(" 连接服务器超时，请检查");
+            }else if(e.getMessage().equals("Connection refused: connect")){
+                msgData.setMsg(" 服务器连接不上，请检查");
+            }else{
+                msgData.setMsg(e.getMessage());
+            }
+            return msgData;
         } catch (Exception e) {
             msgData.setMsg(e.getMessage());
             return msgData;
@@ -102,6 +121,15 @@ public class CounDataTypeController {
         try {
             String agreement = iCounDeviceService.getById(deviceId).getAgreement();
             iCounDataTypeService.sendSupplyAgain(deviceId,agreement,dataType);
+            return msgData;
+        } catch (ConnectException e) {
+            if(e.getMessage().equals("Connection timed out: connect")){
+                msgData.setMsg(" 连接服务器超时，请检查");
+            }else if(e.getMessage().equals("Connection refused: connect")){
+                msgData.setMsg(" 服务器连接不上，请检查");
+            }else{
+                msgData.setMsg(e.getMessage());
+            }
             return msgData;
         } catch (IOException e) {
             msgData.setMsg(e.getMessage());

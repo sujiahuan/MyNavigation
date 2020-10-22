@@ -149,6 +149,7 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
 
     @Override
     public void sendMessage(CounDevice counDevice, String message) throws IOException {
+
         Socket socket = new Socket(counDevice.getIp(), counDevice.getPort());
         OutputStream outputStream = socket.getOutputStream();
         message += "\r\n";
