@@ -1,5 +1,7 @@
 package org.jiahuan.entity.coun;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
 import java.io.Serializable;
 
@@ -22,6 +24,7 @@ public class CounCountercharge extends Model<CounCountercharge> {
         /**
      * 校验CN号
      */
+        @TableField(fill = FieldFill.UPDATE)
          private String verifyCn;
 
         /**

@@ -45,12 +45,12 @@ public class CounDataTypeController {
             iCounDataTypeService.sendRealTime(deviceId,agreement,dataType);
             return msgData;
         }catch (ConnectException e) {
-            if(e.getMessage().equals("Connection timed out: connect")){
+            if(e.getMessage().equals("Connection timed out: connect")||e.getMessage().equals("Connection timed out (Connection timed out)")){
                 msgData.setMsg(" 连接服务器超时，请检查");
-            }else if(e.getMessage().equals("Connection refused: connect")){
-                msgData.setMsg(" 服务器连接不上，请检查");
+            }else if(e.getMessage().equals("Connection refused: connect")||e.getMessage().equals("Connection refused (Connection refused)")){
+                msgData.setMsg(" 连接服务器被拒绝，请检查");
             }else{
-                msgData.setMsg(e.getMessage());
+                msgData.setMsg("没处理的异常："+e.getMessage());
             }
             return msgData;
         } catch (Exception e) {
@@ -101,13 +101,26 @@ public class CounDataTypeController {
             iCounDataTypeService.sendMessage(counDevice,msg);
             return msgData;
         }catch (ConnectException e) {
-            if(e.getMessage().equals("Connection timed out: connect")){
+            if(e.getMessage().equals("Connection timed out: connect")||e.getMessage().equals("Connection timed out (Connection timed out)")){
                 msgData.setMsg(" 连接服务器超时，请检查");
-            }else if(e.getMessage().equals("Connection refused: connect")){
-                msgData.setMsg(" 服务器连接不上，请检查");
+            }else if(e.getMessage().equals("Connection refused: connect")||e.getMessage().equals("Connection refused (Connection refused)")){
+                msgData.setMsg(" 连接服务器被拒绝，请检查");
             }else{
-                msgData.setMsg(e.getMessage());
+                msgData.setMsg("没处理的异常："+e.getMessage());
             }
+            return msgData;
+        } catch (Exception e) {
+            msgData.setMsg(e.getMessage());
+            return msgData;
+        }
+    }
+
+    @GetMapping("/getSupplyAgainCount")
+    public RetMsgData<Integer> getSupplyAgainCount(@RequestParam Integer deviceId,@RequestParam Integer dataType){
+        RetMsgData<Integer> msgData = new RetMsgData<>();
+        try {
+            Integer supplyAgainCount = iCounDataTypeService.getSupplyAgainCount(deviceId, dataType);
+            msgData.setData(supplyAgainCount);
             return msgData;
         } catch (Exception e) {
             msgData.setMsg(e.getMessage());
@@ -123,12 +136,12 @@ public class CounDataTypeController {
             iCounDataTypeService.sendSupplyAgain(deviceId,agreement,dataType);
             return msgData;
         } catch (ConnectException e) {
-            if(e.getMessage().equals("Connection timed out: connect")){
+            if(e.getMessage().equals("Connection timed out: connect")||e.getMessage().equals("Connection timed out (Connection timed out)")){
                 msgData.setMsg(" 连接服务器超时，请检查");
-            }else if(e.getMessage().equals("Connection refused: connect")){
-                msgData.setMsg(" 服务器连接不上，请检查");
+            }else if(e.getMessage().equals("Connection refused: connect")||e.getMessage().equals("Connection refused (Connection refused)")){
+                msgData.setMsg(" 连接服务器被拒绝，请检查");
             }else{
-                msgData.setMsg(e.getMessage());
+                msgData.setMsg("没处理的异常："+e.getMessage());
             }
             return msgData;
         } catch (IOException e) {
@@ -152,7 +165,6 @@ public class CounDataTypeController {
     }
 
     @PostMapping("/update")
-//    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss")
     public RetMsgData<CounDataType> updateCounDataType(@RequestBody CounDataType counDataType){
         RetMsgData<CounDataType> msgData = new RetMsgData<>();
         try {

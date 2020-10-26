@@ -61,12 +61,12 @@ public class CounCounterchargeController {
             iCounCounterchargeService.openConnection(deviceId);
             return msgData;
         }catch (ConnectException e) {
-            if(e.getMessage().equals("Connection timed out: connect")){
+            if(e.getMessage().equals("Connection timed out: connect")||e.getMessage().equals("Connection timed out (Connection timed out)")){
                 msgData.setMsg(" 连接服务器超时，请检查");
-            }else if(e.getMessage().equals("Connection refused: connect")){
-                msgData.setMsg(" 服务器连接不上，请检查");
+            }else if(e.getMessage().equals("Connection refused: connect")||e.getMessage().equals("Connection refused (Connection refused)")){
+                msgData.setMsg(" 连接服务器被拒绝，请检查");
             }else{
-                msgData.setMsg(e.getMessage());
+                msgData.setMsg("没处理的异常："+e.getMessage());
             }
             return msgData;
         } catch (Exception e) {

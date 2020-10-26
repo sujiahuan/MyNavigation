@@ -100,7 +100,7 @@ public class CustomWebSocketHandler extends TextWebSocketHandler implements WebS
     /**
      * 发送信息给指定用户
      *
-     * @param mchNo
+     * @param mchNo 设备id
      * @param message
      * @return
      * @Title: sendMessageToUser

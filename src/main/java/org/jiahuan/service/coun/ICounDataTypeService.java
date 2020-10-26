@@ -1,16 +1,11 @@
 package org.jiahuan.service.coun;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.jiahuan.entity.coun.CounDataType;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.jiahuan.entity.coun.CounDevice;
-import org.jiahuan.entity.coun.CounDivisor;
 
 import java.io.IOException;
-import java.text.ParseException;
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 /**
  * <p>
@@ -47,6 +42,9 @@ public interface ICounDataTypeService extends IService<CounDataType> {
      * @throws IOException
      */
     void sendSupplyAgain(Integer deviceId,String agreement,Integer dataType) throws IOException;
+
+
+    int getSupplyAgainCount(Integer deviceId, Integer dataType);
 
     /**
      * 发送3020数据包

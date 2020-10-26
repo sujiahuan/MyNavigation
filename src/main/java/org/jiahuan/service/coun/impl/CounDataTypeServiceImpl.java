@@ -104,19 +104,24 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
         CounDataType counDataType = iCounDataTypeService.getCounDataTypeByDeviceId(deviceId, dataType);
         CounDevice counDevice = iCounDeviceService.getById(deviceId);
         int field = 13;
+        String dataTypeStr="";
 
         switch (dataType) {
             case 1:
                 field = Calendar.SECOND;
+                dataTypeStr="实时";
                 break;
             case 2:
                 field = Calendar.MINUTE;
+                dataTypeStr="分钟";
                 break;
             case 3:
                 field = Calendar.HOUR;
+                dataTypeStr="小时";
                 break;
             case 4:
                 field = Calendar.DAY_OF_MONTH;
+                dataTypeStr="日";
                 break;
         }
         //处理时间
@@ -124,7 +129,8 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
         Calendar endCalendar = Calendar.getInstance();
         startCalendar.setTime(counDataType.getStartTime());
         endCalendar.setTime(counDataType.getEndTime());
-//        endCalendar.add(field, counDataType.getDateInterval());
+
+        int count=0;
         //时间遍历
         while (startCalendar.getTimeInMillis() - endCalendar.getTimeInMillis() <= 0) {
             //获取补发数据包
@@ -133,7 +139,51 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
             iCounDataTypeService.sendMessage(counDevice, dataPackage);
             //添加时间
             startCalendar.add(field, counDataType.getDateInterval());
+            count++;
         }
+        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("本次共补发"+dataTypeStr+"数据："+count+" 条"));
+    }
+
+    @Override
+    public int getSupplyAgainCount(Integer deviceId, Integer dataType) {
+        CounDataType counDataType = iCounDataTypeService.getCounDataTypeByDeviceId(deviceId, dataType);
+        //处理时间
+        Calendar startCalendar = Calendar.getInstance();
+        Calendar endCalendar = Calendar.getInstance();
+        startCalendar.setTime(counDataType.getStartTime());
+        endCalendar.setTime(counDataType.getEndTime());
+
+        int field = 13;
+        String dataTypeStr="";
+
+        switch (dataType) {
+            case 1:
+                field = Calendar.SECOND;
+                dataTypeStr="实时";
+                break;
+            case 2:
+                field = Calendar.MINUTE;
+                dataTypeStr="分钟";
+                break;
+            case 3:
+                field = Calendar.HOUR;
+                dataTypeStr="小时";
+                break;
+            case 4:
+                field = Calendar.DAY_OF_MONTH;
+                dataTypeStr="日";
+                break;
+        }
+
+        int count=0;
+        //时间遍历
+        while (startCalendar.getTimeInMillis() - endCalendar.getTimeInMillis() <= 0) {
+            //添加时间
+            startCalendar.add(field, counDataType.getDateInterval());
+            count++;
+        }
+
+        return count;
     }
 
 
