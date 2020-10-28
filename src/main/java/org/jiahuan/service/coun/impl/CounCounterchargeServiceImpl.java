@@ -86,7 +86,7 @@ public class CounCounterchargeServiceImpl extends ServiceImpl<CounCounterchargeM
                 @Override
                 public void run() {
                     try {
-                        while (connetionStatus.contains(counDevice.getMn())) {
+                        while (true) {
                             //获取一条实时数据包
                             String dataPackage = iCounDataTypeService.getRealTimeDataPackage(counDevice, counDevice.getAgreement(), 2, false);
                             //发送
