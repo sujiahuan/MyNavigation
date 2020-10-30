@@ -83,7 +83,7 @@ public class CounCounterchargeController {
         try {
             iCounCounterchargeService.closeConnection(deviceId);
             return msgData;
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             msgData.setMsg(e.getMessage());
             return msgData;

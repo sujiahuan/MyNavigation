@@ -38,6 +38,12 @@ public class CounDeviceServiceImpl extends ServiceImpl<CounDeviceMapper, CounDev
         iCounCounterchargeService.addInitByDeviceId(counDvice.getId());
     }
 
+    @Override
+    public void updateCounDevice(CounDevice counDevice) {
+        iCounCounterchargeService.closeConnection(counDevice.getId());
+        iCounDeviceService.updateById(counDevice);
+    }
+
     @Transactional
     @Override
     public void deleteInitById(Integer deviceId) {

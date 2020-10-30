@@ -142,7 +142,7 @@ public class CounDeviceController {
         counDevice.setGmtModified(LocalDateTime.now());
 
         try{
-            iCounDeviceService.updateById(counDevice);
+            iCounDeviceService.updateCounDevice(counDevice);
             return msgData;
         }catch (Exception e){
             msgData.setMsg(e.getMessage());

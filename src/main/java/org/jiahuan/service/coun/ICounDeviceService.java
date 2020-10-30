@@ -16,5 +16,7 @@ public interface ICounDeviceService extends IService<CounDevice> {
 
     void addInitCounDevice(CounDevice counDvice);
 
+    void updateCounDevice(CounDevice counDevice);
+
     void deleteInitById(Integer deviceId);
 }
