@@ -116,9 +116,8 @@ public class CustomWebSocketHandler extends TextWebSocketHandler implements WebS
         try {
             while (webSocketSessionIterator.hasNext()) {
                 WebSocketSession webSocketSession = webSocketSessionIterator.next();
-                logger.info("sendMessage：{} ,msg：{}", webSocketSession, message.getPayload());
                 if (!webSocketSession.isOpen()) {
-                    logger.info("客户端:{},已断开连接，发送消息失败", mchNo);
+                    logger.warn("客户端:{},已断开连接，发送消息失败", mchNo);
                     webSocketSessionIterator.remove();
                     continue;
                 }
