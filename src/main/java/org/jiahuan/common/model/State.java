@@ -4,7 +4,9 @@ public enum State {
 
 	RET_STATE_SUCCESS(0, "请求成功"),
 
-	RET_STATE_SYSTEM_ERROR(1, "系统异常");
+	RET_STATE_SYSTEM_ERROR(1, "系统异常"),
+
+	RET_STATE_UNKNOWN(2, "已知异常");
 
 	private int state;
 	private String msg;

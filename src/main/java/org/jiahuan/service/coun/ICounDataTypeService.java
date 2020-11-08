@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import org.jiahuan.entity.coun.CounDevice;
 
 import java.io.IOException;
+import java.util.Calendar;
 import java.util.List;
 
 /**
@@ -42,6 +43,13 @@ public interface ICounDataTypeService extends IService<CounDataType> {
      * @throws IOException
      */
     void sendSupplyAgain(Integer deviceId,String agreement,Integer dataType) throws IOException;
+
+    /**
+     * 终止补发
+     * @param deviceId
+     * @throws IOException
+     */
+    void cancelSupplyAgain(Integer deviceId) throws IOException ;
 
 
     int getSupplyAgainCount(Integer deviceId, Integer dataType);

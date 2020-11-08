@@ -4,6 +4,8 @@ import org.jiahuan.entity.coun.CounDataType;
 import org.jiahuan.entity.coun.CounDevice;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import java.io.IOException;
+
 /**
  * <p>
  *  服务类
@@ -14,9 +16,9 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface ICounDeviceService extends IService<CounDevice> {
 
-    void addInitCounDevice(CounDevice counDvice);
+    void addInitCounDevice(CounDevice counDvice) throws IOException;
 
-    void updateCounDevice(CounDevice counDevice);
+    void updateCounDevice(CounDevice counDevice) throws IOException;
 
     void deleteInitById(Integer deviceId);
 }

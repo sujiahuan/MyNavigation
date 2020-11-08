@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.net.ConnectException;
+import java.net.SocketException;
 
 /**
  * <p>
@@ -66,6 +67,18 @@ public class CounCounterchargeController {
             }else if(e.getMessage().equals("Connection refused: connect")||e.getMessage().equals("Connection refused (Connection refused)")){
                 msgData.setMsg(" 连接服务器被拒绝，请检查");
             }else{
+                msgData.setMsg("没处理的异常："+e.getMessage());
+            }
+            return msgData;
+        }catch (SocketException e) {
+            if(e.getMessage().equals("Software caused connection abort: socket write error")){
+                msgData.setMsg("连接已过时，请重发");
+            }else if(e.getMessage().equals("Connection reset by peer: send")){
+                msgData.setMsg("连接已过时，请重发");
+            }else if(e.getMessage().equals("Software caused connection abort: send")){
+                msgData.setMsg("连接已过时，请重发");
+            }else{
+                e.printStackTrace();
                 msgData.setMsg("没处理的异常："+e.getMessage());
             }
             return msgData;

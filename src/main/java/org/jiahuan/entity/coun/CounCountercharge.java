@@ -40,17 +40,17 @@ public class CounCountercharge extends Model<CounCountercharge> {
         /**
      * 联接状态
      */
-         private Integer connetionStatus;
+        @TableField(exist = false)
+        private boolean connetionStatus;
 
     public CounCountercharge() {
     }
 
-    public CounCountercharge(Integer deviceId, String verifyCn, Integer responseParameter, Integer responseStatus, Integer connetionStatus) {
+    public CounCountercharge(Integer deviceId, String verifyCn, Integer responseParameter, Integer responseStatus) {
         this.deviceId = deviceId;
         this.verifyCn = verifyCn;
         this.responseParameter = responseParameter;
         this.responseStatus = responseStatus;
-        this.connetionStatus = connetionStatus;
     }
 
     public Integer getId() {
@@ -93,11 +93,11 @@ public class CounCountercharge extends Model<CounCountercharge> {
         this.responseStatus = responseStatus;
     }
 
-    public Integer getConnetionStatus() {
+    public boolean getConnetionStatus() {
         return connetionStatus;
     }
 
-    public void setConnetionStatus(Integer connetionStatus) {
+    public void setConnetionStatus(boolean connetionStatus) {
         this.connetionStatus = connetionStatus;
     }
 

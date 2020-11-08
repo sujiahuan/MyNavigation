@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
+
 /**
  * <p>
  *  服务实现类
@@ -27,10 +29,12 @@ public class CounDeviceServiceImpl extends ServiceImpl<CounDeviceMapper, CounDev
     private ICounDataTypeService iCounDataTypeService;
     @Autowired
     private ICounCounterchargeService iCounCounterchargeService;
+    @Autowired
+    private IConnectionObj iConnectionObj;
 
     @Transactional
     @Override
-    public void addInitCounDevice(CounDevice counDvice) {
+    public void addInitCounDevice(CounDevice counDvice) throws IOException {
         iCounDeviceService.save(counDvice);
         //初始化数据类型
         iCounDataTypeService.addInitByDeviceId(counDvice.getId());
@@ -39,9 +43,10 @@ public class CounDeviceServiceImpl extends ServiceImpl<CounDeviceMapper, CounDev
     }
 
     @Override
-    public void updateCounDevice(CounDevice counDevice) {
+    public void updateCounDevice(CounDevice counDevice) throws IOException {
         iCounCounterchargeService.closeConnection(counDevice.getId());
         iCounDeviceService.updateById(counDevice);
+        iConnectionObj.cleanConnetion(counDevice.getId(),true);
     }
 
     @Transactional

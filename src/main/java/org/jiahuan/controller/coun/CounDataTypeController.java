@@ -11,12 +11,14 @@ import org.jiahuan.entity.coun.CounDevice;
 import org.jiahuan.service.coun.ICounDataTypeService;
 import org.jiahuan.service.coun.ICounDeviceService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.stereotype.Controller;
 
 import java.io.IOException;
 import java.net.ConnectException;
+import java.net.SocketException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -46,14 +48,27 @@ public class CounDataTypeController {
             return msgData;
         }catch (ConnectException e) {
             if(e.getMessage().equals("Connection timed out: connect")||e.getMessage().equals("Connection timed out (Connection timed out)")){
-                msgData.setMsg(" 连接服务器超时，请检查");
+                msgData.setMsg(" 连接服务器超时，请检查服务器能否正常连接");
             }else if(e.getMessage().equals("Connection refused: connect")||e.getMessage().equals("Connection refused (Connection refused)")){
-                msgData.setMsg(" 连接服务器被拒绝，请检查");
+                msgData.setMsg(" 连接服务器被拒绝，请检查服务器能否正常连接");
             }else{
+                e.printStackTrace();
                 msgData.setMsg("没处理的异常："+e.getMessage());
             }
             return msgData;
-        } catch (Exception e) {
+        }catch (SocketException e) {
+            if(e.getMessage().equals("Software caused connection abort: socket write error")){
+                msgData.setMsg("连接已过时，请重发");
+            }else if(e.getMessage().equals("Connection reset by peer: send")){
+                msgData.setMsg("连接已过时，请重发");
+            }else if(e.getMessage().equals("Software caused connection abort: send")){
+                msgData.setMsg("连接已过时，请重发");
+            }else{
+                e.printStackTrace();
+                msgData.setMsg("没处理的异常："+e.getMessage());
+            }
+            return msgData;
+        }catch (Exception e) {
             e.printStackTrace();
             msgData.setMsg(e.getMessage());
             return msgData;
@@ -109,6 +124,18 @@ public class CounDataTypeController {
                 msgData.setMsg("没处理的异常："+e.getMessage());
             }
             return msgData;
+        }catch (SocketException e) {
+            if(e.getMessage().equals("Software caused connection abort: socket write error")){
+                msgData.setMsg("连接已过时，请重发");
+            }else if(e.getMessage().equals("Connection reset by peer: send")){
+                msgData.setMsg("连接已过时，请重发");
+            }else if(e.getMessage().equals("Software caused connection abort: send")){
+                msgData.setMsg("连接已过时，请重发");
+            }else{
+                e.printStackTrace();
+                msgData.setMsg("没处理的异常："+e.getMessage());
+            }
+            return msgData;
         } catch (Exception e) {
             msgData.setMsg(e.getMessage());
             return msgData;
@@ -134,6 +161,39 @@ public class CounDataTypeController {
         try {
             String agreement = iCounDeviceService.getById(deviceId).getAgreement();
             iCounDataTypeService.sendSupplyAgain(deviceId,agreement,dataType);
+            return msgData;
+        } catch (ConnectException e) {
+            if(e.getMessage().equals("Connection timed out: connect")||e.getMessage().equals("Connection timed out (Connection timed out)")){
+                msgData.setMsg(" 连接服务器超时，请检查");
+            }else if(e.getMessage().equals("Connection refused: connect")||e.getMessage().equals("Connection refused (Connection refused)")){
+                msgData.setMsg(" 连接服务器被拒绝，请检查");
+            }else{
+                msgData.setMsg("没处理的异常："+e.getMessage());
+            }
+            return msgData;
+        }catch (SocketException e) {
+            if(e.getMessage().equals("Software caused connection abort: socket write error")){
+                msgData.setMsg("连接已过时，请重发");
+            }else if(e.getMessage().equals("Connection reset by peer: send")){
+                msgData.setMsg("连接已过时，请重发");
+            }else if(e.getMessage().equals("Software caused connection abort: send")){
+                msgData.setMsg("连接已过时，请重发");
+            }else{
+                e.printStackTrace();
+                msgData.setMsg("没处理的异常："+e.getMessage());
+            }
+            return msgData;
+        }catch (IOException e) {
+            msgData.setMsg(e.getMessage());
+            return msgData;
+        }
+    }
+
+    @GetMapping("/cancelSupplyAgain")
+    public RetMsgData<CounDataType> cancelSupplyAgain(@RequestParam Integer deviceId){
+        RetMsgData<CounDataType> msgData = new RetMsgData<>();
+        try {
+            iCounDataTypeService.cancelSupplyAgain(deviceId);
             return msgData;
         } catch (ConnectException e) {
             if(e.getMessage().equals("Connection timed out: connect")||e.getMessage().equals("Connection timed out (Connection timed out)")){

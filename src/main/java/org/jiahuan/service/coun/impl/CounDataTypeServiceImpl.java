@@ -15,12 +15,15 @@ import org.jiahuan.mapper.coun.CounDataTypeMapper;
 import org.jiahuan.service.coun.*;
 import org.jiahuan.service.sys.ISysDivisorService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.TextMessage;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.*;
 
 /**
@@ -35,11 +38,14 @@ import java.util.*;
 @Slf4j
 public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, CounDataType> implements ICounDataTypeService {
 
+    private Map<Integer, Boolean> supplyAgainStatus = new HashMap<>();
+
     @Autowired
     private ICounDeviceService iCounDeviceService;
     @Autowired
     private ICounDivisorService iCounDivisorService;
     @Autowired
+    @Lazy
     private ICounDataTypeService iCounDataTypeService;
     @Autowired
     private ICounParameterService iCounParameterService;
@@ -49,6 +55,10 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
     private CustomWebSocketConfig customWebSocketConfig;
     @Autowired
     private ISysDivisorService iSysDivisorService;
+    @Autowired
+    private IConnectionObj iConnectionObj;
+    @Autowired
+    private ICounCounterchargeService iCounCounterchargeService;
 
     @Override
     public CounDataType getCounDataTypeByDeviceId(Integer deviceId, Integer dataType) {
@@ -93,7 +103,6 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
         CounDevice counDevice = iCounDeviceService.getById(deviceId);
         //获取实时数据包
         String message = getRealTimeDataPackage(counDevice, agreement, dataType, false);
-        System.out.println("发送的数据类型："+dataType+"；数据报文："+message);
         iCounDataTypeService.sendMessage(counDevice, message);
     }
 
@@ -104,24 +113,24 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
         CounDataType counDataType = iCounDataTypeService.getCounDataTypeByDeviceId(deviceId, dataType);
         CounDevice counDevice = iCounDeviceService.getById(deviceId);
         int field = 13;
-        String dataTypeStr="";
+        String dataTypeStr = "";
 
         switch (dataType) {
             case 1:
                 field = Calendar.SECOND;
-                dataTypeStr="实时";
+                dataTypeStr = "实时";
                 break;
             case 2:
                 field = Calendar.MINUTE;
-                dataTypeStr="分钟";
+                dataTypeStr = "分钟";
                 break;
             case 3:
                 field = Calendar.HOUR;
-                dataTypeStr="小时";
+                dataTypeStr = "小时";
                 break;
             case 4:
                 field = Calendar.DAY_OF_MONTH;
-                dataTypeStr="日";
+                dataTypeStr = "日";
                 break;
         }
         //处理时间
@@ -130,9 +139,13 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
         startCalendar.setTime(counDataType.getStartTime());
         endCalendar.setTime(counDataType.getEndTime());
 
-        int count=0;
+        if (!supplyAgainStatus.containsKey(deviceId)) {
+            supplyAgainStatus.put(deviceId, true);
+        }
+
+        int count = 0;
         //时间遍历
-        while (startCalendar.getTimeInMillis() - endCalendar.getTimeInMillis() <= 0) {
+        while (startCalendar.getTimeInMillis() - endCalendar.getTimeInMillis() <= 0 && supplyAgainStatus.get(deviceId)) {
             //获取补发数据包
             String dataPackage = getSupplyAgainDataPackage(counDevice, startCalendar.getTime(), agreement, dataType, false);
             //发送消息
@@ -141,7 +154,20 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
             startCalendar.add(field, counDataType.getDateInterval());
             count++;
         }
-        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("本次共补发"+dataTypeStr+"数据："+count+" 条"));
+
+        if (supplyAgainStatus.get(deviceId)) {
+            customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("发送完成，本次共补发" + dataTypeStr + "数据：" + count + " 条"));
+        } else {
+            supplyAgainStatus.put(deviceId, true);
+            customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("终止成功，本次共补发" + dataTypeStr + "数据：" + count + " 条"));
+        }
+
+    }
+
+
+    @Override
+    public void cancelSupplyAgain(Integer deviceId) throws IOException {
+        supplyAgainStatus.put(deviceId, false);
     }
 
     @Override
@@ -154,35 +180,34 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
         endCalendar.setTime(counDataType.getEndTime());
 
         int field = 13;
-        String dataTypeStr="";
+        String dataTypeStr = "";
 
         switch (dataType) {
             case 1:
                 field = Calendar.SECOND;
-                dataTypeStr="实时";
+                dataTypeStr = "实时";
                 break;
             case 2:
                 field = Calendar.MINUTE;
-                dataTypeStr="分钟";
+                dataTypeStr = "分钟";
                 break;
             case 3:
                 field = Calendar.HOUR;
-                dataTypeStr="小时";
+                dataTypeStr = "小时";
                 break;
             case 4:
                 field = Calendar.DAY_OF_MONTH;
-                dataTypeStr="日";
+                dataTypeStr = "日";
                 break;
         }
 
-        int count=0;
+        int count = 0;
         //时间遍历
         while (startCalendar.getTimeInMillis() - endCalendar.getTimeInMillis() <= 0) {
             //添加时间
             startCalendar.add(field, counDataType.getDateInterval());
             count++;
         }
-
         return count;
     }
 
@@ -199,14 +224,20 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
 
     @Override
     public void sendMessage(CounDevice counDevice, String message) throws IOException {
-
-        Socket socket = new Socket(counDevice.getIp(), counDevice.getPort());
-        OutputStream outputStream = socket.getOutputStream();
-        message += "\r\n";
-        outputStream.write(message.getBytes());
-        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage(message));
-        outputStream.close();
-        socket.close();
+        OutputStream outputStream = iConnectionObj.getOutputStream(counDevice);
+        if(message.indexOf("\r\n")==-1){
+            message +="\r\n";
+        }
+        try{
+            outputStream.write(message.getBytes());
+        }catch (SocketException e) {
+            if(e.getMessage().equals("Software caused connection abort: socket write error")){
+               iConnectionObj.cleanConnetion(counDevice.getId(),true);
+               iCounCounterchargeService.closeConnection(counDevice.getId());
+            }
+            throw e;
+        }
+        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage(message+"\r\n"));
     }
 
     /**
@@ -248,7 +279,7 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
             List<CounDivisor> counDivisors = iCounDivisorService.getCounDivisorByDeviceId(deviceId);
             for (CounDivisor counDivisor : counDivisors) {
                 HashMap<String, String> property = new HashMap<>();
-                property.put("Avg", RandomUtil.getRandomString(4,counDivisor.getAvgMin(),counDivisor.getAvgMax()));
+                property.put("Avg", RandomUtil.getRandomString(4, counDivisor.getAvgMin(), counDivisor.getAvgMax()));
                 property.put("Max", String.valueOf(counDivisor.getMax()));
                 property.put("Min", String.valueOf(counDivisor.getMin()));
                 property.put("Cou", String.valueOf(counDivisor.getCou()));
@@ -343,36 +374,36 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
         String polId;
         switch (dataType) {
             case 1:
-                link = "##0235QN=" + TimeUtil.getFormatCurrentTime("millisecond",0)  + ";ST=" + counDevice.getMonitoringType() + ";CN=2011;PW=123456;MN="
+                link = "##0235QN=" + TimeUtil.getFormatCurrentTime("millisecond", 0) + ";ST=" + counDevice.getMonitoringType() + ";CN=2011;PW=123456;MN="
                         + counDevice.getMn() + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatTime(date, "second") + ";"
                         + getParameterPackage(divisorParameter, "realTime", counDataType.getZs()) + "&&B381";
                 break;
             case 2:
-                link = "##0178QN=" + TimeUtil.getFormatCurrentTime("millisecond",0) + ";ST=" + counDevice.getMonitoringType() + ";CN=2051;PW=123456;MN="
+                link = "##0178QN=" + TimeUtil.getFormatCurrentTime("millisecond", 0) + ";ST=" + counDevice.getMonitoringType() + ";CN=2051;PW=123456;MN="
                         + counDevice.getMn() + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatTime(date, "minute") + ";"
                         + getParameterPackage(divisorParameter, "history", counDataType.getZs()) + "&&B381";
                 break;
             case 3:
-                link = "##0160QN=" + TimeUtil.getFormatCurrentTime("millisecond",0) + ";ST=" + counDevice.getMonitoringType() + ";CN=2061;PW=123456;MN="
+                link = "##0160QN=" + TimeUtil.getFormatCurrentTime("millisecond", 0) + ";ST=" + counDevice.getMonitoringType() + ";CN=2061;PW=123456;MN="
                         + counDevice.getMn() + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatTime(date, "hour") + ";" + getParameterPackage(divisorParameter, "history", counDataType.getZs())
                         + "&&B381";
                 break;
             case 4:
-                link = "##0171QN=" + TimeUtil.getFormatCurrentTime("millisecond",0) + ";ST=" + counDevice.getMonitoringType() + ";CN=2031;PW=123456;MN="
+                link = "##0171QN=" + TimeUtil.getFormatCurrentTime("millisecond", 0) + ";ST=" + counDevice.getMonitoringType() + ";CN=2031;PW=123456;MN="
                         + counDevice.getMn() + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatTime(date, "day") + ";" + getParameterPackage(divisorParameter, "history", counDataType.getZs())
                         + "&&B381";
                 break;
             case 5:
                 //获取编码，只考虑一个的情况
                 polId = divisorParameter.keySet().iterator().next();
-                link = "##0171QN=" + TimeUtil.getFormatCurrentTime("millisecond",0) + ";ST=" + counDevice.getMonitoringType() + ";CN=3020;PW=123456;MN="
+                link = "##0171QN=" + TimeUtil.getFormatCurrentTime("millisecond", 0) + ";ST=" + counDevice.getMonitoringType() + ";CN=3020;PW=123456;MN="
                         + counDevice.getMn() + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatTime(date, "second") + ";PolId=" + polId + ";"
                         + getParameterPackage(divisorParameter, "parameter", counDataType.getZs()) + "&&B381";
                 break;
             case 6:
                 //获取编码，只考虑一个的情况
                 polId = divisorParameter.keySet().iterator().next();
-                link = "##0171QN=" + TimeUtil.getFormatCurrentTime("millisecond",0) + ";ST=" + counDevice.getMonitoringType() + ";CN=3020;PW=123456;MN="
+                link = "##0171QN=" + TimeUtil.getFormatCurrentTime("millisecond", 0) + ";ST=" + counDevice.getMonitoringType() + ";CN=3020;PW=123456;MN="
                         + counDevice.getMn() + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatTime(date, "second") + ";PolId=" + polId + ";"
                         + getParameterPackage(divisorParameter, "status", counDataType.getZs()) + "&&B381";
                 break;

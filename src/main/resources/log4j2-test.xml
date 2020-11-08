@@ -14,7 +14,7 @@
         <!--文件会打印出所有信息，这个log每次运行程序会自动清空，由append属性决定，这个也挺有用的，适合临时测试用 -->
         <File name="log" fileName="log/test.log" append="false">
             <PatternLayout
-                    pattern="%d{HH:mm:ss.SSS} %-5level %class{36} %L %M - %msg%xEx%n"/>
+                    pattern="%d{HH:mm:ss.SSS} %-5level %class{36} %L %M %t - %msg%xEx%n"/>
         </File>
         <!-- 这个会打印出所有的info及以下级别的信息，每次大小超过size，则这size大小的日志会自动存入按年份-月份建立的文件夹下面并进行压缩，作为存档 -->
         <RollingFile name="RollingFileInfo"
@@ -68,7 +68,7 @@
 
         <root level="DEBUG">
             <appender-ref ref="Console" />
-<!--            <appender-ref ref="RollingFileWarn" level="ERROR"/>-->
+<!--            <appender-ref ref="log" />-->
             <!-- <appender-ref ref="RollingFileInfo" />
             <appender-ref ref="RollingFileWarn" />
             <appender-ref ref="RollingFileError" /> -->
