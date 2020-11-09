@@ -82,7 +82,7 @@ public class ConnectionObjImpl implements IConnectionObj {
         Socket socket = socketPool.get(counDevice.getId());
         try {
             socket.sendUrgentData(0xFF);
-        } catch (SocketException e) {
+        } catch (Exception e) {
             cleanConnetion(counDevice.getId(),true);
             throw e;
         }

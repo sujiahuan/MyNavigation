@@ -161,7 +161,6 @@ public class CustomWebSocketHandler extends TextWebSocketHandler implements WebS
                 allSendSuccess = false;
             }
         }
-
         return allSendSuccess;
     }
 
