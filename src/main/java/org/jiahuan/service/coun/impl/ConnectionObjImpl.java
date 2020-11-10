@@ -1,5 +1,6 @@
 package org.jiahuan.service.coun.impl;
 
+import lombok.extern.slf4j.Slf4j;
 import org.jiahuan.entity.coun.CounDevice;
 import org.jiahuan.service.coun.IConnectionObj;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,12 +15,17 @@ import java.util.Map;
 import java.util.Set;
 
 @Service
+@Slf4j
 public class ConnectionObjImpl implements IConnectionObj {
 
     private Map<Integer, Socket> socketPool = new HashMap<>();
     private Map<Integer, BufferedReader> buffReaderPoll = new HashMap<>();
     private Map<Integer, OutputStream> outputPoll = new HashMap<>();
     private static Set<Integer> connetionStatusPoll = new HashSet<>();
+
+    public Map<Integer, Socket> getSocketPool() {
+        return socketPool;
+    }
 
     /**
      * 获取socket
@@ -57,7 +63,7 @@ public class ConnectionObjImpl implements IConnectionObj {
         return outputPoll.get(counDevice.getId());
     }
 
-    public Set<Integer> getConnetionStatusPoll(){
+    public Set<Integer> getConnetionStatusPoll() {
         return connetionStatusPoll;
     }
 
@@ -83,7 +89,7 @@ public class ConnectionObjImpl implements IConnectionObj {
         try {
             socket.sendUrgentData(0xFF);
         } catch (Exception e) {
-            cleanConnetion(counDevice.getId(),true);
+            cleanConnetion(counDevice.getId(), true);
             throw e;
         }
     }
@@ -92,10 +98,10 @@ public class ConnectionObjImpl implements IConnectionObj {
      * 关闭连接
      *
      * @param deviceId 设备对象
-     * @param isAll 是否清除所有，否只关闭远程反控
+     * @param isAll    是否清除所有，否只关闭远程反控
      * @throws IOException
      */
-    public void cleanConnetion(Integer deviceId, boolean isAll) throws IOException {
+    public void cleanConnetion(Integer deviceId, boolean isAll) {
         if (connetionStatusPoll.contains(deviceId)) {
             connetionStatusPoll.remove(deviceId);
         }
@@ -103,18 +109,21 @@ public class ConnectionObjImpl implements IConnectionObj {
         if (!isAll) {
             return;
         }
-
-        if (buffReaderPoll.containsKey(deviceId)) {
-            buffReaderPoll.get(deviceId).close();
-            buffReaderPoll.remove(deviceId);
-        }
-        if (outputPoll.containsKey(deviceId)) {
-            outputPoll.get(deviceId).close();
-            outputPoll.remove(deviceId);
-        }
-        if (socketPool.containsKey(deviceId)) {
-            socketPool.get(deviceId).close();
-            socketPool.remove(deviceId);
+        try {
+            if (buffReaderPoll.containsKey(deviceId)) {
+                buffReaderPoll.get(deviceId).close();
+                buffReaderPoll.remove(deviceId);
+            }
+            if (outputPoll.containsKey(deviceId)) {
+                outputPoll.get(deviceId).close();
+                outputPoll.remove(deviceId);
+            }
+            if (socketPool.containsKey(deviceId)) {
+                socketPool.get(deviceId).close();
+                socketPool.remove(deviceId);
+            }
+        } catch (IOException e) {
+           log.error("关闭失败：{}", e.getMessage());
         }
     }
 

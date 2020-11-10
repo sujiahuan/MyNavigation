@@ -6,9 +6,12 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.Map;
 import java.util.Set;
 
 public interface IConnectionObj {
+
+    Map<Integer, Socket> getSocketPool();
 
     Socket getSocket(CounDevice counDevice) throws IOException;
 
@@ -18,5 +21,5 @@ public interface IConnectionObj {
 
     Set<Integer> getConnetionStatusPoll();
 
-    void cleanConnetion(Integer deviceId, boolean isAll) throws IOException;
+    void cleanConnetion(Integer deviceId, boolean isAll);
 }

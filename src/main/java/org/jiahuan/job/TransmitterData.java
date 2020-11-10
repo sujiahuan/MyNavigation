@@ -6,6 +6,7 @@ import org.jiahuan.common.util.TimeUtil;
 import org.jiahuan.entity.coun.CounCountercharge;
 import org.jiahuan.entity.coun.CounDataType;
 import org.jiahuan.entity.coun.CounDevice;
+import org.jiahuan.service.coun.IConnectionObj;
 import org.jiahuan.service.coun.ICounCounterchargeService;
 import org.jiahuan.service.coun.ICounDataTypeService;
 import org.jiahuan.service.coun.ICounDeviceService;
@@ -15,8 +16,12 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.net.ConnectException;
+import java.net.Socket;
 import java.net.SocketException;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Component
 @Slf4j
@@ -27,7 +32,7 @@ public class TransmitterData {
     @Autowired
     private ICounDeviceService iCounDeviceService;
     @Autowired
-    private ICounCounterchargeService iCounCounterchargeService;
+    private IConnectionObj iConnectionObj;
 
     @Scheduled(cron="0,30 * * * * ?")
     public void send2011Data() {
@@ -165,6 +170,25 @@ public class TransmitterData {
                 }
             } catch (Exception e) {
                 log.error(e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * 定时检查socket连接池里面的socket是否还活着
+     */
+    @Scheduled(cron="0 0/1 0 * * ? ")
+    public void checkSocketConnection(){
+        Map<Integer, Socket> socketPool = iConnectionObj.getSocketPool();
+        Set<Integer> integers = socketPool.keySet();
+        Iterator<Integer> iterator = integers.iterator();
+        while(iterator.hasNext()){
+            Integer deviceId = iterator.next();
+            try {
+                socketPool.get(deviceId).sendUrgentData(0xFF);
+            } catch (Exception e) {
+                iConnectionObj.cleanConnetion(deviceId,true);
+                log.warn("{}设备连接已过期，原因是：{}",deviceId,e.getMessage());
             }
         }
     }
