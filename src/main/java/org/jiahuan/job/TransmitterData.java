@@ -177,7 +177,7 @@ public class TransmitterData {
     /**
      * 定时检查socket连接池里面的socket是否还活着
      */
-    @Scheduled(cron="0 0/1 0 * * ? ")
+    @Scheduled(cron="0 0/10 * * * ?")
     public void checkSocketConnection(){
         Map<Integer, Socket> socketPool = iConnectionObj.getSocketPool();
         Set<Integer> integers = socketPool.keySet();
