@@ -20,6 +20,8 @@ public class CounCountercharge extends Model<CounCountercharge> {
     private Integer id;
 
     private Integer deviceId;
+    
+    private Integer verifyPlatformCommand;
 
         /**
      * 校验CN号
@@ -46,8 +48,9 @@ public class CounCountercharge extends Model<CounCountercharge> {
     public CounCountercharge() {
     }
 
-    public CounCountercharge(Integer deviceId, String verifyCn, Integer responseParameter, Integer responseStatus) {
+    public CounCountercharge(Integer deviceId, Integer verifyPlatformCommand, String verifyCn, Integer responseParameter, Integer responseStatus) {
         this.deviceId = deviceId;
+        this.verifyPlatformCommand = verifyPlatformCommand;
         this.verifyCn = verifyCn;
         this.responseParameter = responseParameter;
         this.responseStatus = responseStatus;
@@ -67,6 +70,14 @@ public class CounCountercharge extends Model<CounCountercharge> {
 
     public void setDeviceId(Integer deviceId) {
         this.deviceId = deviceId;
+    }
+
+    public Integer getVerifyPlatformCommand() {
+        return verifyPlatformCommand;
+    }
+
+    public void setVerifyPlatformCommand(Integer verifyPlatformCommand) {
+        this.verifyPlatformCommand = verifyPlatformCommand;
     }
 
     public String getVerifyCn() {
@@ -109,12 +120,13 @@ public class CounCountercharge extends Model<CounCountercharge> {
     @Override
     public String toString() {
         return "CounCountercharge{" +
-        "id=" + id +
-        ", deviceId=" + deviceId +
-        ", verifyCn=" + verifyCn +
-        ", responseParameter=" + responseParameter +
-        ", responseStatus=" + responseStatus +
-        ", connetionStatus=" + connetionStatus +
-        "}";
+                "id=" + id +
+                ", deviceId=" + deviceId +
+                ", verifyPlatformCommand=" + verifyPlatformCommand +
+                ", verifyCn='" + verifyCn + '\'' +
+                ", responseParameter=" + responseParameter +
+                ", responseStatus=" + responseStatus +
+                ", connetionStatus=" + connetionStatus +
+                '}';
     }
 }
