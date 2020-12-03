@@ -24,7 +24,7 @@ public class CounDeviceServiceImpl extends ServiceImpl<CounDeviceMapper, CounDev
     @Autowired
     private ICounDeviceService iCounDeviceService;
     @Autowired
-    private ICounDivisorService iCounDivisorService;
+    private ICounDivisorParameterService iCounDivisorParameterService;
     @Autowired
     private ICounDataTypeService iCounDataTypeService;
     @Autowired
@@ -52,7 +52,7 @@ public class CounDeviceServiceImpl extends ServiceImpl<CounDeviceMapper, CounDev
     @Transactional
     @Override
     public void deleteInitById(Integer deviceId) {
-        iCounDivisorService.deleteByDeviceId(deviceId);
+        iCounDivisorParameterService.deleteByDeviceId(deviceId);
         iCounDataTypeService.deleteByDeviceId(deviceId);
         iCounCounterchargeService.deleteByDeviceId(deviceId);
         iCounDeviceService.removeById(deviceId);

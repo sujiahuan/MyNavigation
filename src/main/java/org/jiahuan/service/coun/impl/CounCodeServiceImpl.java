@@ -2,11 +2,10 @@ package org.jiahuan.service.coun.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.jiahuan.entity.coun.CounCode;
-import org.jiahuan.entity.coun.CounParameter;
 import org.jiahuan.mapper.coun.CounCodeMapper;
 import org.jiahuan.service.coun.ICounCodeService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import org.jiahuan.service.coun.ICounParameterService;
+import org.jiahuan.service.coun.ICounCodeParameterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +23,7 @@ import java.util.List;
 public class CounCodeServiceImpl extends ServiceImpl<CounCodeMapper, CounCode> implements ICounCodeService {
 
     @Autowired
-    private ICounParameterService iCounParameterService;
+    private ICounCodeParameterService iCounCodeParameterService;
     @Autowired
     private ICounCodeService iCounCodeService;
 
@@ -36,6 +35,14 @@ public class CounCodeServiceImpl extends ServiceImpl<CounCodeMapper, CounCode> i
         return counCode;
     }
 
+    @Override
+    public CounCode getCounCodeByCode(String coode) {
+        QueryWrapper<CounCode> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("code",coode);
+        CounCode counCode = iCounCodeService.getOne(queryWrapper);
+        return counCode;
+    }
+
 
     @Override
     public void deleteCounCodeByDeviceId(Integer deviceId) {
@@ -43,7 +50,7 @@ public class CounCodeServiceImpl extends ServiceImpl<CounCodeMapper, CounCode> i
         queryCodeWrapper.eq("device_id",deviceId);
         List<CounCode> counCodes = iCounCodeService.list(queryCodeWrapper);
         for (CounCode counCode : counCodes) {
-            iCounParameterService.deleteByCodeId(counCode.getId());
+            iCounCodeParameterService.deleteByCodeId(counCode.getId());
         }
         iCounCodeService.remove(queryCodeWrapper);
     }

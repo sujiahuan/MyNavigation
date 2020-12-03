@@ -14,7 +14,7 @@ import java.io.Serializable;
  * @author wj
  * @since 2020-07-26
  */
-public class CounParameter extends Model<CounParameter> {
+public class CounCodeParameter extends Model<CounCodeParameter> {
 
     private static final long serialVersionUID = 1L;
 

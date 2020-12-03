@@ -15,7 +15,7 @@ import java.io.Serializable;
  * @author wj
  * @since 2020-07-26
  */
-public class CounDivisor extends Model<CounDivisor> {
+public class CounDivisorParameter extends Model<CounDivisorParameter> {
 
     private static final long serialVersionUID = 1L;
 

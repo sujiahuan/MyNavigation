@@ -1,6 +1,6 @@
 package org.jiahuan.mapper.coun;
 
-import org.jiahuan.entity.coun.CounDivisor;
+import org.jiahuan.entity.coun.CounCodeParameter;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**
@@ -11,6 +11,6 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  * @author wj
  * @since 2020-07-26
  */
-public interface CounDivisorMapper extends BaseMapper<CounDivisor> {
+public interface CounCodeParameterMapper extends BaseMapper<CounCodeParameter> {
 
 }

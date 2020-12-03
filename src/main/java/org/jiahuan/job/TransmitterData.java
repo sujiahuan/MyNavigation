@@ -42,9 +42,8 @@ public class TransmitterData {
         queryWrapper.eq("data_type",1);
         List<CounDataType> listCountDataType = iCounDataTypeService.list(queryWrapper);
         for (CounDataType counDataType : listCountDataType) {
-            CounDevice counDevice = iCounDeviceService.getById(counDataType.getDeviceId());
             try {
-                iCounDataTypeService.sendRealTime(counDataType.getDeviceId(),counDevice.getAgreement(),1);
+                iCounDataTypeService.sendRealTime(counDataType.getDeviceId(),1);
             }catch (ConnectException e) {
                 if(e.getMessage().equals("Connection timed out: connect")||e.getMessage().equals("Connection timed out (Connection timed out)")){
                     log.warn(" 连接服务器超时，请检查");
@@ -77,9 +76,8 @@ public class TransmitterData {
         queryWrapper.eq("data_type",2);
         List<CounDataType> listCountDataType = iCounDataTypeService.list(queryWrapper);
         for (CounDataType counDataType : listCountDataType) {
-            CounDevice counDevice = iCounDeviceService.getById(counDataType.getDeviceId());
             try {
-                iCounDataTypeService.sendRealTime(counDataType.getDeviceId(),counDevice.getAgreement(),2);
+                iCounDataTypeService.sendRealTime(counDataType.getDeviceId(),2);
             }catch (ConnectException e) {
                 if(e.getMessage().equals("Connection timed out: connect")||e.getMessage().equals("Connection timed out (Connection timed out)")){
                     log.warn(" 连接服务器超时，请检查");
@@ -112,9 +110,8 @@ public class TransmitterData {
         queryWrapper.eq("data_type",3);
         List<CounDataType> listCountDataType = iCounDataTypeService.list(queryWrapper);
         for (CounDataType counDataType : listCountDataType) {
-            CounDevice counDevice = iCounDeviceService.getById(counDataType.getDeviceId());
             try {
-                iCounDataTypeService.sendRealTime(counDataType.getDeviceId(),counDevice.getAgreement(),3);
+                iCounDataTypeService.sendRealTime(counDataType.getDeviceId(),3);
             }catch (ConnectException e) {
                 if(e.getMessage().equals("Connection timed out: connect")||e.getMessage().equals("Connection timed out (Connection timed out)")){
                     log.warn(" 连接服务器超时，请检查");
@@ -147,9 +144,8 @@ public class TransmitterData {
         queryWrapper.eq("data_type",4);
         List<CounDataType> listCountDataType = iCounDataTypeService.list(queryWrapper);
         for (CounDataType counDataType : listCountDataType) {
-            CounDevice counDevice = iCounDeviceService.getById(counDataType.getDeviceId());
             try {
-                iCounDataTypeService.sendRealTime(counDataType.getDeviceId(),counDevice.getAgreement(),4);
+                iCounDataTypeService.sendRealTime(counDataType.getDeviceId(),4);
             }catch (ConnectException e) {
                 if(e.getMessage().equals("Connection timed out: connect")||e.getMessage().equals("Connection timed out (Connection timed out)")){
                     log.warn(" 连接服务器超时，请检查");

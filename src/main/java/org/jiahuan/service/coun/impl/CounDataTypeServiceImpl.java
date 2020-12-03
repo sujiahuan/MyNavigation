@@ -16,7 +16,6 @@ import org.jiahuan.service.coun.*;
 import org.jiahuan.service.sys.ISysDivisorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.TextMessage;
 
@@ -43,12 +42,12 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
     @Autowired
     private ICounDeviceService iCounDeviceService;
     @Autowired
-    private ICounDivisorService iCounDivisorService;
+    private ICounDivisorParameterService iCounDivisorParameterService;
     @Autowired
     @Lazy
     private ICounDataTypeService iCounDataTypeService;
     @Autowired
-    private ICounParameterService iCounParameterService;
+    private ICounCodeParameterService iCounCodeParameterService;
     @Autowired
     private ICounCodeService iCounCodeService;
     @Autowired
@@ -99,16 +98,16 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
 
 
     @Override
-    public void sendRealTime(Integer deviceId, String agreement, Integer dataType) throws IOException {
+    public void sendRealTime(Integer deviceId, Integer dataType) throws IOException {
         CounDevice counDevice = iCounDeviceService.getById(deviceId);
         //获取实时数据包
-        String message = getRealTimeDataPackage(counDevice, agreement, dataType, false);
+        String message = getRealTimeDataPackage(counDevice, dataType, false);
         iCounDataTypeService.sendMessage(counDevice, message);
     }
 
 
     @Override
-    public void sendSupplyAgain(Integer deviceId, String agreement, Integer dataType) throws IOException {
+    public void sendSupplyAgain(Integer deviceId, Integer dataType) throws IOException {
 
         CounDataType counDataType = iCounDataTypeService.getCounDataTypeByDeviceId(deviceId, dataType);
         CounDevice counDevice = iCounDeviceService.getById(deviceId);
@@ -147,7 +146,7 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
         //时间遍历
         while (startCalendar.getTimeInMillis() - endCalendar.getTimeInMillis() <= 0 && supplyAgainStatus.get(deviceId)) {
             //获取补发数据包
-            String dataPackage = getSupplyAgainDataPackage(counDevice, startCalendar.getTime(), agreement, dataType, false);
+            String dataPackage = getSupplyAgainDataPackage(counDevice, startCalendar.getTime(), dataType, false);
             //发送消息
             iCounDataTypeService.sendMessage(counDevice, dataPackage);
             //添加时间
@@ -214,10 +213,10 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
 
     @SneakyThrows
     @Override
-    public void sendParam3020(Integer deviceId, String agreement, Integer dataType) {
+    public void sendParam3020(Integer deviceId, Integer dataType) {
         CounDevice counDevice = iCounDeviceService.getById(deviceId);
         //获取3020数据包
-        String message = getRealTimeDataPackage(counDevice, agreement, dataType, true);
+        String message = getRealTimeDataPackage(counDevice , dataType, true);
         iCounDataTypeService.sendMessage(counDevice, message);
     }
 
@@ -268,27 +267,28 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
     private HashMap<String, Map<String, String>> getDivisorParameterMap(Integer deviceId, boolean is3020) {
         HashMap<String, Map<String, String>> divisorParameter = new HashMap<>();
         if (is3020) {
+//            CounCode counCode = iCounCodeService.getCounCodeByCode(divisors.get(0));
             CounCode counCode = iCounCodeService.getCounCodeByDeviceId(deviceId);
-            List<CounParameter> counParameters = iCounParameterService.getCounParameterByCodeId(counCode.getId());
+            List<CounCodeParameter> counCodeParameters = iCounCodeParameterService.getCounParameterByCodeId(counCode.getId());
             HashMap<String, String> property = new HashMap<>();
-            for (CounParameter counParameter : counParameters) {
-                property.put(counParameter.getKey(), counParameter.getValue());
+            for (CounCodeParameter counCodeParameter : counCodeParameters) {
+                property.put(counCodeParameter.getKey(), counCodeParameter.getValue());
             }
             divisorParameter.put(counCode.getCode(), property);
         } else {
-            List<CounDivisor> counDivisors = iCounDivisorService.getCounDivisorByDeviceId(deviceId);
-            for (CounDivisor counDivisor : counDivisors) {
+            List<CounDivisorParameter> counDivisorParameters = iCounDivisorParameterService.getCounDivisorByDeviceId(deviceId);
+            for (CounDivisorParameter counDivisorParameter : counDivisorParameters) {
                 HashMap<String, String> property = new HashMap<>();
-                property.put("Avg", RandomUtil.getRandomString(4, counDivisor.getAvgMin(), counDivisor.getAvgMax()));
-                property.put("Max", String.valueOf(counDivisor.getMax()));
-                property.put("Min", String.valueOf(counDivisor.getMin()));
-                property.put("Cou", String.valueOf(counDivisor.getCou()));
-                property.put("ZsAvg", String.valueOf(counDivisor.getZavg()));
-                property.put("ZsMax", String.valueOf(counDivisor.getZmax()));
-                property.put("ZsMin", String.valueOf(counDivisor.getZmin()));
-                property.put("Flag", counDivisor.getFlag());
+                property.put("Avg", RandomUtil.getRandomString(4, counDivisorParameter.getAvgMin(), counDivisorParameter.getAvgMax()));
+                property.put("Max", String.valueOf(counDivisorParameter.getMax()));
+                property.put("Min", String.valueOf(counDivisorParameter.getMin()));
+                property.put("Cou", String.valueOf(counDivisorParameter.getCou()));
+                property.put("ZsAvg", String.valueOf(counDivisorParameter.getZavg()));
+                property.put("ZsMax", String.valueOf(counDivisorParameter.getZmax()));
+                property.put("ZsMin", String.valueOf(counDivisorParameter.getZmin()));
+                property.put("Flag", counDivisorParameter.getFlag());
 
-                divisorParameter.put(iSysDivisorService.getById(counDivisor.getCodeId()).getCode(), property);
+                divisorParameter.put(iSysDivisorService.getById(counDivisorParameter.getCodeId()).getCode(), property);
             }
         }
         return divisorParameter;
@@ -298,12 +298,11 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
      * 获取实时数据组装报文
      *
      * @param counDevice 设备对象
-     * @param agreement  协议
      * @param dataType   实时（1）\分钟（2）\小时（3）\日（4）\参数（5）\状态（6）
      * @param is3020     是否是3020数据
      * @return 返回组装好的数据包包
      */
-    public String getRealTimeDataPackage(CounDevice counDevice, String agreement, Integer dataType, boolean is3020) {
+    public String getRealTimeDataPackage(CounDevice counDevice, Integer dataType, boolean is3020) {
         HashMap<String, Map<String, String>> divisorParameter = getDivisorParameterMap(counDevice.getId(), is3020);
         CounDataType counDataType = iCounDataTypeService.getCounDataTypeByDeviceId(counDevice.getId(), dataType);
         String link = null;
@@ -344,10 +343,10 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
                         + getParameterPackage(divisorParameter, "status", counDataType.getZs()) + "&&B381";
                 break;
         }
-        if (link != null && "05".equals(agreement) && 1 == dataType) {
+        if (link != null && "05".equals(counDevice.getAgreement()) && 1 == dataType) {
             int indexOf = link.indexOf("ST=");
             link = link.substring(indexOf, link.length());
-        } else if (link != null && "05".equals(agreement) && 1 != dataType) {
+        } else if (link != null && "05".equals(counDevice.getAgreement()) && 1 != dataType) {
             int indexOf = link.indexOf("ST=");
             link = link.substring(indexOf, link.length());
             String regex = "[,;]\\w+-Flag=[a-zA-Z]";
@@ -367,7 +366,7 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
      * @param is3020     是否是3020数据包
      * @return 返回组装好的数据包
      */
-    private String getSupplyAgainDataPackage(CounDevice counDevice, Date date, String agreement, Integer dataType, boolean is3020) {
+    private String getSupplyAgainDataPackage(CounDevice counDevice, Date date, Integer dataType, boolean is3020) {
         HashMap<String, Map<String, String>> divisorParameter = getDivisorParameterMap(counDevice.getId(), is3020);
         CounDataType counDataType = iCounDataTypeService.getCounDataTypeByDeviceId(counDevice.getId(), dataType);
         String link = null;
@@ -408,10 +407,10 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
                         + getParameterPackage(divisorParameter, "status", counDataType.getZs()) + "&&B381";
                 break;
         }
-        if (link != null && "05".equals(agreement) && 1 == dataType) {
+        if (link != null && "05".equals(counDevice.getAgreement()) && 1 == dataType) {
             int indexOf = link.indexOf("ST=");
             link = link.substring(indexOf, link.length());
-        } else if (link != null && "05".equals(agreement) && 1 != dataType) {
+        } else if (link != null && "05".equals(counDevice.getAgreement()) && 1 != dataType) {
             int indexOf = link.indexOf("ST=");
             link = link.substring(indexOf, link.length());
             String regex = "[,;]\\w+-Flag=[a-zA-Z]";

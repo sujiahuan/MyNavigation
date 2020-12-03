@@ -7,14 +7,11 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
 import org.jiahuan.common.model.RetMsgData;
-import org.jiahuan.common.model.State;
 import org.jiahuan.common.util.VerdictUtil;
-import org.jiahuan.entity.coun.CounParameter;
-import org.jiahuan.service.coun.ICounParameterService;
+import org.jiahuan.entity.coun.CounCodeParameter;
+import org.jiahuan.service.coun.ICounCodeParameterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import org.springframework.stereotype.Controller;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -30,14 +27,14 @@ import java.util.List;
 @RestController
 @RequestMapping("/counParameter")
 @Slf4j
-public class CounParameterController {
+public class CounCodeParameterController {
 
     @Autowired
-    private ICounParameterService iCounParameterService;
+    private ICounCodeParameterService iCounCodeParameterService;
 
     @PostMapping("/add")
-    public RetMsgData<CounParameter> add(@RequestBody CounParameter obj){
-        RetMsgData<CounParameter> msgData = new RetMsgData<>();
+    public RetMsgData<CounCodeParameter> add(@RequestBody CounCodeParameter obj){
+        RetMsgData<CounCodeParameter> msgData = new RetMsgData<>();
 
 //        if(VerdictUtil.isNull(CounParameter.getName())){
 //            msgData.setMsg("name为空");
@@ -46,7 +43,7 @@ public class CounParameterController {
         obj.setGmtCreate(LocalDateTime.now());
 
         try{
-            iCounParameterService.save(obj);
+            iCounCodeParameterService.save(obj);
             msgData.setData(obj);
             return msgData;
         }catch (Exception e){
@@ -57,8 +54,8 @@ public class CounParameterController {
     }
 
     @DeleteMapping("/deleteById")
-    public RetMsgData<CounParameter> delete(@RequestParam Integer id){
-        RetMsgData<CounParameter> msgData = new RetMsgData<>();
+    public RetMsgData<CounCodeParameter> delete(@RequestParam Integer id){
+        RetMsgData<CounCodeParameter> msgData = new RetMsgData<>();
         if(VerdictUtil.isNull(id)){
             msgData.setMsg("id为空");
         }
@@ -72,7 +69,7 @@ public class CounParameterController {
 //        }
 
         try{
-            iCounParameterService.removeById(id);
+            iCounCodeParameterService.removeById(id);
             return msgData;
         }catch (Exception e){
             msgData.setMsg(e.getMessage());
@@ -82,13 +79,13 @@ public class CounParameterController {
     }
 
     @GetMapping("/getById")
-    public RetMsgData<CounParameter> get(@RequestParam Integer id){
-        RetMsgData<CounParameter> msgData = new RetMsgData<>();
+    public RetMsgData<CounCodeParameter> get(@RequestParam Integer id){
+        RetMsgData<CounCodeParameter> msgData = new RetMsgData<>();
         if(VerdictUtil.isNull(id)){
             msgData.setMsg("id为空");
         }
         try{
-            msgData.setData(iCounParameterService.getById(id));
+            msgData.setData(iCounCodeParameterService.getById(id));
             return msgData;
         }catch (Exception e){
             msgData.setMsg(e.getMessage());
@@ -98,11 +95,11 @@ public class CounParameterController {
     }
 
     @GetMapping("/getAll")
-    public RetMsgData<List<CounParameter>> getAll(){
-        RetMsgData<List<CounParameter>> msgData = new RetMsgData<>();
-        QueryWrapper<CounParameter> queryWrapper = new QueryWrapper<>();
+    public RetMsgData<List<CounCodeParameter>> getAll(){
+        RetMsgData<List<CounCodeParameter>> msgData = new RetMsgData<>();
+        QueryWrapper<CounCodeParameter> queryWrapper = new QueryWrapper<>();
         try{
-            msgData.setData(iCounParameterService.list(queryWrapper));
+            msgData.setData(iCounCodeParameterService.list(queryWrapper));
             return msgData;
         }catch (Exception e){
             msgData.setMsg(e.getMessage());
@@ -112,15 +109,15 @@ public class CounParameterController {
     }
 
     @GetMapping("/getPage")
-    public RetMsgData<IPage<CounParameter>> getPage(@RequestParam Integer page, @RequestParam Integer size, @RequestParam(required=false)String name){
-        RetMsgData<IPage<CounParameter>> msgData = new RetMsgData<>();
-        Page<CounParameter> page1 = new Page<>(page, size);
-        QueryWrapper<CounParameter> queryWrapper = new QueryWrapper<>();
+    public RetMsgData<IPage<CounCodeParameter>> getPage(@RequestParam Integer page, @RequestParam Integer size, @RequestParam(required=false)String name){
+        RetMsgData<IPage<CounCodeParameter>> msgData = new RetMsgData<>();
+        Page<CounCodeParameter> page1 = new Page<>(page, size);
+        QueryWrapper<CounCodeParameter> queryWrapper = new QueryWrapper<>();
         if(VerdictUtil.isNotNull(name)){
             queryWrapper.like("name",name);
         }
         try{
-            msgData.setData(iCounParameterService.page(page1, queryWrapper));
+            msgData.setData(iCounCodeParameterService.page(page1, queryWrapper));
             return msgData;
         }catch (Exception e){
             msgData.setMsg(e.getMessage());
@@ -130,10 +127,10 @@ public class CounParameterController {
     }
 
     @PostMapping("/update")
-    public RetMsgData<IPage<CounParameter>> update(@RequestBody CounParameter obj){
-        RetMsgData<IPage<CounParameter>> msgData = new RetMsgData<>();
+    public RetMsgData<IPage<CounCodeParameter>> update(@RequestBody CounCodeParameter obj){
+        RetMsgData<IPage<CounCodeParameter>> msgData = new RetMsgData<>();
 
-        CounParameter byId = iCounParameterService.getById(obj.getId());
+        CounCodeParameter byId = iCounCodeParameterService.getById(obj.getId());
         if(VerdictUtil.isNull(byId)){
             msgData.setMsg("找不到要修改的信息");
             return msgData;
@@ -143,13 +140,13 @@ public class CounParameterController {
 //            msgData.setMsg("name为空");
 //            return msgData;
 //        }
-        UpdateWrapper<CounParameter> updateWrapper = new UpdateWrapper<>();
+        UpdateWrapper<CounCodeParameter> updateWrapper = new UpdateWrapper<>();
         updateWrapper.eq("id",obj.getId());
 
         obj.setGmtModified(LocalDateTime.now());
 
         try{
-            iCounParameterService.update(obj,updateWrapper);
+            iCounCodeParameterService.update(obj,updateWrapper);
             return msgData;
         }catch (Exception e){
             msgData.setMsg(e.getMessage());

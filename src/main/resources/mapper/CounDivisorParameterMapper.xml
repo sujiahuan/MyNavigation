@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="org.jiahuan.mapper.coun.CounDivisorMapper">
+<mapper namespace="org.jiahuan.mapper.coun.CounDivisorParameterMapper">
 
     <!-- 通用查询映射结果 -->
-    <resultMap id="BaseResultMap" type="org.jiahuan.entity.coun.CounDivisor">
+    <resultMap id="BaseResultMap" type="org.jiahuan.entity.coun.CounDivisorParameter">
         <id column="id" property="id" />
         <result column="device_id" property="deviceId" />
         <result column="name" property="name" />

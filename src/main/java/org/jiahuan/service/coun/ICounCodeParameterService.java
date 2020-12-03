@@ -1,7 +1,6 @@
 package org.jiahuan.service.coun;
 
-import org.jiahuan.entity.coun.CounDataType;
-import org.jiahuan.entity.coun.CounParameter;
+import org.jiahuan.entity.coun.CounCodeParameter;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import java.util.List;
@@ -14,9 +13,9 @@ import java.util.List;
  * @author wj
  * @since 2020-07-26
  */
-public interface ICounParameterService extends IService<CounParameter> {
+public interface ICounCodeParameterService extends IService<CounCodeParameter> {
 
-    List<CounParameter> getCounParameterByCodeId(Integer codeId);
+    List<CounCodeParameter> getCounParameterByCodeId(Integer codeId);
 
     void deleteByCodeId(Integer codeId);
 

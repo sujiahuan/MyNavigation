@@ -29,20 +29,18 @@ public interface ICounDataTypeService extends IService<CounDataType> {
     /**
      * 发送实时数据
      * @param deviceId 设备id
-     * @param agreement 协议17/05
      * @param dataType 发的数据类型 实时（1）\分钟（2）\小时（3）\日（4）
      * @throws IOException
      */
-    void sendRealTime(Integer deviceId,String agreement,Integer dataType) throws IOException;
+    void sendRealTime(Integer deviceId,Integer dataType) throws IOException;
 
     /**
      * 发送补发数据
      * @param deviceId 设备id
-     * @param agreement 协议17/05
      * @param dataType 发的数据类型 实时（1）\分钟（2）\小时（3）\日（4）
      * @throws IOException
      */
-    void sendSupplyAgain(Integer deviceId,String agreement,Integer dataType) throws IOException;
+    void sendSupplyAgain(Integer deviceId,Integer dataType) throws IOException;
 
     /**
      * 终止补发
@@ -57,10 +55,9 @@ public interface ICounDataTypeService extends IService<CounDataType> {
     /**
      * 发送3020数据包
      * @param deviceId 设备id
-     * @param agreement 协议17/05
      * @param dataType 发的数据类型 实时（1）\分钟（2）\小时（3）\日（4）\参数（5）\状态（6）
      */
-    void sendParam3020(Integer deviceId,String agreement,Integer dataType);
+    void sendParam3020(Integer deviceId,Integer dataType);
 
     /**
      * 发送组装好的数据包
@@ -73,11 +70,10 @@ public interface ICounDataTypeService extends IService<CounDataType> {
     /**
      * 获取已进行crc加密的实时数据组装报文
      * @param counDevice  设备对象
-     * @param agreement 协议
      * @param dataType 实时（1）\分钟（2）\小时（3）\日（4）\参数（5）\状态（6）
      * @param is3020 是否是3020数据
      * @return 返回组装好的crc加密数据包
      */
-    String getRealTimeDataPackage(CounDevice counDevice, String agreement, Integer dataType,boolean is3020);
+    String getRealTimeDataPackage(CounDevice counDevice, Integer dataType,boolean is3020);
 
 }

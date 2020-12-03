@@ -7,14 +7,11 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
 import org.jiahuan.common.model.RetMsgData;
-import org.jiahuan.common.model.State;
 import org.jiahuan.common.util.VerdictUtil;
-import org.jiahuan.entity.coun.CounDivisor;
-import org.jiahuan.service.coun.ICounDivisorService;
+import org.jiahuan.entity.coun.CounDivisorParameter;
+import org.jiahuan.service.coun.ICounDivisorParameterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import org.springframework.stereotype.Controller;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -30,14 +27,14 @@ import java.util.List;
 @RestController
 @RequestMapping("/counDivisor")
 @Slf4j
-public class CounDivisorController {
+public class CounDivisorParameterController {
 
     @Autowired
-    private ICounDivisorService iCounDivisorService;
+    private ICounDivisorParameterService iCounDivisorParameterService;
 
     @PostMapping("/add")
-    public RetMsgData<CounDivisor> add(@RequestBody CounDivisor obj){
-        RetMsgData<CounDivisor> msgData = new RetMsgData<>();
+    public RetMsgData<CounDivisorParameter> add(@RequestBody CounDivisorParameter obj){
+        RetMsgData<CounDivisorParameter> msgData = new RetMsgData<>();
 
 //        if(VerdictUtil.isNull(CounDivisor.getName())){
 //            msgData.setMsg("name为空");
@@ -46,7 +43,7 @@ public class CounDivisorController {
         obj.setGmtCreate(LocalDateTime.now());
 
         try{
-            iCounDivisorService.save(obj);
+            iCounDivisorParameterService.save(obj);
             msgData.setData(obj);
             return msgData;
         }catch (Exception e){
@@ -57,8 +54,8 @@ public class CounDivisorController {
     }
 
     @DeleteMapping("/deleteById")
-    public RetMsgData<CounDivisor> delete(@RequestParam Integer id){
-        RetMsgData<CounDivisor> msgData = new RetMsgData<>();
+    public RetMsgData<CounDivisorParameter> delete(@RequestParam Integer id){
+        RetMsgData<CounDivisorParameter> msgData = new RetMsgData<>();
         if(VerdictUtil.isNull(id)){
             msgData.setMsg("id为空");
         }
@@ -72,7 +69,7 @@ public class CounDivisorController {
 //        }
 
         try{
-            iCounDivisorService.removeById(id);
+            iCounDivisorParameterService.removeById(id);
             return msgData;
         }catch (Exception e){
             msgData.setMsg(e.getMessage());
@@ -82,13 +79,13 @@ public class CounDivisorController {
     }
 
     @GetMapping("/getById")
-    public RetMsgData<CounDivisor> get(@RequestParam Integer id){
-        RetMsgData<CounDivisor> msgData = new RetMsgData<>();
+    public RetMsgData<CounDivisorParameter> get(@RequestParam Integer id){
+        RetMsgData<CounDivisorParameter> msgData = new RetMsgData<>();
         if(VerdictUtil.isNull(id)){
             msgData.setMsg("id为空");
         }
         try{
-            msgData.setData(iCounDivisorService.getById(id));
+            msgData.setData(iCounDivisorParameterService.getById(id));
             return msgData;
         }catch (Exception e){
             msgData.setMsg(e.getMessage());
@@ -97,12 +94,12 @@ public class CounDivisorController {
     }
 
     @GetMapping("/getListByDeviceId")
-    public RetMsgData<List<CounDivisor>> getAll(@RequestParam Integer deviceId){
-        RetMsgData<List<CounDivisor>> msgData = new RetMsgData<>();
-        QueryWrapper<CounDivisor> queryWrapper = new QueryWrapper<>();
+    public RetMsgData<List<CounDivisorParameter>> getAll(@RequestParam Integer deviceId){
+        RetMsgData<List<CounDivisorParameter>> msgData = new RetMsgData<>();
+        QueryWrapper<CounDivisorParameter> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("device_id",deviceId);
         try{
-            msgData.setData(iCounDivisorService.list(queryWrapper));
+            msgData.setData(iCounDivisorParameterService.list(queryWrapper));
             return msgData;
         }catch (Exception e){
             msgData.setMsg(e.getMessage());
@@ -111,14 +108,14 @@ public class CounDivisorController {
     }
 
     @GetMapping("/getPage")
-    public RetMsgData<IPage<CounDivisor>> getPage(@RequestParam Integer page, @RequestParam Integer size, @RequestParam Integer deviceId){
-        RetMsgData<IPage<CounDivisor>> msgData = new RetMsgData<>();
-        Page<CounDivisor> page1 = new Page<>(page, size);
-        QueryWrapper<CounDivisor> queryWrapper = new QueryWrapper<>();
+    public RetMsgData<IPage<CounDivisorParameter>> getPage(@RequestParam Integer page, @RequestParam Integer size, @RequestParam Integer deviceId){
+        RetMsgData<IPage<CounDivisorParameter>> msgData = new RetMsgData<>();
+        Page<CounDivisorParameter> page1 = new Page<>(page, size);
+        QueryWrapper<CounDivisorParameter> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("device_id",deviceId);
         queryWrapper.orderByDesc("gmt_create");
         try{
-            msgData.setData(iCounDivisorService.page(page1, queryWrapper));
+            msgData.setData(iCounDivisorParameterService.page(page1, queryWrapper));
             return msgData;
         }catch (Exception e){
             msgData.setMsg(e.getMessage());
@@ -127,10 +124,10 @@ public class CounDivisorController {
     }
 
     @PostMapping("/update")
-    public RetMsgData<IPage<CounDivisor>> update(@RequestBody CounDivisor obj){
-        RetMsgData<IPage<CounDivisor>> msgData = new RetMsgData<>();
+    public RetMsgData<IPage<CounDivisorParameter>> update(@RequestBody CounDivisorParameter obj){
+        RetMsgData<IPage<CounDivisorParameter>> msgData = new RetMsgData<>();
 
-        CounDivisor byId = iCounDivisorService.getById(obj.getId());
+        CounDivisorParameter byId = iCounDivisorParameterService.getById(obj.getId());
         if(VerdictUtil.isNull(byId)){
             msgData.setMsg("找不到要修改的信息");
             return msgData;
@@ -140,13 +137,13 @@ public class CounDivisorController {
 //            msgData.setMsg("name为空");
 //            return msgData;
 //        }
-        UpdateWrapper<CounDivisor> updateWrapper = new UpdateWrapper<>();
+        UpdateWrapper<CounDivisorParameter> updateWrapper = new UpdateWrapper<>();
         updateWrapper.eq("id",obj.getId());
 
         obj.setGmtModified(LocalDateTime.now());
 
         try{
-            iCounDivisorService.update(obj,updateWrapper);
+            iCounDivisorParameterService.update(obj,updateWrapper);
             return msgData;
         }catch (Exception e){
             msgData.setMsg(e.getMessage());
