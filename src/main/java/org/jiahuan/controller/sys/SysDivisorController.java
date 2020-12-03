@@ -42,7 +42,13 @@ public class SysDivisorController {
             return msgData;
         }
 
-
+        QueryWrapper<SysDivisor> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("name", sysCode.getName());
+        queryWrapper.eq("code", sysCode.getCode());
+        if(iSysDivisorService.list(queryWrapper).size()>0 ){
+            msgData.setMsg("该因子已存在");
+            return msgData;
+        }
 
         sysCode.setGmtCreate(LocalDateTime.now());
 
@@ -116,13 +122,22 @@ public class SysDivisorController {
     }
 
     @PostMapping("/update")
-    public RetMsgData<IPage<SysDivisor>> update(@RequestBody SysDivisor SysCode) {
+    public RetMsgData<IPage<SysDivisor>> update(@RequestBody SysDivisor sysCode) {
         RetMsgData<IPage<SysDivisor>> msgData = new RetMsgData<>();
 
-        SysCode.setGmtModified(LocalDateTime.now());
+        QueryWrapper<SysDivisor> queryWrapper = new QueryWrapper<>();
+        queryWrapper.ne("id", sysCode.getId());
+        queryWrapper.eq("name", sysCode.getName());
+        queryWrapper.eq("code", sysCode.getCode());
+        if(iSysDivisorService.list(queryWrapper).size()>0 ){
+            msgData.setMsg("该因子已存在");
+            return msgData;
+        }
+
+        sysCode.setGmtModified(LocalDateTime.now());
 
         try {
-            iSysDivisorService.updateById(SysCode);
+            iSysDivisorService.updateById(sysCode);
             return msgData;
         } catch (Exception e) {
             msgData.setMsg(e.getMessage());
