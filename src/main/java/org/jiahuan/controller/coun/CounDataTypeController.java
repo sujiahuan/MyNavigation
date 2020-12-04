@@ -44,7 +44,7 @@ public class CounDataTypeController {
         RetMsgData<CounDataType> msgData = new RetMsgData<>();
         try {
             String agreement = iCounDeviceService.getById(deviceId).getAgreement();
-            iCounDataTypeService.sendRealTime(deviceId,agreement,dataType);
+            iCounDataTypeService.sendRealTime(deviceId,dataType);
             return msgData;
         }catch (ConnectException e) {
             if(e.getMessage().equals("Connection timed out: connect")||e.getMessage().equals("Connection timed out (Connection timed out)")){
@@ -80,7 +80,7 @@ public class CounDataTypeController {
         RetMsgData<String> msgData = new RetMsgData<>();
         try {
             CounDevice counDevice = iCounDeviceService.getById(deviceId);
-            String dataPackage = iCounDataTypeService.getRealTimeDataPackage(counDevice, counDevice.getAgreement(), dataType, false);
+            String dataPackage = iCounDataTypeService.getRealTimeDataPackage(counDevice, dataType, false);
             msgData.setData(dataPackage);
             return msgData;
         } catch (Exception e) {
@@ -160,7 +160,7 @@ public class CounDataTypeController {
         RetMsgData<CounDataType> msgData = new RetMsgData<>();
         try {
             String agreement = iCounDeviceService.getById(deviceId).getAgreement();
-            iCounDataTypeService.sendSupplyAgain(deviceId,agreement,dataType);
+            iCounDataTypeService.sendSupplyAgain(deviceId,dataType);
             return msgData;
         } catch (ConnectException e) {
             if(e.getMessage().equals("Connection timed out: connect")||e.getMessage().equals("Connection timed out (Connection timed out)")){

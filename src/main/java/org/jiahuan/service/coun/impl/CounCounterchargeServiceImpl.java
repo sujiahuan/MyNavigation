@@ -81,7 +81,7 @@ public class CounCounterchargeServiceImpl extends ServiceImpl<CounCounterchargeM
                 try {
                     while (true) {
                         //获取一条实时数据包
-                        String dataPackage = iCounDataTypeService.getRealTimeDataPackage(counDevice, counDevice.getAgreement(), 2, false);
+                        String dataPackage = iCounDataTypeService.getRealTimeDataPackage(counDevice, 2, false);
                         //发送
                         outputStream.write(dataPackage.getBytes());
                         customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("定时发送分钟数据：" + dataPackage + "\r\n"));
