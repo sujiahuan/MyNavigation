@@ -31,7 +31,7 @@ public class SysCodeServiceImpl extends ServiceImpl<SysDivisorMapper, SysDivisor
     @Override
     public void deleteById(Integer id) throws Exception {
         QueryWrapper<CounDivisorParameter> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("code_id", id);
+        queryWrapper.eq("divisor_id", id);
         List<CounDivisorParameter> divisors = counDivisorService.list(queryWrapper);
 
         if(divisors.size()!=0){
