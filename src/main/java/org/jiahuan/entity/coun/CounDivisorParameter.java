@@ -24,7 +24,7 @@ public class CounDivisorParameter extends Model<CounDivisorParameter> {
 
     private Integer deviceId;
 
-    private Integer codeId;
+    private Integer divisorId;
 
     private Double avgMin;
 
@@ -65,14 +65,13 @@ public class CounDivisorParameter extends Model<CounDivisorParameter> {
         this.deviceId = deviceId;
     }
 
-    public Integer getCodeId() {
-        return codeId;
+    public Integer getDivisorId() {
+        return divisorId;
     }
 
-    public void setCodeId(Integer codeId) {
-        this.codeId = codeId;
+    public void setDivisorId(Integer divisorId) {
+        this.divisorId = divisorId;
     }
-
 
     public Double getMax() {
         return max;
@@ -169,18 +168,18 @@ public class CounDivisorParameter extends Model<CounDivisorParameter> {
 
     @Override
     public String toString() {
-        return "CounDivisor{" +
+        return "CounDivisorParameter{" +
                 "id=" + id +
                 ", deviceId=" + deviceId +
-                ", codeId='" + codeId + '\'' +
-                ", avgMin='" + avgMin + '\'' +
-                ", avgMax='" + avgMax + '\'' +
-                ", max='" + max + '\'' +
-                ", min='" + min + '\'' +
-                ", cou='" + cou + '\'' +
-                ", zavg='" + zavg + '\'' +
-                ", zmax='" + zmax + '\'' +
-                ", zmin='" + zmin + '\'' +
+                ", divisorId=" + divisorId +
+                ", avgMin=" + avgMin +
+                ", avgMax=" + avgMax +
+                ", max=" + max +
+                ", min=" + min +
+                ", cou=" + cou +
+                ", zavg=" + zavg +
+                ", zmax=" + zmax +
+                ", zmin=" + zmin +
                 ", flag='" + flag + '\'' +
                 ", gmtCreate=" + gmtCreate +
                 ", gmtModified=" + gmtModified +

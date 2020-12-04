@@ -288,7 +288,7 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
                 property.put("ZsMin", String.valueOf(counDivisorParameter.getZmin()));
                 property.put("Flag", counDivisorParameter.getFlag());
 
-                divisorParameter.put(iSysDivisorService.getById(counDivisorParameter.getCodeId()).getCode(), property);
+                divisorParameter.put(iSysDivisorService.getById(counDivisorParameter.getDivisorId()).getCode(), property);
             }
         }
         return divisorParameter;
