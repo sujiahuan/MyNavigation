@@ -81,11 +81,8 @@ public class CounCounterchargeServiceImpl extends ServiceImpl<CounCounterchargeM
                 try {
                     while (true) {
                         //获取一条实时数据包
-                        String dataPackage = iCounDataTypeService.getRealTimeDataPackage(counDevice, 2, false);
+                        iCounDataTypeService.sendRealTime(counDevice.getId(), 2);
                         //发送
-                        outputStream.write(dataPackage.getBytes());
-                        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("定时发送分钟数据：" + dataPackage + "\r\n"));
-                        log.info("发送成功");
                         Thread.sleep(1000 * 60 * 10);
                     }
                 } catch (Exception e) {
@@ -555,7 +552,7 @@ public class CounCounterchargeServiceImpl extends ServiceImpl<CounCounterchargeM
         String msg = "";
         switch (getLinkConstant("CN", datagram)) {
             case "1011":
-                msg = "ST=" + getLinkConstant("ST", datagram) + ";CN=1011;PW=123456;MN=" + getLinkConstant("MN", datagram) + ";Flag=4;CP=&&QN=" + getLinkConstant("QN", datagram) + ";SystemTime=" + TimeUtil.getFormatCurrentTime("second", 0) + "&&";
+                msg = "ST=" + getLinkConstant("ST", datagram) + ";CN=1011;PW=123456;MN=" + getLinkConstant("MN", datagram) + ";Flag=4;CP=&&QN=" + getLinkConstant("QN", datagram) + ";SystemTime=" + TimeUtil.getFormatCurrentTime(new Date(),"second", 0) + "&&";
                 break;
             case "1021":
                 msg = "ST=" + getLinkConstant("ST", datagram) + ";CN=1021;PW=123456;MN=" + getLinkConstant("MN", datagram) + ";Flag=4;CP=&&QN=" + getLinkConstant("QN", datagram) + ";" + getLinkConstant("PolId", datagram) + "-LowValue=1.1," + getLinkConstant("PolId", datagram) + "-UpValue=9.9&&";
@@ -602,7 +599,7 @@ public class CounCounterchargeServiceImpl extends ServiceImpl<CounCounterchargeM
         switch (getLinkConstant("CN", datagram)) {
             //参数命令
             case "1011":
-                msg = "QN=" + getLinkConstant("QN", datagram) + ";ST=" + getLinkConstant("ST", datagram) + ";CN=1011;PW=123456;MN=" + getLinkConstant("MN", datagram) + ";Flag=4;CP=&&" + (null != getLinkConstant("PolId", datagram) ? "PolId=" + getLinkConstant("PolId", datagram) + ";" : "") + "SystemTime=" + TimeUtil.getFormatCurrentTime("second", 0) + "&&";
+                msg = "QN=" + getLinkConstant("QN", datagram) + ";ST=" + getLinkConstant("ST", datagram) + ";CN=1011;PW=123456;MN=" + getLinkConstant("MN", datagram) + ";Flag=4;CP=&&" + (null != getLinkConstant("PolId", datagram) ? "PolId=" + getLinkConstant("PolId", datagram) + ";" : "") + "SystemTime=" + TimeUtil.getFormatCurrentTime(new Date(),"second", 0) + "&&";
                 break;
             case "1061":
                 msg = "QN=" + getLinkConstant("QN", datagram) + ";ST=" + getLinkConstant("ST", datagram) + ";CN=1061;PW=123456;MN=" + getLinkConstant("MN", datagram) + ";Flag=4;CP=&&RtdInterval=30&&";
@@ -625,7 +622,7 @@ public class CounCounterchargeServiceImpl extends ServiceImpl<CounCounterchargeM
                 break;
             //控制命令
             case "3015":
-                msg = "QN=" + getLinkConstant("QN", datagram) + ";ST=" + getLinkConstant("ST", datagram) + ";CN=3015;PW=123456;MN=" + getLinkConstant("MN", datagram) + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatCurrentTime("second", 0) + ";VaseNo=1&&";
+                msg = "QN=" + getLinkConstant("QN", datagram) + ";ST=" + getLinkConstant("ST", datagram) + ";CN=3015;PW=123456;MN=" + getLinkConstant("MN", datagram) + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatCurrentTime(new Date(),"second", 0) + ";VaseNo=1&&";
                 break;
             case "3017":
                 msg = "QN=" + getLinkConstant("QN", datagram) + ";ST=" + getLinkConstant("ST", datagram) + ";CN=3017;PW=123456;MN=" + getLinkConstant("MN", datagram) + ";Flag=4;CP=&&PolId=" + getLinkConstant("PolId", datagram) + ";CstartTime=060606;CTime=6&&";

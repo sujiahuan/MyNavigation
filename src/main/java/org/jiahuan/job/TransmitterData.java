@@ -18,10 +18,7 @@ import java.io.IOException;
 import java.net.ConnectException;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Component
 @Slf4j
@@ -36,7 +33,7 @@ public class TransmitterData {
 
     @Scheduled(cron="0,30 * * * * ?")
     public void send2011Data() {
-        System.out.println("实时数据运行啦："+ TimeUtil.getFormatCurrentTime("millisecond",0));
+        System.out.println("实时数据运行啦："+ TimeUtil.getFormatCurrentTime(new Date(),"millisecond",0));
         QueryWrapper<CounDataType> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("is_timing",1);
         queryWrapper.eq("data_type",1);
@@ -70,7 +67,7 @@ public class TransmitterData {
 
     @Scheduled(cron="0 0/10 * * * ?")
     public void send2051Data() {
-        System.out.println("分钟数据运行啦："+ TimeUtil.getFormatCurrentTime("millisecond",0));
+        System.out.println("分钟数据运行啦："+ TimeUtil.getFormatCurrentTime(new Date(),"millisecond",0));
         QueryWrapper<CounDataType> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("is_timing",1);
         queryWrapper.eq("data_type",2);
@@ -104,7 +101,7 @@ public class TransmitterData {
 
     @Scheduled(cron="0 0 0/1 * * ?")
     public void send2061Data(){
-        System.out.println("小时数据运行啦："+ TimeUtil.getFormatCurrentTime("millisecond",0));
+        System.out.println("小时数据运行啦："+ TimeUtil.getFormatCurrentTime(new Date(),"millisecond",0));
         QueryWrapper<CounDataType> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("is_timing",1);
         queryWrapper.eq("data_type",3);
@@ -138,7 +135,7 @@ public class TransmitterData {
 
     @Scheduled(cron="0 0 0 * * ? ")
     public void send2031Data(){
-        System.out.println("日数据运行啦："+ TimeUtil.getFormatCurrentTime("millisecond",0));
+        System.out.println("日数据运行啦："+ TimeUtil.getFormatCurrentTime(new Date(),"millisecond",0));
         QueryWrapper<CounDataType> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("is_timing",1);
         queryWrapper.eq("data_type",4);

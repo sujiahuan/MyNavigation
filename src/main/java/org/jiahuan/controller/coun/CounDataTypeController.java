@@ -43,7 +43,6 @@ public class CounDataTypeController {
     public RetMsgData<CounDataType> sendRealTime(@RequestParam Integer deviceId,@RequestParam Integer dataType){
         RetMsgData<CounDataType> msgData = new RetMsgData<>();
         try {
-            String agreement = iCounDeviceService.getById(deviceId).getAgreement();
             iCounDataTypeService.sendRealTime(deviceId,dataType);
             return msgData;
         }catch (ConnectException e) {
@@ -79,8 +78,7 @@ public class CounDataTypeController {
     public RetMsgData<String> getRealTime(@RequestParam Integer deviceId,@RequestParam Integer dataType){
         RetMsgData<String> msgData = new RetMsgData<>();
         try {
-            CounDevice counDevice = iCounDeviceService.getById(deviceId);
-            String dataPackage = iCounDataTypeService.getRealTimeDataPackage(counDevice, dataType, false);
+            String dataPackage = iCounDataTypeService.getDataPackage(deviceId, dataType, false);
             msgData.setData(dataPackage);
             return msgData;
         } catch (Exception e) {
@@ -159,7 +157,6 @@ public class CounDataTypeController {
     public RetMsgData<CounDataType> sendSupplyAgain(@RequestParam Integer deviceId,@RequestParam Integer dataType){
         RetMsgData<CounDataType> msgData = new RetMsgData<>();
         try {
-            String agreement = iCounDeviceService.getById(deviceId).getAgreement();
             iCounDataTypeService.sendSupplyAgain(deviceId,dataType);
             return msgData;
         } catch (ConnectException e) {

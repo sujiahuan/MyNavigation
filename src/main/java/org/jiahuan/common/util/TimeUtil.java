@@ -14,38 +14,29 @@ public class TimeUtil {
      * @param modified 在当前时间上加减时间，加则输入整数，减则输入负整数。分钟按分钟加、小时按小时加。。。
      * @return 返回格式化后的日期
      */
-    public static String getFormatCurrentTime(String key,int modified) {
+    public static String getFormatCurrentTime(Date date,String key,int modified) {
         Calendar calendar = Calendar.getInstance();
-
+        calendar.setTime(date);
+        SimpleDateFormat simpleDateFormat;
         if ("millisecond".equals(key)) {
-            Date date = calendar.getTime();
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMddHHmmssSSS");
-            String format = simpleDateFormat.format(date);
-            return format;
+            simpleDateFormat = new SimpleDateFormat("yyyyMMddHHmmssSSS");
+            return simpleDateFormat.format(calendar.getTime());
         } else if ("second".equals(key)) {
             calendar.add(Calendar.SECOND, modified);
-            Date date = calendar.getTime();
-            SimpleDateFormat simpleDateFormat1 = new SimpleDateFormat("yyyyMMddHHmmss");
-            String format1 = simpleDateFormat1.format(date);
-            return format1;
+            simpleDateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+            return simpleDateFormat.format(calendar.getTime());
         } else if ("minute".equals(key)) {
             calendar.add(Calendar.MINUTE, modified);
-            Date date = calendar.getTime();
-            SimpleDateFormat simpleDateFormat2 = new SimpleDateFormat("yyyyMMddHHmm");
-            String format2 = simpleDateFormat2.format(date);
-            return format2 + "00";
+            simpleDateFormat = new SimpleDateFormat("yyyyMMddHHmm");
+            return simpleDateFormat.format(calendar.getTime()) + "00";
         } else if ("hour".equals(key)) {
             calendar.add(Calendar.HOUR, modified);
-            Date date = calendar.getTime();
-            SimpleDateFormat simpleDateFormat3 = new SimpleDateFormat("yyyyMMddHH");
-            String format3 = simpleDateFormat3.format(date);
-            return format3 + "0000";
+            simpleDateFormat = new SimpleDateFormat("yyyyMMddHH");
+            return simpleDateFormat.format(calendar.getTime()) + "0000";
         } else if ("day".equals(key)) {
             calendar.add(Calendar.DAY_OF_MONTH, modified);
-            Date date = calendar.getTime();
-            SimpleDateFormat simpleDateFormat4 = new SimpleDateFormat("yyyyMMdd");
-            String format4 = simpleDateFormat4.format(date);
-            return format4 + "000000";
+            simpleDateFormat = new SimpleDateFormat("yyyyMMdd");
+            return simpleDateFormat.format(calendar.getTime()) + "000000";
         } else {
             return null;
         }
@@ -60,28 +51,23 @@ public class TimeUtil {
     public static String getFormatTime(Date ReissueDate,String key) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(ReissueDate);
-        Date date = calendar.getTime();
+        SimpleDateFormat simpleDateFormat;
         switch (key) {
             case "millisecond":
-                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMddHHmmssSSS");
-                String format = simpleDateFormat.format(date);
-                return format;
+                simpleDateFormat = new SimpleDateFormat("yyyyMMddHHmmssSSS");
+                return simpleDateFormat.format(calendar.getTime());
             case "second":
-                SimpleDateFormat simpleDateFormat1 = new SimpleDateFormat("yyyyMMddHHmmss");
-                String format1 = simpleDateFormat1.format(date);
-                return format1;
+                simpleDateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+                return simpleDateFormat.format(calendar.getTime());
             case "minute":
-                SimpleDateFormat simpleDateFormat2 = new SimpleDateFormat("yyyyMMddHHmm");
-                String format2 = simpleDateFormat2.format(date);
-                return format2 + "00";
+                simpleDateFormat = new SimpleDateFormat("yyyyMMddHHmm");
+                return simpleDateFormat.format(calendar.getTime()) + "00";
             case "hour":
-                SimpleDateFormat simpleDateFormat3 = new SimpleDateFormat("yyyyMMddHH");
-                String format3 = simpleDateFormat3.format(date);
-                return format3 + "0000";
+                simpleDateFormat = new SimpleDateFormat("yyyyMMddHH");
+                return simpleDateFormat.format(calendar.getTime()) + "0000";
             case "day":
-                SimpleDateFormat simpleDateFormat4 = new SimpleDateFormat("yyyyMMdd");
-                String format4 = simpleDateFormat4.format(date);
-                return format4 + "000000";
+                simpleDateFormat = new SimpleDateFormat("yyyyMMdd");
+                return simpleDateFormat.format(calendar.getTime()) + "000000";
             default:
                 return null;
         }

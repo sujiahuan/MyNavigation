@@ -100,9 +100,68 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
     @Override
     public void sendRealTime(Integer deviceId, Integer dataType) throws IOException {
         CounDevice counDevice = iCounDeviceService.getById(deviceId);
+        List<CounDivisorParameter> counDivisorParameters = iCounDivisorParameterService.getCounDivisorByDeviceId(deviceId);
+
+        List<Object> divisorParameters = new ArrayList<>();
+        int pnum = 1;
+        int pon = 1;
+        Date date = new Date();
+        //判断是否需要包头
+        if (counDevice.getSubpackage() == 1) {
+            if (counDivisorParameters.size() % counDevice.getSubpackageNumber() == 0) {
+                pnum = counDivisorParameters.size() / counDevice.getSubpackageNumber();
+            } else {
+                pnum = counDivisorParameters.size() / counDevice.getSubpackageNumber() + 1;
+            }
+        }
+
+        //判断是否需要分包
+        if (counDevice.getSubpackage() != 0) {
+
+            for (int i = 1; i <= counDivisorParameters.size(); i++) {
+                divisorParameters.add(counDivisorParameters.get(i - 1));
+                //判断是否需要分包
+//            if (counDevice.getSubpackage() != 0) {
+                //判断是否满足分包数
+                if (i % counDevice.getSubpackageNumber() == 0) {
+                    HashMap<String, Map<String, String>> divisorParameterMap = getDivisorParameterMap(divisorParameters, false);
+                    divisorParameters.clear();
+                    //获取实时数据包
+                    String message = getRealTimeDataPackage(counDevice, date, divisorParameterMap, pnum, pon, dataType, false);
+                    iCounDataTypeService.sendMessage(counDevice, message);
+                    pon++;
+                } else if (i == counDivisorParameters.size()) {
+                    HashMap<String, Map<String, String>> divisorParameterMap = getDivisorParameterMap(divisorParameters, false);
+                    //获取实时数据包
+                    String message = getRealTimeDataPackage(counDevice, date, divisorParameterMap, pnum, pon, dataType, false);
+                    iCounDataTypeService.sendMessage(counDevice, message);
+                }
+//            } else if (i == counDivisorParameters.size()) {
+//                HashMap<String, Map<String, String>> divisorParameterMap = getDivisorParameterMap(divisorParameters, false);
+//                //获取实时数据包
+//                String message = getRealTimeDataPackage(counDevice, date, divisorParameterMap, pnum, pon, dataType, false);
+//                iCounDataTypeService.sendMessage(counDevice, message);
+//            }
+            }
+        } else {
+            divisorParameters=new ArrayList<>(counDivisorParameters);
+            HashMap<String, Map<String, String>> divisorParameterMap = getDivisorParameterMap(divisorParameters, false);
+            //获取实时数据包
+            String message = getRealTimeDataPackage(counDevice, date, divisorParameterMap, pnum, pon, dataType, false);
+            iCounDataTypeService.sendMessage(counDevice, message);
+        }
+
+    }
+
+    @Override
+    public String getDataPackage(Integer deviceId, Integer dataType, boolean is3020) throws IOException {
+        CounDevice counDevice = iCounDeviceService.getById(deviceId);
+        List<CounDivisorParameter> counDivisorParameters = iCounDivisorParameterService.getCounDivisorByDeviceId(deviceId);
+        List<Object> divisorParameters=new ArrayList<>(counDivisorParameters);
+        HashMap<String, Map<String, String>> divisorParameterMap = getDivisorParameterMap(divisorParameters, false);
         //获取实时数据包
-        String message = getRealTimeDataPackage(counDevice, dataType, false);
-        iCounDataTypeService.sendMessage(counDevice, message);
+        String message = getRealTimeDataPackage(counDevice, new Date(), divisorParameterMap, 1, 1, dataType, false);
+        return message;
     }
 
 
@@ -142,13 +201,53 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
             supplyAgainStatus.put(deviceId, true);
         }
 
+        List<CounDivisorParameter> counDivisorParameters = iCounDivisorParameterService.getCounDivisorByDeviceId(deviceId);
+
+        List<Object> divisorParameters = new ArrayList<>();
+        int pnum = 1;
+        int pon = 1;
         int count = 0;
+
+        //计算总包数
+        if (counDevice.getSubpackage() == 1) {
+            if (counDivisorParameters.size() % counDevice.getSubpackageNumber() == 0) {
+                pnum = counDivisorParameters.size() / counDevice.getSubpackageNumber();
+            } else {
+                pnum = counDivisorParameters.size() / counDevice.getSubpackageNumber() + 1;
+            }
+        }
         //时间遍历
         while (startCalendar.getTimeInMillis() - endCalendar.getTimeInMillis() <= 0 && supplyAgainStatus.get(deviceId)) {
-            //获取补发数据包
-            String dataPackage = getSupplyAgainDataPackage(counDevice, startCalendar.getTime(), dataType, false);
-            //发送消息
-            iCounDataTypeService.sendMessage(counDevice, dataPackage);
+
+            for (int i = 1; i <= counDivisorParameters.size(); i++) {
+                divisorParameters.add(counDivisorParameters.get(i - 1));
+                //判断是否需要分包
+                if (counDevice.getSubpackage() != 0) {
+                    //判断是否满足分包数
+                    if (i % counDevice.getSubpackageNumber() == 0) {
+                        HashMap<String, Map<String, String>> divisorParameterMap = getDivisorParameterMap(divisorParameters, false);
+                        divisorParameters.clear();
+                        //获取补发数据包
+                        String dataPackage = getSupplyAgainDataPackage(counDevice, startCalendar.getTime(), divisorParameterMap, pnum, pon, dataType, false);
+                        //发送消息
+                        iCounDataTypeService.sendMessage(counDevice, dataPackage);
+                        pon++;
+                        //最后一个包因子不足则直接发送
+                    } else if (i == counDivisorParameters.size()) {
+                        HashMap<String, Map<String, String>> divisorParameterMap = getDivisorParameterMap(divisorParameters, false);
+                        //获取补发数据包
+                        String dataPackage = getSupplyAgainDataPackage(counDevice, startCalendar.getTime(), divisorParameterMap, pnum, pon, dataType, false);
+                        //发送消息
+                        iCounDataTypeService.sendMessage(counDevice, dataPackage);
+                    }
+                } else if (i == counDivisorParameters.size()) {
+                    HashMap<String, Map<String, String>> divisorParameterMap = getDivisorParameterMap(divisorParameters, false);
+                    //获取补发数据包
+                    String dataPackage = getSupplyAgainDataPackage(counDevice, startCalendar.getTime(), divisorParameterMap, pnum, pon, dataType, false);
+                    //发送消息
+                    iCounDataTypeService.sendMessage(counDevice, dataPackage);
+                }
+            }
             //添加时间
             startCalendar.add(field, counDataType.getDateInterval());
             count++;
@@ -216,27 +315,27 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
     public void sendParam3020(Integer deviceId, Integer dataType) {
         CounDevice counDevice = iCounDeviceService.getById(deviceId);
         //获取3020数据包
-        String message = getRealTimeDataPackage(counDevice , dataType, true);
-        iCounDataTypeService.sendMessage(counDevice, message);
+//        String message = getRealTimeDataPackage(counDevice , dataType, true);
+//        iCounDataTypeService.sendMessage(counDevice, message);
     }
 
 
     @Override
     public void sendMessage(CounDevice counDevice, String message) throws IOException {
         OutputStream outputStream = iConnectionObj.getOutputStream(counDevice);
-        if(message.indexOf("\r\n")==-1){
-            message +="\r\n";
+        if (message.indexOf("\r\n") == -1) {
+            message += "\r\n";
         }
-        try{
+        try {
             outputStream.write(message.getBytes());
-        }catch (SocketException e) {
-            if(e.getMessage().equals("Software caused connection abort: socket write error")){
-               iConnectionObj.cleanConnetion(counDevice.getId(),true);
-               iCounCounterchargeService.closeConnection(counDevice.getId());
+        } catch (SocketException e) {
+            if (e.getMessage().equals("Software caused connection abort: socket write error")) {
+                iConnectionObj.cleanConnetion(counDevice.getId(), true);
+                iCounCounterchargeService.closeConnection(counDevice.getId());
             }
             throw e;
         }
-        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage(message+"\r\n"));
+        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage(message + "\r\n"));
     }
 
     /**
@@ -260,15 +359,14 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
     /**
      * 获取因子参数map
      *
-     * @param deviceId 设备id
-     * @param is3020   是否是3020数据
+     * @param parameters 3020则传code对象，否则传因子参数对象
+     * @param is3020     是否是3020数据
      * @return 返回组装好的因子参数map key：w00001...,value：{'max':'1'、'min':'2'、'i12001':'3'...}
      */
-    private HashMap<String, Map<String, String>> getDivisorParameterMap(Integer deviceId, boolean is3020) {
+    public HashMap<String, Map<String, String>> getDivisorParameterMap(List<Object> parameters, boolean is3020) {
         HashMap<String, Map<String, String>> divisorParameter = new HashMap<>();
         if (is3020) {
-//            CounCode counCode = iCounCodeService.getCounCodeByCode(divisors.get(0));
-            CounCode counCode = iCounCodeService.getCounCodeByDeviceId(deviceId);
+            CounCode counCode = (CounCode) parameters.get(0);
             List<CounCodeParameter> counCodeParameters = iCounCodeParameterService.getCounParameterByCodeId(counCode.getId());
             HashMap<String, String> property = new HashMap<>();
             for (CounCodeParameter counCodeParameter : counCodeParameters) {
@@ -276,7 +374,7 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
             }
             divisorParameter.put(counCode.getCode(), property);
         } else {
-            List<CounDivisorParameter> counDivisorParameters = iCounDivisorParameterService.getCounDivisorByDeviceId(deviceId);
+            List<CounDivisorParameter> counDivisorParameters = new ArrayList(parameters);
             for (CounDivisorParameter counDivisorParameter : counDivisorParameters) {
                 HashMap<String, String> property = new HashMap<>();
                 property.put("Avg", RandomUtil.getRandomString(4, counDivisorParameter.getAvgMin(), counDivisorParameter.getAvgMax()));
@@ -302,44 +400,48 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
      * @param is3020     是否是3020数据
      * @return 返回组装好的数据包包
      */
-    public String getRealTimeDataPackage(CounDevice counDevice, Integer dataType, boolean is3020) {
-        HashMap<String, Map<String, String>> divisorParameter = getDivisorParameterMap(counDevice.getId(), is3020);
+    public String getRealTimeDataPackage(CounDevice counDevice, Date date, HashMap<String, Map<String, String>> divisorParameter, Integer pnum, Integer pno, Integer dataType, boolean is3020) {
+//        HashMap<String, Map<String, String>> divisorParameter = getDivisorParameterMap(counDevice.getId(), is3020);
         CounDataType counDataType = iCounDataTypeService.getCounDataTypeByDeviceId(counDevice.getId(), dataType);
         String link = null;
         String polId;
+        String subpackage = "";
+        if (counDevice.getSubpackage() == 1) {
+            subpackage = "PNUM=" + pnum + ";PNO=" + pno + ";";
+        }
         switch (dataType) {
             case 1:
-                link = "##0235QN=" + TimeUtil.getFormatCurrentTime("millisecond", 0) + ";ST=" + counDevice.getMonitoringType() + ";CN=2011;PW=123456;MN="
-                        + counDevice.getMn() + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatCurrentTime("second", -30) + ";"
+                link = "##0235QN=" + TimeUtil.getFormatCurrentTime(new Date(), "millisecond", 0) + ";ST=" + counDevice.getMonitoringType() + ";CN=2011;PW=123456;MN="
+                        + counDevice.getMn() + ";Flag=4;" + subpackage + "CP=&&DataTime=" + TimeUtil.getFormatCurrentTime(date, "second", -30) + ";"
                         + getParameterPackage(divisorParameter, "realTime", counDataType.getZs()) + "&&B381";
                 break;
             case 2:
-                link = "##0178QN=" + TimeUtil.getFormatCurrentTime("millisecond", 0) + ";ST=" + counDevice.getMonitoringType() + ";CN=2051;PW=123456;MN="
-                        + counDevice.getMn() + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatCurrentTime("minute", -10) + ";"
+                link = "##0178QN=" + TimeUtil.getFormatCurrentTime(new Date(), "millisecond", 0) + ";ST=" + counDevice.getMonitoringType() + ";CN=2051;PW=123456;MN="
+                        + counDevice.getMn() + ";Flag=4;" + subpackage +"CP=&&DataTime=" + TimeUtil.getFormatCurrentTime(date, "minute", -10) + ";"
                         + getParameterPackage(divisorParameter, "history", counDataType.getZs()) + "&&B381";
                 break;
             case 3:
-                link = "##0160QN=" + TimeUtil.getFormatCurrentTime("millisecond", 0) + ";ST=" + counDevice.getMonitoringType() + ";CN=2061;PW=123456;MN="
-                        + counDevice.getMn() + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatCurrentTime("hour", -1) + ";" + getParameterPackage(divisorParameter, "history", counDataType.getZs())
+                link = "##0160QN=" + TimeUtil.getFormatCurrentTime(new Date(), "millisecond", 0) + ";ST=" + counDevice.getMonitoringType() + ";CN=2061;PW=123456;MN="
+                        + counDevice.getMn() + ";Flag=4;" + subpackage +"CP=&&DataTime=" + TimeUtil.getFormatCurrentTime(date, "hour", -1) + ";" + getParameterPackage(divisorParameter, "history", counDataType.getZs())
                         + "&&B381";
                 break;
             case 4:
-                link = "##0171QN=" + TimeUtil.getFormatCurrentTime("millisecond", 0) + ";ST=" + counDevice.getMonitoringType() + ";CN=2031;PW=123456;MN="
-                        + counDevice.getMn() + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatCurrentTime("day", -1) + ";" + getParameterPackage(divisorParameter, "history", counDataType.getZs())
+                link = "##0171QN=" + TimeUtil.getFormatCurrentTime(new Date(), "millisecond", 0) + ";ST=" + counDevice.getMonitoringType() + ";CN=2031;PW=123456;MN="
+                        + counDevice.getMn() + ";Flag=4;" + subpackage +"CP=&&DataTime=" + TimeUtil.getFormatCurrentTime(date, "day", -1) + ";" + getParameterPackage(divisorParameter, "history", counDataType.getZs())
                         + "&&B381";
                 break;
             case 5:
                 //获取编码，只考虑一个的情况
                 polId = divisorParameter.keySet().iterator().next();
-                link = "##0171QN=" + TimeUtil.getFormatCurrentTime("millisecond", 0) + ";ST=" + counDevice.getMonitoringType() + ";CN=3020;PW=123456;MN="
-                        + counDevice.getMn() + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatCurrentTime("second", 0) + ";PolId=" + polId + ";"
+                link = "##0171QN=" + TimeUtil.getFormatCurrentTime(new Date(), "millisecond", 0) + ";ST=" + counDevice.getMonitoringType() + ";CN=3020;PW=123456;MN="
+                        + counDevice.getMn() + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatCurrentTime(date, "second", 0) + ";PolId=" + polId + ";"
                         + getParameterPackage(divisorParameter, "parameter", counDataType.getZs()) + "&&B381";
                 break;
             case 6:
                 //获取编码，只考虑一个的情况
                 polId = divisorParameter.keySet().iterator().next();
-                link = "##0171QN=" + TimeUtil.getFormatCurrentTime("millisecond", 0) + ";ST=" + counDevice.getMonitoringType() + ";CN=3020;PW=123456;MN="
-                        + counDevice.getMn() + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatCurrentTime("second", 0) + ";PolId=" + polId + ";"
+                link = "##0171QN=" + TimeUtil.getFormatCurrentTime(new Date(), "millisecond", 0) + ";ST=" + counDevice.getMonitoringType() + ";CN=3020;PW=123456;MN="
+                        + counDevice.getMn() + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatCurrentTime(date, "second", 0) + ";PolId=" + polId + ";"
                         + getParameterPackage(divisorParameter, "status", counDataType.getZs()) + "&&B381";
                 break;
         }
@@ -358,7 +460,7 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
     }
 
     /**
-     * 获取报文内容
+     * 获取补发报文内容
      *
      * @param counDevice 设备对象
      * @param date       补发时间
@@ -366,43 +468,47 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
      * @param is3020     是否是3020数据包
      * @return 返回组装好的数据包
      */
-    private String getSupplyAgainDataPackage(CounDevice counDevice, Date date, Integer dataType, boolean is3020) {
-        HashMap<String, Map<String, String>> divisorParameter = getDivisorParameterMap(counDevice.getId(), is3020);
+    private String getSupplyAgainDataPackage(CounDevice counDevice, Date date, HashMap<String, Map<String, String>> divisorParameter, Integer pnum, Integer pno, Integer dataType, boolean is3020) {
+//        HashMap<String, Map<String, String>> divisorParameter = getDivisorParameterMap(counDevice.getId(), is3020);
         CounDataType counDataType = iCounDataTypeService.getCounDataTypeByDeviceId(counDevice.getId(), dataType);
         String link = null;
         String polId;
+        String subpackage = "";
+        if (counDevice.getSubpackage() == 1) {
+            subpackage = "PNUM=" + pnum + ";PNO=" + pno + ";";
+        }
         switch (dataType) {
             case 1:
-                link = "##0235QN=" + TimeUtil.getFormatCurrentTime("millisecond", 0) + ";ST=" + counDevice.getMonitoringType() + ";CN=2011;PW=123456;MN="
-                        + counDevice.getMn() + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatTime(date, "second") + ";"
+                link = "##0235QN=" + TimeUtil.getFormatCurrentTime(new Date(), "millisecond", 0) + ";ST=" + counDevice.getMonitoringType() + ";CN=2011;PW=123456;MN="
+                        + counDevice.getMn() + ";Flag=4;" + subpackage +"CP=&&DataTime=" + TimeUtil.getFormatTime(date, "second") + ";"
                         + getParameterPackage(divisorParameter, "realTime", counDataType.getZs()) + "&&B381";
                 break;
             case 2:
-                link = "##0178QN=" + TimeUtil.getFormatCurrentTime("millisecond", 0) + ";ST=" + counDevice.getMonitoringType() + ";CN=2051;PW=123456;MN="
-                        + counDevice.getMn() + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatTime(date, "minute") + ";"
+                link = "##0178QN=" + TimeUtil.getFormatCurrentTime(new Date(), "millisecond", 0) + ";ST=" + counDevice.getMonitoringType() + ";CN=2051;PW=123456;MN="
+                        + counDevice.getMn() + ";Flag=4;" + subpackage +"CP=&&DataTime=" + TimeUtil.getFormatTime(date, "minute") + ";"
                         + getParameterPackage(divisorParameter, "history", counDataType.getZs()) + "&&B381";
                 break;
             case 3:
-                link = "##0160QN=" + TimeUtil.getFormatCurrentTime("millisecond", 0) + ";ST=" + counDevice.getMonitoringType() + ";CN=2061;PW=123456;MN="
-                        + counDevice.getMn() + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatTime(date, "hour") + ";" + getParameterPackage(divisorParameter, "history", counDataType.getZs())
+                link = "##0160QN=" + TimeUtil.getFormatCurrentTime(new Date(), "millisecond", 0) + ";ST=" + counDevice.getMonitoringType() + ";CN=2061;PW=123456;MN="
+                        + counDevice.getMn() + ";Flag=4;" + subpackage +"CP=&&DataTime=" + TimeUtil.getFormatTime(date, "hour") + ";" + getParameterPackage(divisorParameter, "history", counDataType.getZs())
                         + "&&B381";
                 break;
             case 4:
-                link = "##0171QN=" + TimeUtil.getFormatCurrentTime("millisecond", 0) + ";ST=" + counDevice.getMonitoringType() + ";CN=2031;PW=123456;MN="
-                        + counDevice.getMn() + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatTime(date, "day") + ";" + getParameterPackage(divisorParameter, "history", counDataType.getZs())
+                link = "##0171QN=" + TimeUtil.getFormatCurrentTime(new Date(), "millisecond", 0) + ";ST=" + counDevice.getMonitoringType() + ";CN=2031;PW=123456;MN="
+                        + counDevice.getMn() + ";Flag=4;" + subpackage +"CP=&&DataTime=" + TimeUtil.getFormatTime(date, "day") + ";" + getParameterPackage(divisorParameter, "history", counDataType.getZs())
                         + "&&B381";
                 break;
             case 5:
                 //获取编码，只考虑一个的情况
                 polId = divisorParameter.keySet().iterator().next();
-                link = "##0171QN=" + TimeUtil.getFormatCurrentTime("millisecond", 0) + ";ST=" + counDevice.getMonitoringType() + ";CN=3020;PW=123456;MN="
+                link = "##0171QN=" + TimeUtil.getFormatCurrentTime(new Date(), "millisecond", 0) + ";ST=" + counDevice.getMonitoringType() + ";CN=3020;PW=123456;MN="
                         + counDevice.getMn() + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatTime(date, "second") + ";PolId=" + polId + ";"
                         + getParameterPackage(divisorParameter, "parameter", counDataType.getZs()) + "&&B381";
                 break;
             case 6:
                 //获取编码，只考虑一个的情况
                 polId = divisorParameter.keySet().iterator().next();
-                link = "##0171QN=" + TimeUtil.getFormatCurrentTime("millisecond", 0) + ";ST=" + counDevice.getMonitoringType() + ";CN=3020;PW=123456;MN="
+                link = "##0171QN=" + TimeUtil.getFormatCurrentTime(new Date(), "millisecond", 0) + ";ST=" + counDevice.getMonitoringType() + ";CN=3020;PW=123456;MN="
                         + counDevice.getMn() + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatTime(date, "second") + ";PolId=" + polId + ";"
                         + getParameterPackage(divisorParameter, "status", counDataType.getZs()) + "&&B381";
                 break;

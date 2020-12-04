@@ -49,6 +49,10 @@ public class CounDevice extends Model<CounDevice> {
      */
          private String agreement;
 
+         private Integer subpackage;
+
+         private Integer subpackageNumber;
+
     private LocalDateTime gmtCreate;
 
     private LocalDateTime gmtModified;
@@ -84,6 +88,22 @@ public class CounDevice extends Model<CounDevice> {
 
     public void setMn(String mn) {
         this.mn = mn;
+    }
+
+    public Integer getSubpackage() {
+        return subpackage;
+    }
+
+    public void setSubpackage(Integer subpackage) {
+        this.subpackage = subpackage;
+    }
+
+    public Integer getSubpackageNumber() {
+        return subpackageNumber;
+    }
+
+    public void setSubpackageNumber(Integer subpackageNumber) {
+        this.subpackageNumber = subpackageNumber;
     }
 
     public LocalDateTime getGmtCreate() {
@@ -141,6 +161,8 @@ public class CounDevice extends Model<CounDevice> {
                 ", mn='" + mn + '\'' +
                 ", monitoringType='" + monitoringType + '\'' +
                 ", agreement='" + agreement + '\'' +
+                ", subpackage=" + subpackage +
+                ", subpackageNumber=" + subpackageNumber +
                 ", gmtCreate=" + gmtCreate +
                 ", gmtModified=" + gmtModified +
                 '}';

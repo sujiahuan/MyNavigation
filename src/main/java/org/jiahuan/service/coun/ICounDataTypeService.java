@@ -3,10 +3,10 @@ package org.jiahuan.service.coun;
 import org.jiahuan.entity.coun.CounDataType;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.jiahuan.entity.coun.CounDevice;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.io.IOException;
-import java.util.Calendar;
-import java.util.List;
+import java.util.*;
 
 /**
  * <p>
@@ -33,6 +33,16 @@ public interface ICounDataTypeService extends IService<CounDataType> {
      * @throws IOException
      */
     void sendRealTime(Integer deviceId,Integer dataType) throws IOException;
+
+
+    /**
+     * 获取数据包
+     * @param deviceId 设备id
+     * @param dataType 提取数据类型 实时（1）\分钟（2）\小时（3）\日（4）
+     * @param is3020 是否是3020
+     * @return
+     */
+    String getDataPackage(Integer deviceId,Integer dataType,boolean is3020) throws IOException;
 
     /**
      * 发送补发数据
@@ -67,13 +77,21 @@ public interface ICounDataTypeService extends IService<CounDataType> {
      */
     void sendMessage(CounDevice counDevice, String message) throws IOException ;
 
-    /**
-     * 获取已进行crc加密的实时数据组装报文
-     * @param counDevice  设备对象
-     * @param dataType 实时（1）\分钟（2）\小时（3）\日（4）\参数（5）\状态（6）
-     * @param is3020 是否是3020数据
-     * @return 返回组装好的crc加密数据包
-     */
-    String getRealTimeDataPackage(CounDevice counDevice, Integer dataType,boolean is3020);
+//    /**
+//     * 获取已进行crc加密的实时数据组装报文
+//     * @param counDevice  设备对象
+//     * @param dataType 实时（1）\分钟（2）\小时（3）\日（4）\参数（5）\状态（6）
+//     * @param is3020 是否是3020数据
+//     * @return 返回组装好的crc加密数据包
+//     */
+//    String getRealTimeDataPackage(CounDevice counDevice, Date date, HashMap<String, Map<String, String>> divisorParameter, Integer pnum, Integer pno, Integer dataType, boolean is3020);
+//
+//    /**
+//     * 获取因子参数map
+//     * @param parameters 因子参数集合
+//     * @param is3020 是否是3020
+//     * @return map
+//     */
+//    public HashMap<String, Map<String, String>> getDivisorParameterMap(List<Object> parameters, boolean is3020);
 
 }
