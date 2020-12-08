@@ -46,7 +46,7 @@ public class CounCounterchargeController {
         RetMsgData<CounCountercharge> msgData = new RetMsgData<>();
 
         try {
-            iCounCounterchargeService.updateById(counCountercharge);
+            iCounCounterchargeService.updateCounCountercharge(counCountercharge);
             return msgData;
         } catch (Exception e) {
             msgData.setMsg(e.getMessage());

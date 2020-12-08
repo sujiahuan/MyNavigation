@@ -28,4 +28,6 @@ public interface ICounCounterchargeService extends IService<CounCountercharge> {
 
     void deleteByDeviceId(Integer deviceId);
 
+    void updateCounCountercharge(CounCountercharge counCountercharge);
+
 }

@@ -96,8 +96,6 @@ public class CounCounterchargeServiceImpl extends ServiceImpl<CounCounterchargeM
 
 
         //修改连接状态
-//            CounCountercharge counCountercharge = iCounCounterchargeService.getCounCounterchargeByDeviceId(deviceId);
-//            iCounCounterchargeService.updateById(counCountercharge);
         iConnectionObj.getConnetionStatusPoll().add(counDevice.getId());
 
 
@@ -284,6 +282,12 @@ public class CounCounterchargeServiceImpl extends ServiceImpl<CounCounterchargeM
         QueryWrapper<CounCountercharge> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("device_id", deviceId);
         iCounCounterchargeService.remove(queryWrapper);
+    }
+
+    @Override
+    public void updateCounCountercharge(CounCountercharge counCountercharge) {
+        iCounCounterchargeService.closeConnection(counCountercharge.getDeviceId());
+        iCounCounterchargeService.updateById(counCountercharge);
     }
 
 
