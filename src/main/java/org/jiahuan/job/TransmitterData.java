@@ -27,8 +27,6 @@ public class TransmitterData {
     @Autowired
     private ICounDataTypeService iCounDataTypeService;
     @Autowired
-    private ICounDeviceService iCounDeviceService;
-    @Autowired
     private IConnectionObj iConnectionObj;
 
     @Scheduled(cron="0,30 * * * * ?")
