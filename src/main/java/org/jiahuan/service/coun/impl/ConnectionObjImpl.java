@@ -7,7 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
+import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.net.SocketException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -75,7 +77,9 @@ public class ConnectionObjImpl implements IConnectionObj {
      */
     private void startConnetion(CounDevice counDevice) throws IOException {
         if (!socketPool.containsKey(counDevice.getId())) {
-            Socket socket = new Socket(counDevice.getIp(), counDevice.getPort());
+            Socket socket = new Socket();
+            SocketAddress socketAddress = new InetSocketAddress(counDevice.getIp(), counDevice.getPort());
+            socket.connect(socketAddress, 2000);
             OutputStream outputStream = socket.getOutputStream();
             InputStream inputStream = socket.getInputStream();
             InputStreamReader reader = new InputStreamReader(inputStream);

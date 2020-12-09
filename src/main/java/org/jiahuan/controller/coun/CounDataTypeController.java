@@ -19,6 +19,7 @@ import org.springframework.stereotype.Controller;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -44,7 +45,6 @@ public class CounDataTypeController {
         RetMsgData<CounDataType> msgData = new RetMsgData<>();
         try {
             iCounDataTypeService.sendRealTime(deviceId,dataType);
-            return msgData;
         }catch (ConnectException e) {
             if(e.getMessage().equals("Connection timed out: connect")||e.getMessage().equals("Connection timed out (Connection timed out)")){
                 msgData.setMsg(" 连接服务器超时，请检查服务器能否正常连接");
@@ -54,7 +54,6 @@ public class CounDataTypeController {
                 e.printStackTrace();
                 msgData.setMsg("没处理的异常："+e.getMessage());
             }
-            return msgData;
         }catch (SocketException e) {
             if(e.getMessage().equals("Software caused connection abort: socket write error")){
                 msgData.setMsg("连接已过时，请重发");
@@ -66,10 +65,16 @@ public class CounDataTypeController {
                 e.printStackTrace();
                 msgData.setMsg("没处理的异常："+e.getMessage());
             }
-            return msgData;
+        } catch (SocketTimeoutException e) {
+            if (e.getMessage().equals("connect timed out")) {
+                msgData.setMsg("连接已超时，请检查该服务器是否能连上");
+            } else {
+                msgData.setMsg("没处理的异常：" + e.getMessage());
+            }
         }catch (Exception e) {
             e.printStackTrace();
             msgData.setMsg(e.getMessage());
+        }finally{
             return msgData;
         }
     }
@@ -80,10 +85,10 @@ public class CounDataTypeController {
         try {
             String dataPackage = iCounDataTypeService.getDataPackage(deviceId, dataType, false);
             msgData.setData(dataPackage);
-            return msgData;
         } catch (Exception e) {
             e.printStackTrace();
             msgData.setMsg(e.getMessage());
+        }finally{
             return msgData;
         }
     }
@@ -98,10 +103,10 @@ public class CounDataTypeController {
                 return msgData;
             }
             msgData.setData(dataPackage);
-            return msgData;
         } catch (Exception e) {
             e.printStackTrace();
             msgData.setMsg(e.getMessage());
+        }finally{
             return msgData;
         }
     }
@@ -112,7 +117,6 @@ public class CounDataTypeController {
         try {
             CounDevice counDevice = iCounDeviceService.getById(deviceId);
             iCounDataTypeService.sendMessage(counDevice,msg);
-            return msgData;
         }catch (ConnectException e) {
             if(e.getMessage().equals("Connection timed out: connect")||e.getMessage().equals("Connection timed out (Connection timed out)")){
                 msgData.setMsg(" 连接服务器超时，请检查");
@@ -121,7 +125,6 @@ public class CounDataTypeController {
             }else{
                 msgData.setMsg("没处理的异常："+e.getMessage());
             }
-            return msgData;
         }catch (SocketException e) {
             if(e.getMessage().equals("Software caused connection abort: socket write error")){
                 msgData.setMsg("连接已过时，请重发");
@@ -133,9 +136,15 @@ public class CounDataTypeController {
                 e.printStackTrace();
                 msgData.setMsg("没处理的异常："+e.getMessage());
             }
-            return msgData;
+        } catch (SocketTimeoutException e) {
+            if (e.getMessage().equals("connect timed out")) {
+                msgData.setMsg("连接已超时，请检查该服务器是否能连上");
+            } else {
+                msgData.setMsg("没处理的异常：" + e.getMessage());
+            }
         } catch (Exception e) {
             msgData.setMsg(e.getMessage());
+        }finally{
             return msgData;
         }
     }
@@ -146,9 +155,9 @@ public class CounDataTypeController {
         try {
             Integer supplyAgainCount = iCounDataTypeService.getSupplyAgainCount(deviceId, dataType);
             msgData.setData(supplyAgainCount);
-            return msgData;
         } catch (Exception e) {
             msgData.setMsg(e.getMessage());
+        }finally{
             return msgData;
         }
     }
@@ -158,7 +167,6 @@ public class CounDataTypeController {
         RetMsgData<CounDataType> msgData = new RetMsgData<>();
         try {
             iCounDataTypeService.sendSupplyAgain(deviceId,dataType);
-            return msgData;
         } catch (ConnectException e) {
             if(e.getMessage().equals("Connection timed out: connect")||e.getMessage().equals("Connection timed out (Connection timed out)")){
                 msgData.setMsg(" 连接服务器超时，请检查");
@@ -167,7 +175,6 @@ public class CounDataTypeController {
             }else{
                 msgData.setMsg("没处理的异常："+e.getMessage());
             }
-            return msgData;
         }catch (SocketException e) {
             if(e.getMessage().equals("Software caused connection abort: socket write error")){
                 msgData.setMsg("连接已过时，请重发");
@@ -179,9 +186,15 @@ public class CounDataTypeController {
                 e.printStackTrace();
                 msgData.setMsg("没处理的异常："+e.getMessage());
             }
-            return msgData;
+        } catch (SocketTimeoutException e) {
+            if (e.getMessage().equals("connect timed out")) {
+                msgData.setMsg("连接已超时，请检查该服务器是否能连上");
+            } else {
+                msgData.setMsg("没处理的异常：" + e.getMessage());
+            }
         }catch (IOException e) {
             msgData.setMsg(e.getMessage());
+        }finally{
             return msgData;
         }
     }
@@ -191,7 +204,6 @@ public class CounDataTypeController {
         RetMsgData<CounDataType> msgData = new RetMsgData<>();
         try {
             iCounDataTypeService.cancelSupplyAgain(deviceId);
-            return msgData;
         } catch (ConnectException e) {
             if(e.getMessage().equals("Connection timed out: connect")||e.getMessage().equals("Connection timed out (Connection timed out)")){
                 msgData.setMsg(" 连接服务器超时，请检查");
@@ -200,9 +212,9 @@ public class CounDataTypeController {
             }else{
                 msgData.setMsg("没处理的异常："+e.getMessage());
             }
-            return msgData;
         } catch (IOException e) {
             msgData.setMsg(e.getMessage());
+        }finally{
             return msgData;
         }
     }
@@ -213,10 +225,10 @@ public class CounDataTypeController {
         try {
             List<CounDataType> counDataTypes = iCounDataTypeService.getListCounDataTypeByDeviceId(deviceId);
             msgData.setData(counDataTypes);
-            return msgData;
         } catch (Exception e) {
             e.printStackTrace();
             msgData.setMsg(e.getMessage());
+        }finally{
             return msgData;
         }
     }
@@ -226,10 +238,10 @@ public class CounDataTypeController {
         RetMsgData<CounDataType> msgData = new RetMsgData<>();
         try {
             iCounDataTypeService.updateById(counDataType);
-            return msgData;
         } catch (Exception e) {
             e.printStackTrace();
             msgData.setMsg(e.getMessage());
+        }finally{
             return msgData;
         }
     }
