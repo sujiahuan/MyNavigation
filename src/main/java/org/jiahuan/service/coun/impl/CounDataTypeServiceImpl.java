@@ -250,6 +250,7 @@ public class CounDataTypeServiceImpl extends ServiceImpl<CounDataTypeMapper, Cou
             }
             //添加时间
             startCalendar.add(field, counDataType.getDateInterval());
+            pon=1;
             count++;
         }
 

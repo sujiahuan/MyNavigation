@@ -134,6 +134,8 @@ public class CounCounterchargeServiceImpl extends ServiceImpl<CounCounterchargeM
                                 break;
                         }
                         customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("校验平台下发的命令格式正确：" + stringBuffer.toString() + "\r\n\r\n"));
+                    }else{
+                        log.info("设置了不校验平台命令");
                     }
 
 
@@ -145,7 +147,8 @@ public class CounCounterchargeServiceImpl extends ServiceImpl<CounCounterchargeM
                         }
                         customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("校验指定CN号成功：" + countercharge.getVerifyCn() + "\r\n\r\n"));
                     } else {
-                        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("不需要校验CN号：" + countercharge.getVerifyCn() + "\r\n\r\n"));
+//                        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("不需要校验CN号：" + countercharge.getVerifyCn() + "\r\n\r\n"));
+                        log.info("不需要校验CN号：" + countercharge.getVerifyCn());
                     }
 
                     switch (counDevice.getAgreement()) {
