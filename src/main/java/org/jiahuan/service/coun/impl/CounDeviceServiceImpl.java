@@ -44,7 +44,6 @@ public class CounDeviceServiceImpl extends ServiceImpl<CounDeviceMapper, CounDev
 
     @Override
     public void updateCounDevice(CounDevice counDevice) throws IOException {
-        iCounCounterchargeService.closeConnection(counDevice.getId());
         iCounDeviceService.updateById(counDevice);
         iConnectionObj.cleanConnetion(counDevice.getId(),true);
     }
