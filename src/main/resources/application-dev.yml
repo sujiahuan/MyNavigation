@@ -16,7 +16,7 @@ spring:
     basic:
       enabled: false
   datasource:
-    url: jdbc:mysql://127.0.0.1:3306/my_navigation_pro?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Hongkong&&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://127.0.0.1:3306/my_navigation_dev?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Hongkong&&allowPublicKeyRetrieval=true
     username: root
     password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
