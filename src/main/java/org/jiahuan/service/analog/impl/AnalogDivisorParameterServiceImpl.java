@@ -28,9 +28,6 @@ public class AnalogDivisorParameterServiceImpl extends ServiceImpl<AnalogDivisor
 
     @Override
     public List<AnalogDivisorParameter> getCounDivisorByDeviceId(Integer deviceId) {
-//        QueryWrapper<AnalogDivisorParameter> queryWrapper = new QueryWrapper<>();
-//        queryWrapper.eq("device_id",deviceId);
-//        List<AnalogDivisorParameter> analogDivisorParameters = iAnalogDivisorParameterService.list(queryWrapper);
         List<AnalogDivisorParameter> analogDivisorParameters = analogDivisorParameterMapper.getCounDivisorByDeviceId(deviceId);
         return analogDivisorParameters;
     }
