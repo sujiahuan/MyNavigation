@@ -1,11 +1,11 @@
 package org.jiahuan.entity.sys;
 
 import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.extension.activerecord.Model;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.extension.activerecord.Model;
 
 import java.time.LocalDateTime;
-import java.io.Serializable;
 
 /**
  * <p>
@@ -57,6 +57,16 @@ public class SysDevice extends Model<SysDevice> {
 
     private LocalDateTime gmtModified;
 
+    @TableField(exist=false)
+    private Integer copyDeviceId;
+
+    public Integer getCopyDeviceId() {
+        return copyDeviceId;
+    }
+
+    public void setCopyDeviceId(Integer copyDeviceId) {
+        this.copyDeviceId = copyDeviceId;
+    }
 
     public Integer getId() {
         return id;
@@ -120,11 +130,6 @@ public class SysDevice extends Model<SysDevice> {
 
     public void setGmtModified(LocalDateTime gmtModified) {
         this.gmtModified = gmtModified;
-    }
-
-    @Override
-    protected Serializable pkVal() {
-        return this.id;
     }
 
     public String getMonitoringType() {

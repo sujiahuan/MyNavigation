@@ -13,4 +13,5 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  */
 public interface SysDeviceMapper extends BaseMapper<SysDevice> {
 
+    Integer insertReturnId(SysDevice sysDevice);
 }

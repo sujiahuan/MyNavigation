@@ -1,9 +1,7 @@
 package org.jiahuan.service.sys;
 
-import org.jiahuan.entity.sys.SysDevice;
 import com.baomidou.mybatisplus.extension.service.IService;
-
-import java.io.IOException;
+import org.jiahuan.entity.sys.SysDevice;
 
 /**
  * <p>
@@ -15,9 +13,9 @@ import java.io.IOException;
  */
 public interface ISysDeviceService extends IService<SysDevice> {
 
-    void addInitCounDevice(SysDevice counDvice) throws IOException;
+    void addInitCounDevice(SysDevice counDvice);
 
-    void updateCounDevice(SysDevice sysDevice) throws IOException;
+    void updateCounDevice(SysDevice sysDevice) ;
 
     void deleteInitById(Integer deviceId);
 }

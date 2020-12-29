@@ -1,15 +1,20 @@
 package org.jiahuan.service.sys.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.jiahuan.entity.analog.AnalogDivisorParameter;
 import org.jiahuan.entity.sys.SysDevice;
 import org.jiahuan.mapper.sys.SysDeviceMapper;
-import org.jiahuan.service.analog.*;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.jiahuan.service.analog.IAnalogDataTypeService;
+import org.jiahuan.service.analog.IAnalogDivisorParameterService;
+import org.jiahuan.service.analog.IAnalogRemoteCounteraccusationService;
+import org.jiahuan.service.analog.IConnectionObj;
 import org.jiahuan.service.sys.ISysDeviceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
+import java.util.List;
 
 /**
  * <p>
@@ -32,11 +37,20 @@ public class SysDeviceServiceImpl extends ServiceImpl<SysDeviceMapper, SysDevice
     private IAnalogRemoteCounteraccusationService iAnalogRemoteCounteraccusationService;
     @Autowired
     private IConnectionObj iConnectionObj;
+    @Autowired
+    private SysDeviceMapper sysDeviceMapper;
 
     @Transactional
     @Override
-    public void addInitCounDevice(SysDevice counDvice) throws IOException {
-        iSysDeviceService.save(counDvice);
+    public void addInitCounDevice(SysDevice counDvice) {
+         iSysDeviceService.save(counDvice);
+        if(null!=counDvice.getCopyDeviceId()){
+            List<AnalogDivisorParameter> divisorParameters = iAnalogDivisorParameterService.getCounDivisorByDeviceId(counDvice.getCopyDeviceId());
+            for (AnalogDivisorParameter divisorParameter : divisorParameters) {
+                divisorParameter.setDeviceId(counDvice.getId());
+            }
+            iAnalogDivisorParameterService.saveBatch(divisorParameters);
+        }
         //初始化数据类型
         iAnalogDataTypeService.addInitByDeviceId(counDvice.getId());
         //初始化反控
@@ -44,8 +58,19 @@ public class SysDeviceServiceImpl extends ServiceImpl<SysDeviceMapper, SysDevice
     }
 
     @Override
-    public void updateCounDevice(SysDevice sysDevice) throws IOException {
+    public void updateCounDevice(SysDevice sysDevice)  {
         iSysDeviceService.updateById(sysDevice);
+        if(null!=sysDevice.getCopyDeviceId()){
+            QueryWrapper<AnalogDivisorParameter> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("device_id", sysDevice.getId());
+            iAnalogDivisorParameterService.remove(queryWrapper);
+            List<AnalogDivisorParameter> divisorParameters = iAnalogDivisorParameterService.getCounDivisorByDeviceId(sysDevice.getCopyDeviceId());
+            for (AnalogDivisorParameter divisorParameter : divisorParameters) {
+                divisorParameter.setDeviceId(sysDevice.getId());
+            }
+
+            iAnalogDivisorParameterService.saveBatch(divisorParameters);
+        }
         iConnectionObj.cleanConnetion(sysDevice.getId(),true);
     }
 
