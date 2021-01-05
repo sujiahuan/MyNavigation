@@ -408,7 +408,7 @@ public class DataPackageUtils {
 		String group;
 		try {
 			//17协议
-			regex = "QN=[\\w\\d;=\\-&.,]+&{2,4}";
+			regex = "QN=[\\w\\d\\p{Punct}]+&{2,4}";
 			p = Pattern.compile(regex);
 			m = p.matcher(msg);
 			m.find();
@@ -417,7 +417,8 @@ public class DataPackageUtils {
 		} catch (Exception a) {
 			try {
 				//05协议
-				regex = "ST=[\\w\\d;=\\-&.,]+&{2,4}";
+//				regex = "ST=[\\w\\d;=\\-&.,#]+&{2,4}";
+				regex = "ST=[\\w\\d\\p{Punct}]+&{2,4}";
 				p = Pattern.compile(regex);
 				m = p.matcher(msg);
 				m.find();
