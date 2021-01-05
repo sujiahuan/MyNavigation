@@ -91,11 +91,7 @@ public class AnalogDataTypeController {
     public RetMsgData<String> computeCrc(@RequestParam String msg){
         RetMsgData<String> msgData = new RetMsgData<>();
         try {
-            String dataPackage = DataPackageUtils.composeDataPackage(DataPackageUtils.positiveExpression(msg), false);
-            if(VerdictUtil.isNull(dataPackage)){
-                msgData.setMsg("数据格式不对");
-                return msgData;
-            }
+            String dataPackage = DataPackageUtils.composeDataPackage(msg, false);
             msgData.setData(dataPackage);
         } catch (Exception e) {
             e.printStackTrace();
