@@ -435,7 +435,7 @@ public class DataPackageUtils {
 					return group;
 				} catch (Exception c) {
 					c.printStackTrace();
-					return null;
+					return msg;
 				}
 			}
 
