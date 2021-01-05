@@ -1,6 +1,7 @@
 package org.jiahuan.service.analog.impl;
 
 import lombok.extern.slf4j.Slf4j;
+import org.jiahuan.entity.analog.AnalogRemoteCounteraccusation;
 import org.jiahuan.entity.sys.SysDevice;
 import org.jiahuan.service.analog.IConnectionObj;
 import org.springframework.stereotype.Service;
@@ -20,10 +21,10 @@ public class ConnectionObjImpl implements IConnectionObj {
     private Map<Integer, LocalDateTime> socketCommunicationTime = new HashMap<>();
     private Map<Integer, BufferedReader> buffReaderPoll = new HashMap<>();
     private Map<Integer, OutputStream> outputPoll = new HashMap<>();
-    private static Set<Integer> controlConnetionStatusPoll = new HashSet<>();
+    private Map<Integer, AnalogRemoteCounteraccusation> controlConnetionPoll = new HashMap<>();
 
     @Override
-    public boolean isConnetion(Integer deviceId) {
+    public boolean isSocketConnetion(Integer deviceId) {
         if (!socketPool.containsKey(deviceId)) {
             return false;
         }
@@ -39,9 +40,14 @@ public class ConnectionObjImpl implements IConnectionObj {
     }
 
     @Override
+    public boolean isControlConnetion(Integer deviceId) {
+        return controlConnetionPoll.containsKey(deviceId);
+    }
+
+    @Override
     public void openConnetion(SysDevice sysDevice) throws IOException {
         try {
-            if (!isConnetion(sysDevice.getId())) {
+            if (!isSocketConnetion(sysDevice.getId())) {
                 Socket socket = new Socket();
                 SocketAddress socketAddress = new InetSocketAddress(sysDevice.getIp(), sysDevice.getPort());
                 socket.connect(socketAddress, 2000);
@@ -53,7 +59,6 @@ public class ConnectionObjImpl implements IConnectionObj {
                 socketCommunicationTime.put(sysDevice.getId(), LocalDateTime.now());
                 buffReaderPoll.put(sysDevice.getId(), bufferedReader);
                 outputPoll.put(sysDevice.getId(), outputStream);
-                return;
             }
         } catch (Exception e) {
             throw e;
@@ -106,17 +111,31 @@ public class ConnectionObjImpl implements IConnectionObj {
     }
 
     @Override
+    public AnalogRemoteCounteraccusation getControlConnetion(Integer deviceId){
+        if(controlConnetionPoll.containsKey(deviceId)){
+            return controlConnetionPoll.get(deviceId);
+        }
+        return null;
+    }
+
+
+    @Override
     public Map<Integer, Socket> getSocketConnetionPoll() {
-        return socketPool;
+        return new HashMap<>(socketPool);
     }
 
     @Override
     public Map<Integer, LocalDateTime> getSocketCommunicationTimePoll() {
-        return socketCommunicationTime;
+        return new HashMap<>(socketCommunicationTime);
     }
 
-    public Set<Integer> getControlConnetionPoll() {
-        return controlConnetionStatusPoll;
+    public Map<Integer, AnalogRemoteCounteraccusation> getControlConnetionPoll() {
+        return new HashMap<>(controlConnetionPoll);
+    }
+
+    @Override
+    public void setControlConnetionPoll(AnalogRemoteCounteraccusation counteraccusation) {
+        controlConnetionPoll.put(counteraccusation.getDeviceId(),counteraccusation);
     }
 
 
@@ -128,8 +147,8 @@ public class ConnectionObjImpl implements IConnectionObj {
      * @throws IOException
      */
     public void cleanConnetion(Integer deviceId, boolean isAll) {
-        if (controlConnetionStatusPoll.contains(deviceId)) {
-            controlConnetionStatusPoll.remove(deviceId);
+        if (controlConnetionPoll.containsKey(deviceId)) {
+            controlConnetionPoll.remove(deviceId);
         }
 
         if (!isAll) {

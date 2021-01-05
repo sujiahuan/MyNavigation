@@ -50,11 +50,11 @@ public class AnalogRemoteCounteraccusationImpl extends ServiceImpl<AnalogRemoteC
     private IConnectionObj iConnectionObj;
 
     @Override
-    public org.jiahuan.entity.analog.AnalogRemoteCounteraccusation getCounCounterchargeByDeviceId(Integer deviceId) {
+    public AnalogRemoteCounteraccusation getCounCounterchargeByDeviceId(Integer deviceId) {
         QueryWrapper<org.jiahuan.entity.analog.AnalogRemoteCounteraccusation> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("device_id", deviceId);
         org.jiahuan.entity.analog.AnalogRemoteCounteraccusation countercharge = iAnalogRemoteCounteraccusationService.getOne(queryWrapper);
-        countercharge.setConnetionStatus(iConnectionObj.getControlConnetionPoll().contains(deviceId));
+        countercharge.setConnetionStatus(iConnectionObj.isControlConnetion(deviceId));
         return countercharge;
     }
 
@@ -71,7 +71,7 @@ public class AnalogRemoteCounteraccusationImpl extends ServiceImpl<AnalogRemoteC
 
     @Override
     public boolean getSocketConnetionStatus(Integer deviceId) {
-        if(iConnectionObj.isConnetion(deviceId)){
+        if(iConnectionObj.isSocketConnetion(deviceId)){
             return true;
         };
         return false;
@@ -87,7 +87,7 @@ public class AnalogRemoteCounteraccusationImpl extends ServiceImpl<AnalogRemoteC
 
         SysDevice sysDevice = iSysDeviceService.getById(deviceId);
 
-        org.jiahuan.entity.analog.AnalogRemoteCounteraccusation countercharge = iAnalogRemoteCounteraccusationService.getCounCounterchargeByDeviceId(deviceId);
+        AnalogRemoteCounteraccusation counteraccusation = iAnalogRemoteCounteraccusationService.getCounCounterchargeByDeviceId(deviceId);
         //获取输入流和输出流
         OutputStream outputStream = iConnectionObj.getOutputStream(deviceId);
         BufferedReader bufferedReader = iConnectionObj.getBuffReader(deviceId);
@@ -114,14 +114,14 @@ public class AnalogRemoteCounteraccusationImpl extends ServiceImpl<AnalogRemoteC
 
 
         //修改连接状态
-        iConnectionObj.getControlConnetionPoll().add(sysDevice.getId());
+        iConnectionObj.setControlConnetionPoll(counteraccusation);
 
 
         Runnable runnable1 = new Runnable() {
             @SneakyThrows
             @Override
             public void run() {
-                while (iConnectionObj.getControlConnetionPoll().contains(sysDevice.getId())) {
+                while (iConnectionObj.isControlConnetion(deviceId)) {
                     StringBuffer stringBuffer = new StringBuffer();
 
                     while (bufferedReader.ready() != false) {
@@ -130,10 +130,13 @@ public class AnalogRemoteCounteraccusationImpl extends ServiceImpl<AnalogRemoteC
 
                     //判断是否取到平台命令
                     if ("".equals(stringBuffer.toString())) {
+                        Thread.sleep(2000);
                         continue;
                     }
 
                     customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("获取到平台下发的反控命令：" + stringBuffer.toString() + "\r\n\r\n"));
+
+                    AnalogRemoteCounteraccusation countercharge = iConnectionObj.getControlConnetion(deviceId);
 
                     //是否校验平台命令
                     if (countercharge.getVerifyPlatformCommand() == 1) {
@@ -294,21 +297,21 @@ public class AnalogRemoteCounteraccusationImpl extends ServiceImpl<AnalogRemoteC
 
     @Override
     public void addInitByDeviceId(Integer deviceId) {
-        org.jiahuan.entity.analog.AnalogRemoteCounteraccusation analogRemoteCounteraccusation = new org.jiahuan.entity.analog.AnalogRemoteCounteraccusation(deviceId, 1, "", 9012, 1);
+        AnalogRemoteCounteraccusation analogRemoteCounteraccusation = new org.jiahuan.entity.analog.AnalogRemoteCounteraccusation(deviceId, 1, "", 9012, 1);
         iAnalogRemoteCounteraccusationService.save(analogRemoteCounteraccusation);
     }
 
     @Override
     public void deleteByDeviceId(Integer deviceId) {
-        QueryWrapper<org.jiahuan.entity.analog.AnalogRemoteCounteraccusation> queryWrapper = new QueryWrapper<>();
+        QueryWrapper<AnalogRemoteCounteraccusation> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("device_id", deviceId);
         iAnalogRemoteCounteraccusationService.remove(queryWrapper);
     }
 
     @Override
-    public void updateCounCountercharge(org.jiahuan.entity.analog.AnalogRemoteCounteraccusation analogRemoteCounteraccusation) {
-        iAnalogRemoteCounteraccusationService.colseControlConnection(analogRemoteCounteraccusation.getDeviceId());
+    public void updateCounCountercharge(AnalogRemoteCounteraccusation analogRemoteCounteraccusation) {
         iAnalogRemoteCounteraccusationService.updateById(analogRemoteCounteraccusation);
+        iConnectionObj.setControlConnetionPoll(analogRemoteCounteraccusation);
     }
 
 
