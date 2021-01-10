@@ -106,15 +106,15 @@ public class SysDeviceController {
     }
 
     @GetMapping("/getPage")
-    public RetMsgData<IPage<SysDevice>> getPage(@RequestParam Integer page, @RequestParam Integer size, @RequestParam String mn, @RequestParam Integer id){
+    public RetMsgData<IPage<SysDevice>> getPage(@RequestParam Integer page, @RequestParam Integer size, @RequestParam String mn, @RequestParam String name){
         RetMsgData<IPage<SysDevice>> msgData = new RetMsgData<>();
         Page<SysDevice> page1 = new Page<>(page, size);
         QueryWrapper<SysDevice> queryWrapper = new QueryWrapper<>();
         if(VerdictUtil.isNotNull(mn)){
             queryWrapper.eq("mn",mn);
         }
-        if(VerdictUtil.isNotNull(id)){
-            queryWrapper.eq("id",id);
+        if(VerdictUtil.isNotNull(name)){
+            queryWrapper.like("name",name);
         }
 
         queryWrapper.orderByDesc("gmt_create");
