@@ -1,20 +1,24 @@
 package org.jiahuan.controller.analog;
 
 
+import org.jiahuan.common.config.CustomWebSocketConfig;
 import org.jiahuan.common.model.RetMsgData;
 import org.jiahuan.common.util.DataPackageUtils;
 import org.jiahuan.common.util.VerdictUtil;
 import org.jiahuan.entity.analog.AnalogDataType;
 import org.jiahuan.entity.sys.SysDevice;
 import org.jiahuan.service.analog.IAnalogDataTypeService;
+import org.jiahuan.service.analog.impl.CustomWebSocketHandler;
 import org.jiahuan.service.sys.ISysDeviceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.socket.TextMessage;
 
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -32,7 +36,7 @@ public class AnalogDataTypeController {
     @Autowired
     private IAnalogDataTypeService iAnalogDataTypeService;
     @Autowired
-    private ISysDeviceService iSysDeviceService;
+    private CustomWebSocketConfig customWebSocketConfig;
 
     @GetMapping("/sendRealTime")
     public RetMsgData<AnalogDataType> sendRealTime(@RequestParam Integer deviceId, @RequestParam Integer dataType){
@@ -109,8 +113,9 @@ public class AnalogDataTypeController {
     public RetMsgData<AnalogDataType> sendMessage(@RequestParam Integer deviceId, @RequestParam String msg){
         RetMsgData<AnalogDataType> msgData = new RetMsgData<>();
         try {
-            SysDevice sysDevice = iSysDeviceService.getById(deviceId);
-            iAnalogDataTypeService.sendMessage(deviceId,msg);
+            ArrayList<String> dataPack = new ArrayList<>();
+            iAnalogDataTypeService.sendMessage(deviceId,msg,dataPack);
+            customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(deviceId),new TextMessage(dataPack.toString()));
         }catch (ConnectException e) {
             if(e.getMessage().equals("Connection timed out: connect")||e.getMessage().equals("Connection timed out (Connection timed out)")){
                 msgData.setMsg(" 连接服务器超时，请检查");

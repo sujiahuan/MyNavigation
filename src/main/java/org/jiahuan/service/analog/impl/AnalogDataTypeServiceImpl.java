@@ -99,6 +99,7 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
 
     @Override
     public void sendRealTime(Integer deviceId, Integer dataType) throws Exception {
+        List<String> dataPack=new ArrayList<>();
         SysDevice sysDevice = iSysDeviceService.getById(deviceId);
         List<AnalogDivisorParameter> analogDivisorParameters = iAnalogDivisorParameterService.getCounDivisorByDeviceId(deviceId);
 
@@ -120,37 +121,29 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
 
             for (int i = 1; i <= analogDivisorParameters.size(); i++) {
                 divisorParameters.add(analogDivisorParameters.get(i - 1));
-                //判断是否需要分包
-//            if (counDevice.getSubpackage() != 0) {
                 //判断是否满足分包数
                 if (i % sysDevice.getSubpackageNumber() == 0) {
                     HashMap<String, Map<String, String>> divisorParameterMap = getDivisorParameterMap(divisorParameters, false);
                     divisorParameters.clear();
                     //获取实时数据包
                     String message = getRealTimeDataPackage(sysDevice, date, divisorParameterMap, pnum, pon, dataType, false);
-                    iAnalogDataTypeService.sendMessage(sysDevice.getId(), message);
+                    iAnalogDataTypeService.sendMessage(sysDevice.getId(), message,dataPack);
                     pon++;
                 } else if (i == analogDivisorParameters.size()) {
                     HashMap<String, Map<String, String>> divisorParameterMap = getDivisorParameterMap(divisorParameters, false);
                     //获取实时数据包
                     String message = getRealTimeDataPackage(sysDevice, date, divisorParameterMap, pnum, pon, dataType, false);
-                    iAnalogDataTypeService.sendMessage(deviceId, message);
+                    iAnalogDataTypeService.sendMessage(deviceId, message,dataPack);
                 }
-//            } else if (i == counDivisorParameters.size()) {
-//                HashMap<String, Map<String, String>> divisorParameterMap = getDivisorParameterMap(divisorParameters, false);
-//                //获取实时数据包
-//                String message = getRealTimeDataPackage(counDevice, date, divisorParameterMap, pnum, pon, dataType, false);
-//                iCounDataTypeService.sendMessage(counDevice, message);
-//            }
             }
         } else {
             divisorParameters = new ArrayList<>(analogDivisorParameters);
             HashMap<String, Map<String, String>> divisorParameterMap = getDivisorParameterMap(divisorParameters, false);
             //获取实时数据包
             String message = getRealTimeDataPackage(sysDevice, date, divisorParameterMap, pnum, pon, dataType, false);
-            iAnalogDataTypeService.sendMessage(deviceId, message);
+            iAnalogDataTypeService.sendMessage(deviceId, message,dataPack);
         }
-
+        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage(dataPack.toString()));
     }
 
     @Override
@@ -167,7 +160,7 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
 
     @Override
     public void sendSupplyAgain(Integer deviceId, Integer dataType) throws Exception {
-
+        List<String> dataPack=new ArrayList<>();
         AnalogDataType analogDataType = iAnalogDataTypeService.getCounDataTypeByDeviceId(deviceId, dataType);
         SysDevice sysDevice = iSysDeviceService.getById(deviceId);
         int field = 13;
@@ -230,7 +223,7 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
                         //获取补发数据包
                         String dataPackage = getSupplyAgainDataPackage(sysDevice, startCalendar.getTime(), divisorParameterMap, pnum, pon, analogDataType, false);
                         //发送消息
-                        iAnalogDataTypeService.sendMessage(deviceId, dataPackage);
+                        this.sendMessage(deviceId, dataPackage,dataPack);
                         pon++;
                         //最后一个包因子不足则直接发送
                     } else if (i == analogDivisorParameters.size()) {
@@ -238,14 +231,14 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
                         //获取补发数据包
                         String dataPackage = getSupplyAgainDataPackage(sysDevice, startCalendar.getTime(), divisorParameterMap, pnum, pon, analogDataType, false);
 //发送消息
-                        iAnalogDataTypeService.sendMessage(deviceId, dataPackage);
+                        this.sendMessage(deviceId, dataPackage,dataPack);
                     }
                 } else if (i == analogDivisorParameters.size()) {
                     HashMap<String, Map<String, String>> divisorParameterMap = getDivisorParameterMap(divisorParameters, false);
                     //获取补发数据包
                     String dataPackage = getSupplyAgainDataPackage(sysDevice, startCalendar.getTime(), divisorParameterMap, pnum, pon, analogDataType, false);
                     //发送消息
-                    iAnalogDataTypeService.sendMessage(deviceId, dataPackage);
+                    iAnalogDataTypeService.sendMessage(deviceId, dataPackage,dataPack);
                 }
             }
             //添加时间
@@ -253,7 +246,7 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
             pon = 1;
             count++;
         }
-
+        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage(dataPack.toString()));
         if (supplyAgainStatus.get(deviceId)) {
             customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("发送完成，本次共补发" + dataTypeStr + "数据：" + count + " 条"));
         } else {
@@ -320,20 +313,19 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
 //        iCounDataTypeService.sendMessage(counDevice, message);
     }
 
-
     @Override
-    public void sendMessage(Integer deviceId, String message) throws Exception {
+    public void sendMessage(Integer deviceId, String message,List<String> dataPack) throws Exception {
         OutputStream outputStream = iConnectionObj.getOutputStream(deviceId);
         if (message.indexOf("\r\n") == -1) {
             message += "\r\n";
         }
         try {
             outputStream.write(message.getBytes());
+            dataPack.add(message);
         } catch (Exception e) {
             iConnectionObj.cleanConnetion(deviceId, true);
             throw e;
         }
-        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(deviceId), new TextMessage(message + "\r\n"));
     }
 
     /**

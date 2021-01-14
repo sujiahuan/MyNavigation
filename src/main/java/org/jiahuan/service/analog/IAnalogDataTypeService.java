@@ -73,7 +73,7 @@ public interface IAnalogDataTypeService extends IService<AnalogDataType> {
      * @param message 数据包
      * @throws IOException
      */
-    void sendMessage(Integer deviceId, String message) throws Exception;
+    void sendMessage(Integer deviceId, String message,List<String> dataPack) throws Exception;
 
 //    /**
 //     * 获取已进行crc加密的实时数据组装报文
