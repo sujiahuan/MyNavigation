@@ -160,7 +160,7 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
 
     @Override
     public void sendSupplyAgain(Integer deviceId, Integer dataType) throws Exception {
-        List<String> dataPack=new ArrayList<>();
+        List<String> dataPacks=new ArrayList<>();
         AnalogDataType analogDataType = iAnalogDataTypeService.getCounDataTypeByDeviceId(deviceId, dataType);
         SysDevice sysDevice = iSysDeviceService.getById(deviceId);
         int field = 13;
@@ -223,7 +223,7 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
                         //获取补发数据包
                         String dataPackage = getSupplyAgainDataPackage(sysDevice, startCalendar.getTime(), divisorParameterMap, pnum, pon, analogDataType, false);
                         //发送消息
-                        this.sendMessage(deviceId, dataPackage,dataPack);
+                        this.sendMessage(deviceId, dataPackage,dataPacks);
                         pon++;
                         //最后一个包因子不足则直接发送
                     } else if (i == analogDivisorParameters.size()) {
@@ -231,14 +231,14 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
                         //获取补发数据包
                         String dataPackage = getSupplyAgainDataPackage(sysDevice, startCalendar.getTime(), divisorParameterMap, pnum, pon, analogDataType, false);
 //发送消息
-                        this.sendMessage(deviceId, dataPackage,dataPack);
+                        this.sendMessage(deviceId, dataPackage,dataPacks);
                     }
                 } else if (i == analogDivisorParameters.size()) {
                     HashMap<String, Map<String, String>> divisorParameterMap = getDivisorParameterMap(divisorParameters, false);
                     //获取补发数据包
                     String dataPackage = getSupplyAgainDataPackage(sysDevice, startCalendar.getTime(), divisorParameterMap, pnum, pon, analogDataType, false);
                     //发送消息
-                    iAnalogDataTypeService.sendMessage(deviceId, dataPackage,dataPack);
+                    iAnalogDataTypeService.sendMessage(deviceId, dataPackage,dataPacks);
                 }
             }
             //添加时间
@@ -246,7 +246,11 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
             pon = 1;
             count++;
         }
-        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage(dataPack.toString()));
+        if(dataPacks.size()>500){
+            dataPacks.subList(dataPacks.size()-500,dataPacks.size());
+            dataPacks.add(0, "已超过500条，只保留500条数据");
+        }
+        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage(dataPacks.toString()));
         if (supplyAgainStatus.get(deviceId)) {
             customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("发送完成，本次共补发" + dataTypeStr + "数据：" + count + " 条"));
         } else {
