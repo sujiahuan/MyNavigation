@@ -33,18 +33,16 @@ public class AnalogDivisorParameterController {
     private IAnalogDivisorParameterService iAnalogDivisorParameterService;
 
     @PostMapping("/add")
-    public RetMsgData<AnalogDivisorParameter> add(@RequestBody AnalogDivisorParameter obj){
-        RetMsgData<AnalogDivisorParameter> msgData = new RetMsgData<>();
+    public RetMsgData<List<AnalogDivisorParameter>> add(@RequestBody List<AnalogDivisorParameter> divisorParameters){
+        RetMsgData<List<AnalogDivisorParameter>> msgData = new RetMsgData<>();
 
-//        if(VerdictUtil.isNull(CounDivisor.getName())){
-//            msgData.setMsg("name为空");
-//        }
-
-        obj.setGmtCreate(LocalDateTime.now());
+        divisorParameters.forEach(divisorParameter -> {
+            divisorParameter.setGmtCreate(LocalDateTime.now());
+        });
 
         try{
-            iAnalogDivisorParameterService.save(obj);
-            msgData.setData(obj);
+            iAnalogDivisorParameterService.saveOrUpdateBatch(divisorParameters);
+            msgData.setData(divisorParameters);
             return msgData;
         }catch (Exception e){
             msgData.setMsg(e.getMessage());
