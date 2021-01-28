@@ -249,8 +249,6 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
             pon = 1;
             count++;
         }
-        System.out.println("while循环"+count+"次，共花费了："+(System.currentTimeMillis()-currentTimeMillis));
-        System.out.println();
         if(dataPacks.size()>100){
             dataPacks.subList(dataPacks.size()-100,dataPacks.size());
             dataPacks.add(0, "已超过100条，只保留100条数据");
