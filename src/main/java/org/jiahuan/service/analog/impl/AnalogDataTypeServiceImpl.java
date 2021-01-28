@@ -209,6 +209,7 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
                 pnum = analogDivisorParameters.size() / sysDevice.getSubpackageNumber() + 1;
             }
         }
+        long currentTimeMillis = System.currentTimeMillis();
         //时间遍历
         while (startCalendar.getTimeInMillis() - endCalendar.getTimeInMillis() <= 0 && supplyAgainStatus.get(deviceId)) {
 
@@ -228,6 +229,7 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
                         //最后一个包因子不足则直接发送
                     } else if (i == analogDivisorParameters.size()) {
                         HashMap<String, Map<String, String>> divisorParameterMap = getDivisorParameterMap(divisorParameters, false);
+                        divisorParameters.clear();
                         //获取补发数据包
                         String dataPackage = getSupplyAgainDataPackage(sysDevice, startCalendar.getTime(), divisorParameterMap, pnum, pon, analogDataType, false);
 //发送消息
@@ -235,6 +237,7 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
                     }
                 } else if (i == analogDivisorParameters.size()) {
                     HashMap<String, Map<String, String>> divisorParameterMap = getDivisorParameterMap(divisorParameters, false);
+                    divisorParameters.clear();
                     //获取补发数据包
                     String dataPackage = getSupplyAgainDataPackage(sysDevice, startCalendar.getTime(), divisorParameterMap, pnum, pon, analogDataType, false);
                     //发送消息
@@ -246,9 +249,11 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
             pon = 1;
             count++;
         }
-        if(dataPacks.size()>500){
-            dataPacks.subList(dataPacks.size()-500,dataPacks.size());
-            dataPacks.add(0, "已超过500条，只保留500条数据");
+        System.out.println("while循环"+count+"次，共花费了："+(System.currentTimeMillis()-currentTimeMillis));
+        System.out.println();
+        if(dataPacks.size()>100){
+            dataPacks.subList(dataPacks.size()-100,dataPacks.size());
+            dataPacks.add(0, "已超过100条，只保留100条数据");
         }
         customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage(dataPacks.toString()));
         if (supplyAgainStatus.get(deviceId)) {
@@ -359,6 +364,7 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
      */
     public HashMap<String, Map<String, String>> getDivisorParameterMap(List<Object> parameters, boolean is3020) {
         HashMap<String, Map<String, String>> divisorParameter = new HashMap<>();
+
         if (is3020) {
             AnalogCode analogCode = (AnalogCode) parameters.get(0);
             List<AnalogCodeParameter> analogCodeParameters = iAnalogCodeParameterService.getCounParameterByCodeId(analogCode.getId());
