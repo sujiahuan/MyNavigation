@@ -73,7 +73,7 @@ public class ConnectionObjImpl implements IConnectionObj {
      * @throws IOException
      */
     public Socket getSocket(Integer deviceId) throws Exception {
-        if(socketPool.containsKey(deviceId)){
+        if (socketPool.containsKey(deviceId)) {
             socketCommunicationTime.put(deviceId, LocalDateTime.now());
             return socketPool.get(deviceId);
         }
@@ -88,9 +88,9 @@ public class ConnectionObjImpl implements IConnectionObj {
      * @throws IOException
      */
     public BufferedReader getBuffReader(Integer deviceId) throws Exception {
-        if(buffReaderPoll.containsKey(deviceId)){
+        if (buffReaderPoll.containsKey(deviceId)) {
             socketCommunicationTime.put(deviceId, LocalDateTime.now());
-        return buffReaderPoll.get(deviceId);
+            return buffReaderPoll.get(deviceId);
         }
         throw new Exception("连接已断开，请连接");
     }
@@ -103,16 +103,16 @@ public class ConnectionObjImpl implements IConnectionObj {
      * @throws IOException
      */
     public OutputStream getOutputStream(Integer deviceId) throws Exception {
-        if(outputPoll.containsKey(deviceId)){
+        if (outputPoll.containsKey(deviceId)) {
             socketCommunicationTime.put(deviceId, LocalDateTime.now());
-        return outputPoll.get(deviceId);
-    }
+            return outputPoll.get(deviceId);
+        }
         throw new Exception("连接已断开，请连接");
     }
 
     @Override
-    public AnalogRemoteCounteraccusation getControlConnetion(Integer deviceId){
-        if(controlConnetionPoll.containsKey(deviceId)){
+    public AnalogRemoteCounteraccusation getControlConnetion(Integer deviceId) {
+        if (controlConnetionPoll.containsKey(deviceId)) {
             return controlConnetionPoll.get(deviceId);
         }
         return null;
@@ -135,7 +135,7 @@ public class ConnectionObjImpl implements IConnectionObj {
 
     @Override
     public void setControlConnetionPoll(AnalogRemoteCounteraccusation counteraccusation) {
-        controlConnetionPoll.put(counteraccusation.getDeviceId(),counteraccusation);
+        controlConnetionPoll.put(counteraccusation.getDeviceId(), counteraccusation);
     }
 
 

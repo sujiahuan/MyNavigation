@@ -209,7 +209,6 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
                 pnum = analogDivisorParameters.size() / sysDevice.getSubpackageNumber() + 1;
             }
         }
-        long currentTimeMillis = System.currentTimeMillis();
         //时间遍历
         while (startCalendar.getTimeInMillis() - endCalendar.getTimeInMillis() <= 0 && supplyAgainStatus.get(deviceId)) {
 
