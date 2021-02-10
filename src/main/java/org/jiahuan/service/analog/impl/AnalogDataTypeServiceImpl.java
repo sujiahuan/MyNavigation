@@ -240,7 +240,7 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
                     //获取补发数据包
                     String dataPackage = getSupplyAgainDataPackage(sysDevice, startCalendar.getTime(), divisorParameterMap, pnum, pon, analogDataType, false);
                     //发送消息
-                    iAnalogDataTypeService.sendMessage(deviceId, dataPackage,dataPacks);
+                    this.sendMessage(deviceId, dataPackage,dataPacks);
                 }
             }
             //添加时间
@@ -321,12 +321,11 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
 
     @Override
     public void sendMessage(Integer deviceId, String message,List<String> dataPack) throws Exception {
-        OutputStream outputStream = iConnectionObj.getOutputStream(deviceId);
         if (message.indexOf("\r\n") == -1) {
             message += "\r\n";
         }
         try {
-            outputStream.write(message.getBytes());
+            iConnectionObj.getOutputStream(deviceId).write(message.getBytes());
             dataPack.add(message);
         } catch (Exception e) {
             iConnectionObj.cleanConnetion(deviceId, true);
