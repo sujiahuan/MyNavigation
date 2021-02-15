@@ -16,6 +16,10 @@ import java.util.List;
  */
 public interface IAnalogDataTypeService extends IService<AnalogDataType> {
 
+    boolean getSupplyAgainStatus(Integer deviceId) ;
+
+    void waitForTheReissueToComplete(Integer deviceId) throws InterruptedException;
+
     AnalogDataType getCounDataTypeByDeviceId(Integer deviceId, Integer dataType);
 
     List<AnalogDataType> getListCounDataTypeByDeviceId(Integer deviceId);
@@ -55,7 +59,7 @@ public interface IAnalogDataTypeService extends IService<AnalogDataType> {
      * @param deviceId
      * @throws IOException
      */
-    void cancelSupplyAgain(Integer deviceId) throws IOException ;
+    void cancelSupplyAgain(Integer deviceId)  ;
 
 
     int getSupplyAgainCount(Integer deviceId, Integer dataType);

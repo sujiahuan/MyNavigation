@@ -60,6 +60,22 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
     private IConnectionObj iConnectionObj;
 
     @Override
+    public boolean getSupplyAgainStatus(Integer deviceId) {
+        if(supplyAgainStatus.containsKey(deviceId)&&supplyAgainStatus.get(deviceId)){
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public void waitForTheReissueToComplete(Integer deviceId) throws InterruptedException {
+        if(supplyAgainStatus.get(deviceId)){
+            Thread.sleep(3000);
+            this.waitForTheReissueToComplete(deviceId);
+        }
+    }
+
+    @Override
     public AnalogDataType getCounDataTypeByDeviceId(Integer deviceId, Integer dataType) {
         QueryWrapper<AnalogDataType> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("device_id", deviceId);
@@ -190,9 +206,7 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
         startCalendar.setTime(analogDataType.getStartTime());
         endCalendar.setTime(analogDataType.getEndTime());
 
-        if (!supplyAgainStatus.containsKey(deviceId)) {
-            supplyAgainStatus.put(deviceId, true);
-        }
+        supplyAgainStatus.put(deviceId, true);
 
         List<AnalogDivisorParameter> analogDivisorParameters = iAnalogDivisorParameterService.getCounDivisorByDeviceId(deviceId);
 
@@ -211,7 +225,6 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
         }
         //时间遍历
         while (startCalendar.getTimeInMillis() - endCalendar.getTimeInMillis() <= 0 && supplyAgainStatus.get(deviceId)) {
-
             for (int i = 1; i <= analogDivisorParameters.size(); i++) {
                 divisorParameters.add(analogDivisorParameters.get(i - 1));
                 //判断是否需要分包
@@ -248,15 +261,15 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
             pon = 1;
             count++;
         }
-        if(dataPacks.size()>100){
-            dataPacks.subList(dataPacks.size()-100,dataPacks.size());
-            dataPacks.add(0, "已超过100条，只保留100条数据");
+        supplyAgainStatus.put(deviceId, false);
+        if(dataPacks.size()>50){
+            dataPacks.subList(dataPacks.size()-50,dataPacks.size());
+            dataPacks.add(0, "本次补发已超过50条，只保留最后50条数据");
         }
         customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage(dataPacks.toString()));
         if (supplyAgainStatus.get(deviceId)) {
             customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("发送完成，本次共补发" + dataTypeStr + "数据：" + count + " 条"));
         } else {
-            supplyAgainStatus.put(deviceId, true);
             customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("终止成功，本次共补发" + dataTypeStr + "数据：" + count + " 条"));
         }
 
@@ -264,7 +277,7 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
 
 
     @Override
-    public void cancelSupplyAgain(Integer deviceId) throws IOException {
+    public void cancelSupplyAgain(Integer deviceId)  {
         supplyAgainStatus.put(deviceId, false);
     }
 
@@ -329,6 +342,7 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
             dataPack.add(message);
         } catch (Exception e) {
             iConnectionObj.cleanConnetion(deviceId, true);
+            supplyAgainStatus.put(deviceId, false);
             throw e;
         }
     }
