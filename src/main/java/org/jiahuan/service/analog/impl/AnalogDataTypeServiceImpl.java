@@ -70,8 +70,9 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
     @Override
     public void waitForTheReissueToComplete(Integer deviceId) throws InterruptedException {
         if(supplyAgainStatus.get(deviceId)){
-            Thread.sleep(3000);
-            this.waitForTheReissueToComplete(deviceId);
+          synchronized (deviceId){
+              deviceId.wait();
+          }
         }
     }
 
@@ -262,9 +263,12 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
             count++;
         }
         supplyAgainStatus.put(deviceId, false);
-        if(dataPacks.size()>50){
-            dataPacks.subList(dataPacks.size()-50,dataPacks.size());
-            dataPacks.add(0, "本次补发已超过50条，只保留最后50条数据");
+        synchronized (deviceId){
+            deviceId.notifyAll();
+        }
+        if(dataPacks.size()>30){
+            dataPacks=dataPacks.subList(dataPacks.size()-30,dataPacks.size());
+            dataPacks.add(0, "本次补发已超过30条，只保留最后30条数据");
         }
         customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage(dataPacks.toString()));
         if (supplyAgainStatus.get(deviceId)) {
