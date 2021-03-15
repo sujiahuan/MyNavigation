@@ -167,7 +167,7 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
         List<Object> divisorParameters;
         SysDevice sysDevice = iSysDeviceService.getById(deviceId);
         HashMap<String, Map<String, String>> divisorParameterMap;
-        if(dataType<=3){
+        if(dataType<=4){
             List<AnalogDivisorParameter> analogDivisorParameters = iAnalogDivisorParameterService.getCounDivisorByDeviceId(deviceId);
             divisorParameters = new ArrayList<>(analogDivisorParameters);
             divisorParameterMap = getDivisorParameterMap(divisorParameters, false);
