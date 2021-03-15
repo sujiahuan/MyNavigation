@@ -387,9 +387,10 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
      */
     public HashMap<String, Map<String, String>> getDivisorParameterMap(List<Object> parameters, boolean is3020) {
         HashMap<String, Map<String, String>> divisorParameter = new HashMap<>();
-        HashMap<String, String> property = new HashMap<>();
+
         if (is3020) {
             List<AnalogCodeParameter> analogCodeParameters = new ArrayList(parameters);
+            HashMap<String, String> property = new HashMap<>();
             for (AnalogCodeParameter analogCodeParameter : analogCodeParameters) {
                 property.put(analogCodeParameter.getKey(), analogCodeParameter.getValue());
             }
@@ -397,6 +398,7 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
         } else {
             List<AnalogDivisorParameter> analogDivisorParameters = new ArrayList(parameters);
             for (AnalogDivisorParameter analogDivisorParameter : analogDivisorParameters) {
+                HashMap<String, String> property = new HashMap<>();
                 property.put("Avg", RandomUtil.getRandomString(4, analogDivisorParameter.getAvgMin(), analogDivisorParameter.getAvgMax()));
                 property.put("Max", String.valueOf(analogDivisorParameter.getMax()));
                 property.put("Min", String.valueOf(analogDivisorParameter.getMin()));
