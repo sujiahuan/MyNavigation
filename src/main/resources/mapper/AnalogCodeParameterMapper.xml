@@ -4,14 +4,22 @@
 
     <!-- 通用查询映射结果 -->
     <resultMap id="BaseResultMap" type="org.jiahuan.entity.analog.AnalogCodeParameter">
-        <id column="id" property="id" />
-        <result column="device_id" property="deviceId" />
-        <result column="name" property="name" />
-        <result column="code" property="code" />
-        <result column="value" property="value" />
-        <result column="type" property="type" />
-        <result column="gmt_create" property="gmtCreate" />
-        <result column="gmt_modify" property="gmtModify" />
+        <id column="id" property="id"/>
+        <result column="code_id" property="codeId"/>
+        <result column="key" property="key"/>
+        <result column="value" property="value"/>
+        <result column="type" property="type"/>
+        <result column="gmt_create" property="gmtCreate"/>
+        <result column="gmt_modify" property="gmtModified"/>
     </resultMap>
+
+    <select id="getAnalogParameterByCodeId" resultType="org.jiahuan.entity.analog.AnalogCodeParameter">
+        select t1.*,t3.name,t3.code as divisor_name from analog_code_parameter t1
+        left join analog_code t2 on t1.code_id=t2.id
+        left join sys_divisor t3 on t3.id=t2.divisor_id
+        <where>
+            t1.code_id=#{codeId}
+        </where>
+    </select>
 
 </mapper>

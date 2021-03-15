@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.util.List;
 
 /**
@@ -21,21 +22,18 @@ import java.util.List;
 @Service
 public class AnalogCodeParameterServiceImpl extends ServiceImpl<AnalogCodeParameterMapper, AnalogCodeParameter> implements IAnalogCodeParameterService {
 
-    @Autowired
-    private IAnalogCodeParameterService iAnalogCodeParameterService;
+    @Resource
+    private AnalogCodeParameterMapper parameterMapper;
 
     @Override
     public List<AnalogCodeParameter> getCounParameterByCodeId(Integer codeId) {
-        QueryWrapper<AnalogCodeParameter> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("code_id",codeId);
-        List<AnalogCodeParameter> analogCodeParameters = iAnalogCodeParameterService.list(queryWrapper);
-        return analogCodeParameters;
+        return parameterMapper.getAnalogParameterByCodeId(codeId);
     }
 
     @Override
     public void deleteByCodeId(Integer codeId) {
         QueryWrapper<AnalogCodeParameter> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("code_id",codeId);
-        iAnalogCodeParameterService.remove(queryWrapper);
+        parameterMapper.delete(queryWrapper);
     }
 }

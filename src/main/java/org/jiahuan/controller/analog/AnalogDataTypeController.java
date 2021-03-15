@@ -77,7 +77,7 @@ public class AnalogDataTypeController {
     public RetMsgData<String> getRealTime(@RequestParam Integer deviceId, @RequestParam Integer dataType) {
         RetMsgData<String> msgData = new RetMsgData<>();
         try {
-            String dataPackage = iAnalogDataTypeService.getDataPackage(deviceId, dataType, false);
+            String dataPackage = iAnalogDataTypeService.getDataPackage(deviceId, dataType);
             msgData.setData(dataPackage);
         } catch (Exception e) {
             e.printStackTrace();

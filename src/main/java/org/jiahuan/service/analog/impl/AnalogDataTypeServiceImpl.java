@@ -16,10 +16,7 @@ import org.jiahuan.entity.analog.AnalogDataType;
 import org.jiahuan.entity.analog.AnalogDivisorParameter;
 import org.jiahuan.entity.sys.SysDevice;
 import org.jiahuan.mapper.analog.AnalogDataTypeMapper;
-import org.jiahuan.service.analog.IAnalogCodeParameterService;
-import org.jiahuan.service.analog.IAnalogDataTypeService;
-import org.jiahuan.service.analog.IAnalogDivisorParameterService;
-import org.jiahuan.service.analog.IConnectionObj;
+import org.jiahuan.service.analog.*;
 import org.jiahuan.service.sys.ISysDeviceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -52,6 +49,8 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
     @Autowired
     @Lazy
     private IAnalogDataTypeService iAnalogDataTypeService;
+    @Autowired
+    private IAnalogCodeService iAnalogCodeService;
     @Autowired
     private IAnalogCodeParameterService iAnalogCodeParameterService;
     @Autowired
@@ -164,11 +163,21 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
     }
 
     @Override
-    public String getDataPackage(Integer deviceId, Integer dataType, boolean is3020) throws IOException {
+    public String getDataPackage(Integer deviceId, Integer dataType) {
+        List<Object> divisorParameters;
         SysDevice sysDevice = iSysDeviceService.getById(deviceId);
-        List<AnalogDivisorParameter> analogDivisorParameters = iAnalogDivisorParameterService.getCounDivisorByDeviceId(deviceId);
-        List<Object> divisorParameters = new ArrayList<>(analogDivisorParameters);
-        HashMap<String, Map<String, String>> divisorParameterMap = getDivisorParameterMap(divisorParameters, false);
+        HashMap<String, Map<String, String>> divisorParameterMap;
+        if(dataType<=3){
+            List<AnalogDivisorParameter> analogDivisorParameters = iAnalogDivisorParameterService.getCounDivisorByDeviceId(deviceId);
+            divisorParameters = new ArrayList<>(analogDivisorParameters);
+            divisorParameterMap = getDivisorParameterMap(divisorParameters, false);
+        }else{
+            AnalogCode analogCode = iAnalogCodeService.getAnalogCodeByDeviceId(deviceId);
+            List<AnalogCodeParameter> analogCodeParameters = iAnalogCodeParameterService.getCounParameterByCodeId(analogCode.getId());
+            divisorParameters=new ArrayList<>(analogCodeParameters);
+            divisorParameterMap = getDivisorParameterMap(divisorParameters, true);
+        }
+
         //获取实时数据包
         String message = getRealTimeDataPackage(sysDevice, new Date(), divisorParameterMap, 1, 1, dataType, false);
         return message;
@@ -378,19 +387,16 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
      */
     public HashMap<String, Map<String, String>> getDivisorParameterMap(List<Object> parameters, boolean is3020) {
         HashMap<String, Map<String, String>> divisorParameter = new HashMap<>();
-
+        HashMap<String, String> property = new HashMap<>();
         if (is3020) {
-            AnalogCode analogCode = (AnalogCode) parameters.get(0);
-            List<AnalogCodeParameter> analogCodeParameters = iAnalogCodeParameterService.getCounParameterByCodeId(analogCode.getId());
-            HashMap<String, String> property = new HashMap<>();
+            List<AnalogCodeParameter> analogCodeParameters = new ArrayList(parameters);
             for (AnalogCodeParameter analogCodeParameter : analogCodeParameters) {
                 property.put(analogCodeParameter.getKey(), analogCodeParameter.getValue());
             }
-            divisorParameter.put(analogCode.getCode(), property);
+            divisorParameter.put(analogCodeParameters.get(0).getDivisorCode(), property);
         } else {
             List<AnalogDivisorParameter> analogDivisorParameters = new ArrayList(parameters);
             for (AnalogDivisorParameter analogDivisorParameter : analogDivisorParameters) {
-                HashMap<String, String> property = new HashMap<>();
                 property.put("Avg", RandomUtil.getRandomString(4, analogDivisorParameter.getAvgMin(), analogDivisorParameter.getAvgMax()));
                 property.put("Max", String.valueOf(analogDivisorParameter.getMax()));
                 property.put("Min", String.valueOf(analogDivisorParameter.getMin()));
@@ -549,7 +555,6 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
     private String getParameterPackage(Map<String, Map<String, String>> divisorParameter, String key, String zs) {
         Set<String> keySet;
         List<String> coding;
-        List<String> li = new ArrayList<>();
         StringBuffer buffer = new StringBuffer();
         switch (key) {
             case "realTime":
@@ -645,51 +650,41 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
                 }
                 return buffer.toString();
             case "parameter":
-                keySet = divisorParameter.keySet();
-                coding = new ArrayList<>(keySet);
+                String next = divisorParameter.keySet().iterator().next();
+                Map<String, String> stringStringMap = divisorParameter.get(next);
+                keySet = stringStringMap.keySet();
+                Iterator<String> iterator = keySet.iterator();
                 //遍历因子编码
-                for (String cod : coding) {
-                    String toJSONString = JSON.toJSONString(divisorParameter.get(cod));
-                    JSONObject jsonObject = JSON.parseObject(toJSONString);
-                    keySet = jsonObject.keySet();
-                    ArrayList<String> arrayList = new ArrayList<>(keySet);
-                    //遍历i12001、i13001等
-                    for (int i = 0; i < arrayList.size(); i++) {
-                        if (arrayList.get(i).indexOf("i12") == -1) {
-                            li.add(arrayList.get(i));
-                        }
-                    }
-                    for (int i = 0; i < li.size(); i++) {
-                        if (li.size() - 1 == i) {
-                            buffer.append(li.get(i) + "-Info=" + jsonObject.getString(li.get(i)));
-                        } else {
-                            buffer.append(li.get(i) + "-Info=" + jsonObject.getString(li.get(i)) + ";");
-                        }
-                    }
+                while (iterator.hasNext()){
+                    String parameterKey = iterator.next();
+                    String parameterValue = stringStringMap.get(parameterKey);
+                    buffer.append(parameterKey+"-Info=" + parameterValue+";");
                 }
+                buffer.deleteCharAt(buffer.length()-1);
+
                 return buffer.toString();
             case "status":
-                keySet = divisorParameter.keySet();
-                coding = new ArrayList<>(keySet);
-                for (String cod : coding) {
-                    String toJSONString = JSON.toJSONString(divisorParameter.get(cod));
-                    JSONObject jsonObject = JSON.parseObject(toJSONString);
-                    keySet = jsonObject.keySet();
-                    ArrayList<String> arrayList = new ArrayList<>(keySet);
-                    for (int i = 0; i < arrayList.size(); i++) {
-                        if (arrayList.get(i).indexOf("i12") != -1) {
-                            li.add(arrayList.get(i));
-                        }
-                    }
-                    for (int i = 0; i < li.size(); i++) {
-                        if (li.size() - 1 == i) {
-                            buffer.append(li.get(i) + "-Info=" + jsonObject.getString(li.get(i)));
-                        } else {
-                            buffer.append(li.get(i) + "-Info=" + jsonObject.getString(li.get(i)) + ";");
-                        }
-                    }
-                }
-                return buffer.toString();
+//                keySet = divisorParameter.keySet();
+//                coding = new ArrayList<>(keySet);
+//                for (String cod : coding) {
+//                    String toJSONString = JSON.toJSONString(divisorParameter.get(cod));
+//                    JSONObject jsonObject = JSON.parseObject(toJSONString);
+//                    keySet = jsonObject.keySet();
+//                    ArrayList<String> arrayList = new ArrayList<>(keySet);
+//                    for (int i = 0; i < arrayList.size(); i++) {
+//                        if (arrayList.get(i).indexOf("i12") != -1) {
+//                            li.add(arrayList.get(i));
+//                        }
+//                    }
+//                    for (int i = 0; i < li.size(); i++) {
+//                        if (li.size() - 1 == i) {
+//                            buffer.append(li.get(i) + "-Info=" + jsonObject.getString(li.get(i)));
+//                        } else {
+//                            buffer.append(li.get(i) + "-Info=" + jsonObject.getString(li.get(i)) + ";");
+//                        }
+//                    }
+//                }
+//                return buffer.toString();
         }
         return "Sorry 没找到你需要找的内容";
     }

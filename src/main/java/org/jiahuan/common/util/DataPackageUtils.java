@@ -418,7 +418,7 @@ public class DataPackageUtils {
 			try {
 				//05协议
 //				regex = "ST=[\\w\\d;=\\-&.,#]+&{2,4}";
-				regex = "ST=[\\w\\d\\p{Punct}]+&{2,4}";
+				regex = "ST=[\\w\\d\\p{Punct}]+&{2,4}[\\w\\d\\p{Punct} ]+&{2,4}";
 				p = Pattern.compile(regex);
 				m = p.matcher(msg);
 				m.find();

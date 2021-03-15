@@ -28,7 +28,7 @@ public class AnalogCodeController {
         RetMsgData<AnalogCode> msgData = new RetMsgData<>();
 
         try {
-            AnalogCode analogCode = iAnalogCodeService.getCounCodeByDeviceId(deviceId);
+            AnalogCode analogCode = iAnalogCodeService.getAnalogCodeByDeviceId(deviceId);
             msgData.setData(analogCode);
             return msgData;
         } catch (Exception e) {
@@ -45,7 +45,7 @@ public class AnalogCodeController {
             msgData.setMsg("deviceId为空");
             return msgData;
         }
-        if(VerdictUtil.isNull(analogCode.getCode())){
+        if(VerdictUtil.isNull(analogCode.getDivisorId())){
             msgData.setMsg("code为空");
             return msgData;
         }
@@ -67,7 +67,7 @@ public class AnalogCodeController {
             msgData.setMsg("deviceId为空");
             return msgData;
         }
-        if(VerdictUtil.isNull(analogCode.getCode())){
+        if(VerdictUtil.isNull(analogCode.getDivisorId())){
             msgData.setMsg("code为空");
             return msgData;
         }

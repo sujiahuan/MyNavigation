@@ -1,6 +1,9 @@
 package org.jiahuan.entity.analog;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
+import lombok.Data;
+
 import java.io.Serializable;
 
 /**
@@ -11,6 +14,7 @@ import java.io.Serializable;
  * @author jh
  * @since 2020-08-05
  */
+@Data
 public class AnalogCode extends Model<AnalogCode> {
 
     private static final long serialVersionUID = 1L;
@@ -19,44 +23,11 @@ public class AnalogCode extends Model<AnalogCode> {
 
     private Integer deviceId;
 
-    private String code;
+    private Integer divisorId;
+    @TableField(exist=false)
+    private String divisorName;
+    @TableField(exist=false)
+    private String divisorCode;
 
 
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public Integer getDeviceId() {
-        return deviceId;
-    }
-
-    public void setDeviceId(Integer deviceId) {
-        this.deviceId = deviceId;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
-    }
-
-    @Override
-    protected Serializable pkVal() {
-        return this.id;
-    }
-
-    @Override
-    public String toString() {
-        return "CounCode{" +
-        "id=" + id +
-        ", deviceId=" + deviceId +
-        ", code=" + code +
-        "}";
-    }
 }

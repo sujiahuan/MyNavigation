@@ -13,9 +13,9 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface IAnalogCodeService extends IService<AnalogCode> {
 
-    AnalogCode getCounCodeByDeviceId(Integer deviceId);
+    AnalogCode getAnalogCodeByDeviceId(Integer deviceId);
 
-    AnalogCode getCounCodeByCode(String coode);
+    AnalogCode getAnalogCodeByDivisorName(String divisorName);
 
-    void deleteCounCodeByDeviceId(Integer deviceId);
+    void deleteAnalogCodeByDeviceId(Integer deviceId);
 }

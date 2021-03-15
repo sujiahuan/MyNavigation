@@ -7,34 +7,29 @@ import java.util.Map;
 
 public class MyNavigationApplicationTests {
 
-    Map<Integer,Boolean> sendStatus=new HashMap<>();
-
     @Test
     public void testName() {
-        sendStatus.put(1,true);
+        MyNavigationApplicationTests myNavigationApplicationTests = new MyNavigationApplicationTests();
         new Thread(()->{
-            while (sendStatus.get(1)){
-                System.out.println("当前为true，继续循环");
-                try{
-                    Thread.sleep(1000);
-                }catch (Exception e){
-                    e.printStackTrace();
-                }
-            }
-            System.out.println("当前为false，跳出循环");
+            System.out.println("线程一开始等待");
+            test2();
+            System.out.println("线程一运行结束");
         }).start();
 
-        sendStatus.put(1,true);
         new Thread(()->{
-            try{
-                Thread.sleep(5000);
-                System.out.println("开始将true改成false");
-                sendStatus.put(1, false);
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-
+            System.out.println("线程二开始等待");
+            test2();
+            System.out.println("线程二运行结束");
         }).start();
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+//synchronized ("1"){
+//    System.out.println("开始放行");
+//    "1".notify();
+//}
 
         while (true){
             try {
@@ -44,6 +39,17 @@ public class MyNavigationApplicationTests {
             }
         }
 
+    }
+
+    private synchronized void test2() {
+            try {
+                System.out.println("进入等待");
+               this.wait();
+//                Thread.sleep(10000);
+                System.out.println("等待结束");
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
     }
 
 }

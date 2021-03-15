@@ -16,14 +16,39 @@ import java.util.List;
  */
 public interface IAnalogDataTypeService extends IService<AnalogDataType> {
 
+    /**
+     * 获取补发数据状态
+     * @param deviceId
+     * @return
+     */
     boolean getSupplyAgainStatus(Integer deviceId) ;
 
+    /**
+     * 等待补发完成
+     * @param deviceId
+     * @throws InterruptedException
+     */
     void waitForTheReissueToComplete(Integer deviceId) throws InterruptedException;
 
+    /**
+     * 获取该设备的某一个数据类型
+     * @param deviceId
+     * @param dataType
+     * @return
+     */
     AnalogDataType getCounDataTypeByDeviceId(Integer deviceId, Integer dataType);
 
+    /**
+     *获取该设备的所有数据类型
+     * @param deviceId
+     * @return
+     */
     List<AnalogDataType> getListCounDataTypeByDeviceId(Integer deviceId);
 
+    /**
+     * 添加初始化的
+     * @param deviceId
+     */
     void addInitByDeviceId(Integer deviceId);
 
     void deleteByDeviceId(Integer deviceId);
@@ -40,11 +65,10 @@ public interface IAnalogDataTypeService extends IService<AnalogDataType> {
     /**
      * 获取数据包
      * @param deviceId 设备id
-     * @param dataType 提取数据类型 实时（1）\分钟（2）\小时（3）\日（4）
-     * @param is3020 是否是3020
+     * @param dataType 提取数据类型 实时（1）\分钟（2）\小时（3）\日（4）\
      * @return
      */
-    String getDataPackage(Integer deviceId,Integer dataType,boolean is3020) throws IOException;
+    String getDataPackage(Integer deviceId,Integer dataType) ;
 
     /**
      * 发送补发数据
@@ -62,6 +86,12 @@ public interface IAnalogDataTypeService extends IService<AnalogDataType> {
     void cancelSupplyAgain(Integer deviceId)  ;
 
 
+    /**
+     * 获取补发统计的数据
+     * @param deviceId
+     * @param dataType
+     * @return
+     */
     int getSupplyAgainCount(Integer deviceId, Integer dataType);
 
     /**
@@ -78,22 +108,5 @@ public interface IAnalogDataTypeService extends IService<AnalogDataType> {
      * @throws IOException
      */
     void sendMessage(Integer deviceId, String message,List<String> dataPack) throws Exception;
-
-//    /**
-//     * 获取已进行crc加密的实时数据组装报文
-//     * @param counDevice  设备对象
-//     * @param dataType 实时（1）\分钟（2）\小时（3）\日（4）\参数（5）\状态（6）
-//     * @param is3020 是否是3020数据
-//     * @return 返回组装好的crc加密数据包
-//     */
-//    String getRealTimeDataPackage(CounDevice counDevice, Date date, HashMap<String, Map<String, String>> divisorParameter, Integer pnum, Integer pno, Integer dataType, boolean is3020);
-//
-//    /**
-//     * 获取因子参数map
-//     * @param parameters 因子参数集合
-//     * @param is3020 是否是3020
-//     * @return map
-//     */
-//    public HashMap<String, Map<String, String>> getDivisorParameterMap(List<Object> parameters, boolean is3020);
 
 }
