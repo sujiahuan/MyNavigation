@@ -408,7 +408,7 @@ public class DataPackageUtils {
 		String group;
 		try {
 			//17协议
-			regex = "QN=[\\w\\d\\p{Punct}]+&{2,4}";
+			regex = "QN=[\\w\\d\\p{Punct}]+&{2,4}[\\w\\d\\p{Punct} ]+&{2,4}";
 			p = Pattern.compile(regex);
 			m = p.matcher(msg);
 			m.find();
