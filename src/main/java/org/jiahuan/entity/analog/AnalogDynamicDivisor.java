@@ -4,8 +4,6 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
 import lombok.Data;
 
-import java.io.Serializable;
-
 /**
  * <p>
  *
@@ -15,7 +13,7 @@ import java.io.Serializable;
  * @since 2020-08-05
  */
 @Data
-public class AnalogCode extends Model<AnalogCode> {
+public class AnalogDynamicDivisor extends Model<AnalogDynamicDivisor> {
 
     private static final long serialVersionUID = 1L;
 

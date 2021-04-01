@@ -7,7 +7,6 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 
 import java.time.LocalDateTime;
-import java.io.Serializable;
 
 /**
  * <p>
@@ -19,24 +18,24 @@ import java.io.Serializable;
  */
 
 @Data
-public class AnalogCodeParameter extends Model<AnalogCodeParameter> {
+public class AnalogDynamicParameter extends Model<AnalogDynamicParameter> {
 
     private static final long serialVersionUID = 1L;
 
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
 
-    private Integer codeId;
+    private Integer deviceId;
     @TableField(exist=false)
     private String divisorCode;
     @TableField(exist=false)
     private String divisorName;
 
-    private String key;
+    private int divisorId;
 
     private String value;
 
-    private Long type;
+    private int type;
 
     private LocalDateTime gmtCreate;
 

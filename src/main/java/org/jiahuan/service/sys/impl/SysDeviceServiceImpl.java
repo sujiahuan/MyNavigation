@@ -45,7 +45,7 @@ public class SysDeviceServiceImpl extends ServiceImpl<SysDeviceMapper, SysDevice
     public void addInitCounDevice(SysDevice counDvice) {
          iSysDeviceService.save(counDvice);
         if(null!=counDvice.getCopyDeviceId()){
-            List<AnalogDivisorParameter> divisorParameters = iAnalogDivisorParameterService.getCounDivisorByDeviceId(counDvice.getCopyDeviceId());
+            List<AnalogDivisorParameter> divisorParameters = iAnalogDivisorParameterService.getDivisorParameterByDeviceId(counDvice.getCopyDeviceId());
             for (AnalogDivisorParameter divisorParameter : divisorParameters) {
                 divisorParameter.setDeviceId(counDvice.getId());
             }
@@ -64,7 +64,7 @@ public class SysDeviceServiceImpl extends ServiceImpl<SysDeviceMapper, SysDevice
             QueryWrapper<AnalogDivisorParameter> queryWrapper = new QueryWrapper<>();
             queryWrapper.eq("device_id", sysDevice.getId());
             iAnalogDivisorParameterService.remove(queryWrapper);
-            List<AnalogDivisorParameter> divisorParameters = iAnalogDivisorParameterService.getCounDivisorByDeviceId(sysDevice.getCopyDeviceId());
+            List<AnalogDivisorParameter> divisorParameters = iAnalogDivisorParameterService.getDivisorParameterByDeviceId(sysDevice.getCopyDeviceId());
             for (AnalogDivisorParameter divisorParameter : divisorParameters) {
                 divisorParameter.setDeviceId(sysDevice.getId());
             }

@@ -10,8 +10,8 @@ import org.jiahuan.common.config.CustomWebSocketConfig;
 import org.jiahuan.common.util.DataPackageUtils;
 import org.jiahuan.common.util.RandomUtil;
 import org.jiahuan.common.util.TimeUtil;
-import org.jiahuan.entity.analog.AnalogCode;
-import org.jiahuan.entity.analog.AnalogCodeParameter;
+import org.jiahuan.entity.analog.AnalogDynamicDivisor;
+import org.jiahuan.entity.analog.AnalogDynamicParameter;
 import org.jiahuan.entity.analog.AnalogDataType;
 import org.jiahuan.entity.analog.AnalogDivisorParameter;
 import org.jiahuan.entity.sys.SysDevice;
@@ -50,9 +50,9 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
     @Lazy
     private IAnalogDataTypeService iAnalogDataTypeService;
     @Autowired
-    private IAnalogCodeService iAnalogCodeService;
+    private IAnalogDynamicDivisorService iAnalogDynamicDivisorService;
     @Autowired
-    private IAnalogCodeParameterService iAnalogCodeParameterService;
+    private IAnalogDynamicParameterService iAnalogDynamicParameterService;
     @Autowired
     private CustomWebSocketConfig customWebSocketConfig;
     @Autowired
@@ -117,7 +117,7 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
     public void sendRealTime(Integer deviceId, Integer dataType) throws Exception {
         List<String> dataPack=new ArrayList<>();
         SysDevice sysDevice = iSysDeviceService.getById(deviceId);
-        List<AnalogDivisorParameter> analogDivisorParameters = iAnalogDivisorParameterService.getCounDivisorByDeviceId(deviceId);
+        List<AnalogDivisorParameter> analogDivisorParameters = iAnalogDivisorParameterService.getDivisorParameterByDeviceId(deviceId);
 
         List<Object> divisorParameters = new ArrayList<>();
         int pnum = 1;
@@ -168,13 +168,12 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
         SysDevice sysDevice = iSysDeviceService.getById(deviceId);
         HashMap<String, Map<String, String>> divisorParameterMap;
         if(dataType<=4){
-            List<AnalogDivisorParameter> analogDivisorParameters = iAnalogDivisorParameterService.getCounDivisorByDeviceId(deviceId);
+            List<AnalogDivisorParameter> analogDivisorParameters = iAnalogDivisorParameterService.getDivisorParameterByDeviceId(deviceId);
             divisorParameters = new ArrayList<>(analogDivisorParameters);
             divisorParameterMap = getDivisorParameterMap(divisorParameters, false);
         }else{
-            AnalogCode analogCode = iAnalogCodeService.getAnalogCodeByDeviceId(deviceId);
-            List<AnalogCodeParameter> analogCodeParameters = iAnalogCodeParameterService.getCounParameterByCodeId(analogCode.getId());
-            divisorParameters=new ArrayList<>(analogCodeParameters);
+            List<AnalogDynamicParameter> analogDynamicParameters = iAnalogDynamicParameterService.getDynamicParameterByDeviceId(deviceId,dataType-5);
+            divisorParameters=new ArrayList<>(analogDynamicParameters);
             divisorParameterMap = getDivisorParameterMap(divisorParameters, true);
         }
 
@@ -218,7 +217,7 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
 
         supplyAgainStatus.put(deviceId, true);
 
-        List<AnalogDivisorParameter> analogDivisorParameters = iAnalogDivisorParameterService.getCounDivisorByDeviceId(deviceId);
+        List<AnalogDivisorParameter> analogDivisorParameters = iAnalogDivisorParameterService.getDivisorParameterByDeviceId(deviceId);
 
         List<Object> divisorParameters = new ArrayList<>();
         int pnum = 1;
@@ -361,24 +360,6 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
     }
 
     /**
-     * 发送到服务器
-     *
-     * @param ip      服务器地址：192.168.1.1
-     * @param port    8080
-     * @param message crc校验过的内容
-     * @throws IOException
-     */
-    private void sendData(String ip, int port, String message) throws IOException {
-        Socket socket = new Socket(ip, port);
-        OutputStream outputStream = socket.getOutputStream();
-        message += "\r\n";
-        outputStream.write(message.getBytes());
-        log.info(message);
-        outputStream.close();
-        socket.close();
-    }
-
-    /**
      * 获取因子参数map
      *
      * @param parameters 3020则传code对象，否则传因子参数对象
@@ -389,12 +370,13 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
         HashMap<String, Map<String, String>> divisorParameter = new HashMap<>();
 
         if (is3020) {
-            List<AnalogCodeParameter> analogCodeParameters = new ArrayList(parameters);
+            List<AnalogDynamicParameter> analogDynamicParameters = new ArrayList(parameters);
+            AnalogDynamicDivisor dynamicDivisor = iAnalogDynamicDivisorService.getDynamicDivisorByDeviceId(analogDynamicParameters.get(0).getDeviceId());
             HashMap<String, String> property = new HashMap<>();
-            for (AnalogCodeParameter analogCodeParameter : analogCodeParameters) {
-                property.put(analogCodeParameter.getKey(), analogCodeParameter.getValue());
+            for (AnalogDynamicParameter analogDynamicParameter : analogDynamicParameters) {
+                property.put(analogDynamicParameter.getDivisorCode(), analogDynamicParameter.getValue());
             }
-            divisorParameter.put(analogCodeParameters.get(0).getDivisorCode(), property);
+            divisorParameter.put(dynamicDivisor.getDivisorCode(), property);
         } else {
             List<AnalogDivisorParameter> analogDivisorParameters = new ArrayList(parameters);
             for (AnalogDivisorParameter analogDivisorParameter : analogDivisorParameters) {
@@ -524,13 +506,13 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
                         + sysDevice.getMn() + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatTime(date, "second") + ";PolId=" + polId + ";"
                         + getParameterPackage(divisorParameter, "parameter", analogDataType.getZs()) + "&&B381";
                 break;
-            case 6:
-                //获取编码，只考虑一个的情况
-                polId = divisorParameter.keySet().iterator().next();
-                link = "##0171QN=" + TimeUtil.getFormatCurrentTime(new Date(), "millisecond", 0) + ";ST=" + sysDevice.getMonitoringType() + ";CN=3020;PW=123456;MN="
-                        + sysDevice.getMn() + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatTime(date, "second") + ";PolId=" + polId + ";"
-                        + getParameterPackage(divisorParameter, "status", analogDataType.getZs()) + "&&B381";
-                break;
+//            case 6:
+//                //获取编码，只考虑一个的情况
+//                polId = divisorParameter.keySet().iterator().next();
+//                link = "##0171QN=" + TimeUtil.getFormatCurrentTime(new Date(), "millisecond", 0) + ";ST=" + sysDevice.getMonitoringType() + ";CN=3020;PW=123456;MN="
+//                        + sysDevice.getMn() + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatTime(date, "second") + ";PolId=" + polId + ";"
+//                        + getParameterPackage(divisorParameter, "status", analogDataType.getZs()) + "&&B381";
+//                break;
         }
         if (link != null && "05".equals(sysDevice.getAgreement()) && 1 == analogDataType.getDataType()) {
             int indexOf = link.indexOf("ST=");
@@ -550,7 +532,7 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
      * 拼接监测因子
      *
      * @param divisorParameter 因子参数 key：w00001...,value：{'max':'1'、'min':'2'、'i12001':'3'...}
-     * @param key              实时（realTime）/非实时，分钟、小时、日（history）/参数（parameter）/状态（status）
+     * @param key              实时（realTime）/非实时：分钟、小时、日（history）/动态：参数、状态（dynamic）
      * @param zs               合（join）/分（divide）/没有（none）
      * @return 拼接的监测因子
      */
@@ -651,7 +633,7 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
                     }
                 }
                 return buffer.toString();
-            case "parameter":
+            case "dynamic":
                 String next = divisorParameter.keySet().iterator().next();
                 Map<String, String> stringStringMap = divisorParameter.get(next);
                 keySet = stringStringMap.keySet();
@@ -665,7 +647,7 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
                 buffer.deleteCharAt(buffer.length()-1);
 
                 return buffer.toString();
-            case "status":
+//            case "status":
 //                keySet = divisorParameter.keySet();
 //                coding = new ArrayList<>(keySet);
 //                for (String cod : coding) {

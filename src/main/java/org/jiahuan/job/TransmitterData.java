@@ -66,7 +66,7 @@ public class TransmitterData {
                         log.error("没处理的异常：" + e.getMessage());
                     }
                 }catch (Exception e) {
-                    log.error(e.getMessage());
+                    log.warn(e.getMessage());
                 }
             });
         }

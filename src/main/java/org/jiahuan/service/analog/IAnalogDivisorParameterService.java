@@ -15,7 +15,7 @@ import java.util.List;
  */
 public interface IAnalogDivisorParameterService extends IService<AnalogDivisorParameter> {
 
-    List<AnalogDivisorParameter> getCounDivisorByDeviceId(Integer deviceId);
+    List<AnalogDivisorParameter> getDivisorParameterByDeviceId(Integer deviceId);
 
     void deleteByDeviceId(Integer deviceId);
 }

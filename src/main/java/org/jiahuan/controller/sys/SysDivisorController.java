@@ -101,7 +101,7 @@ public class SysDivisorController {
     }
 
     @GetMapping("/getPage")
-    public RetMsgData<IPage<SysDivisor>> getPage(@RequestParam Integer page, @RequestParam Integer size, @RequestParam String code, @RequestParam String name) {
+    public RetMsgData<IPage<SysDivisor>> getPage(@RequestParam Integer page, @RequestParam Integer size, @RequestParam String code, @RequestParam String name,@RequestParam Integer type) {
         RetMsgData<IPage<SysDivisor>> msgData = new RetMsgData<>();
         Page<SysDivisor> page1 = new Page<>(page, size);
         QueryWrapper<SysDivisor> queryWrapper = new QueryWrapper<>();
@@ -111,6 +111,7 @@ public class SysDivisorController {
         if (VerdictUtil.isNotNull(name)) {
             queryWrapper.like("name", name);
         }
+        queryWrapper.eq("type", type);
         queryWrapper.orderByDesc("gmt_create");
         try {
             msgData.setData(iSysDivisorService.page(page1, queryWrapper));

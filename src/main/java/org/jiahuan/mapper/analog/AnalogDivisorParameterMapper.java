@@ -20,6 +20,6 @@ import java.util.List;
 public interface AnalogDivisorParameterMapper extends BaseMapper<AnalogDivisorParameter> {
 
     @Select("select t1.*,t2.code as divisorCode from analog_divisor_parameter t1 INNER JOIN sys_divisor t2 on t1.divisor_id=t2.id where device_id=${deviceId}")
-    List<AnalogDivisorParameter> getCounDivisorByDeviceId(@Param("deviceId") Integer deviceId);
+    List<AnalogDivisorParameter> getDivisorParameterByDeviceId(@Param("deviceId") Integer deviceId);
 
 }

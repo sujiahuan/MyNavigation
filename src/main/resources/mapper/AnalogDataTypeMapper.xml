@@ -6,8 +6,10 @@
     <resultMap id="BaseResultMap" type="org.jiahuan.entity.analog.AnalogDataType">
         <id column="id" property="id" />
         <result column="device_id" property="deviceId" />
-        <result column="type" property="type" />
+        <result column="data_type" property="dataType" />
         <result column="is_timing" property="isTiming" />
+        <result column="zs" property="zs" />
+        <result column="date_interval" property="dateInterval" />
     </resultMap>
 
 </mapper>
