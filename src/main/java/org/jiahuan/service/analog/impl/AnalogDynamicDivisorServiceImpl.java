@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * <p>
@@ -27,7 +28,14 @@ public class AnalogDynamicDivisorServiceImpl extends ServiceImpl<AnalogDynamicDi
 
     @Override
     public AnalogDynamicDivisor getDynamicDivisorByDeviceId(Integer deviceId) {
-        return analogDynamicDivisorMapper.getDynamicDivisorByDeviceId(deviceId);
+        List<AnalogDynamicDivisor> analogDynamicDivisors = analogDynamicDivisorMapper.getDynamicDivisorByDeviceId(deviceId);
+        if(analogDynamicDivisors.size()==0){
+            return null;
+        }
+        for (int i = 1; i < analogDynamicDivisors.size(); i++) {
+            analogDynamicDivisorMapper.deleteById(analogDynamicDivisors.get(i).getId());
+        }
+        return analogDynamicDivisors.get(0);
     }
 
     @Override

@@ -65,7 +65,7 @@ public interface IAnalogDataTypeService extends IService<AnalogDataType> {
     /**
      * 获取数据包
      * @param deviceId 设备id
-     * @param dataType 提取数据类型 实时（1）\分钟（2）\小时（3）\日（4）\
+     * @param dataType 提取数据类型 实时（1）\分钟（2）\小时（3）\日（4）\状态(5)\参数(6)
      * @return
      */
     String getDataPackage(Integer deviceId,Integer dataType) ;
@@ -99,7 +99,7 @@ public interface IAnalogDataTypeService extends IService<AnalogDataType> {
      * @param deviceId 设备id
      * @param dataType 发的数据类型 实时（1）\分钟（2）\小时（3）\日（4）\参数（5）\状态（6）
      */
-    void sendParam3020(Integer deviceId,Integer dataType);
+    void sendParam3020(Integer deviceId,Integer dataType) throws Exception;
 
     /**
      * 发送组装好的数据包

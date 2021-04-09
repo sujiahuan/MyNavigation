@@ -7,29 +7,26 @@
         <id column="id" property="id"/>
         <result column="device_id" property="deviceId"/>
         <result column="divisorId" property="divisorId"/>
-        <result column="value" property="value"/>
+        <result column="value_max" property="valueMax"/>
+        <result column="value_min" property="valueMin"/>
         <result column="type" property="type"/>
         <result column="gmt_create" property="gmtCreate"/>
         <result column="gmt_modify" property="gmtModified"/>
     </resultMap>
 
     <select id="getDynamicParameterById" resultType="org.jiahuan.entity.analog.AnalogDynamicParameter">
-        select t1.*,t3.name,t3.code as divisor_name from analog_code_parameter t1
-        left join analog_code t2 on t1.code_id=t2.id
-        left join sys_divisor t3 on t3.id=t2.divisor_id
-        <where>
-            t1.id=#{id}
-        </where>
+         select t1.*,t2.name as divisor_name,t2.code as divisor_code from analog_dynamic_parameter t1
+        left join sys_divisor t2 on t2.id=t1.divisor_id
+        where t1.id=#{id}
     </select>
 
 
     <select id="getDynamicParameterByDeviceId" resultType="org.jiahuan.entity.analog.AnalogDynamicParameter">
-        select t1.*,t3.name,t3.code as divisor_name from analog_code_parameter t1
-        left join analog_code t2 on t1.code_id=t2.id
-        left join sys_divisor t3 on t3.id=t2.divisor_id
-            t1.device_id=#{deviceId}
+        select t1.*,t2.name as divisor_name,t2.code as divisor_code from analog_dynamic_parameter t1
+        left join sys_divisor t2 on t2.id=t1.divisor_id
+        where t1.device_id=#{deviceId}
             <if test="type gt 0">
-                and type=#{type}
+                and t1.type=#{type}
             </if>
 
     </select>

@@ -32,15 +32,15 @@ public class AnalogDynamicParameterController {
     @Autowired
     private IAnalogDynamicParameterService iAnalogDynamicParameterService;
 
-    @PostMapping("/add")
-    public RetMsgData<AnalogDynamicParameter> add(@RequestBody AnalogDynamicParameter obj){
-        RetMsgData<AnalogDynamicParameter> msgData = new RetMsgData<>();
+    @PostMapping("/addOrUpdate")
+    public RetMsgData<List<AnalogDynamicParameter>> add(@RequestBody List<AnalogDynamicParameter> objs){
+        RetMsgData<List<AnalogDynamicParameter>> msgData = new RetMsgData<>();
 
-        obj.setGmtCreate(LocalDateTime.now());
+        objs.forEach(obj->obj.setGmtCreate(LocalDateTime.now()));
 
         try{
-            iAnalogDynamicParameterService.save(obj);
-            msgData.setData(obj);
+            iAnalogDynamicParameterService.saveOrUpdateBatch(objs);
+            msgData.setData(objs);
             return msgData;
         }catch (Exception e){
             msgData.setMsg(e.getMessage());
@@ -92,33 +92,6 @@ public class AnalogDynamicParameterController {
         }
         try{
             msgData.setData(iAnalogDynamicParameterService.page(page1, queryWrapper));
-            return msgData;
-        }catch (Exception e){
-            msgData.setMsg(e.getMessage());
-            log.error("{}",e);
-            return msgData;
-        }
-    }
-
-    @PostMapping("/update")
-    public RetMsgData<IPage<AnalogDynamicParameter>> update(@RequestBody AnalogDynamicParameter obj){
-        RetMsgData<IPage<AnalogDynamicParameter>> msgData = new RetMsgData<>();
-
-//        AnalogCodeParameter byId = iAnalogCodeParameterService.getById(obj.getId());
-//        if(VerdictUtil.isNull(byId)){
-//            msgData.setMsg("找不到要修改的信息");
-//            return msgData;
-//        }
-
-        obj.setGmtModified(LocalDateTime.now());
-
-        UpdateWrapper<AnalogDynamicParameter> updateWrapper = new UpdateWrapper<>();
-        updateWrapper.eq("id",obj.getId());
-
-        obj.setGmtModified(LocalDateTime.now());
-
-        try{
-            iAnalogDynamicParameterService.updateById(obj);
             return msgData;
         }catch (Exception e){
             msgData.setMsg(e.getMessage());

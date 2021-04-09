@@ -23,7 +23,7 @@ public class AnalogDynamicDivisorController {
     @Autowired
     private IAnalogDynamicDivisorService iAnalogDynamicDivisorService;
 
-    @GetMapping("/getListByDeviceId")
+    @GetMapping("/getByDeviceId")
     public RetMsgData<AnalogDynamicDivisor> getListCounCode(@RequestParam Integer deviceId){
         RetMsgData<AnalogDynamicDivisor> msgData = new RetMsgData<>();
 
@@ -37,50 +37,23 @@ public class AnalogDynamicDivisorController {
         }
     }
 
-    @PostMapping("/add")
+    @PostMapping("/addOrUpdate")
     public RetMsgData<AnalogDynamicDivisor> addCounCode(@RequestBody AnalogDynamicDivisor analogDynamicDivisor){
         RetMsgData<AnalogDynamicDivisor> msgData = new RetMsgData<>();
 
-        if(VerdictUtil.isNull(analogDynamicDivisor.getDeviceId())){
-            msgData.setMsg("deviceId为空");
-            return msgData;
-        }
         if(VerdictUtil.isNull(analogDynamicDivisor.getDivisorId())){
             msgData.setMsg("code为空");
             return msgData;
         }
 
         try {
-            iAnalogDynamicDivisorService.save(analogDynamicDivisor);
+            iAnalogDynamicDivisorService.saveOrUpdate(analogDynamicDivisor);
             return msgData;
         } catch (Exception e) {
             msgData.setMsg(e.getMessage());
             return msgData;
         }
     }
-
-    @PostMapping("/update")
-    public RetMsgData<AnalogDynamicDivisor> updateCounCode(@RequestBody AnalogDynamicDivisor analogDynamicDivisor){
-        RetMsgData<AnalogDynamicDivisor> msgData = new RetMsgData<>();
-
-        if(VerdictUtil.isNull(analogDynamicDivisor.getDeviceId())){
-            msgData.setMsg("deviceId为空");
-            return msgData;
-        }
-        if(VerdictUtil.isNull(analogDynamicDivisor.getDivisorId())){
-            msgData.setMsg("code为空");
-            return msgData;
-        }
-
-        try {
-            iAnalogDynamicDivisorService.updateById(analogDynamicDivisor);
-            return msgData;
-        } catch (Exception e) {
-            msgData.setMsg(e.getMessage());
-            return msgData;
-        }
-    }
-
 
     @DeleteMapping("/deleteById")
     public RetMsgData<AnalogDynamicDivisor> deleteById(@RequestParam Integer id){

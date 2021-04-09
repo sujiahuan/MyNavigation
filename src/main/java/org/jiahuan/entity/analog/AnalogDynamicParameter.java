@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -33,12 +34,16 @@ public class AnalogDynamicParameter extends Model<AnalogDynamicParameter> {
 
     private int divisorId;
 
-    private String value;
+    private double valueMax;
+    private double valueMin;
 
+    /**
+     * 1：状态/2：参数
+     */
     private int type;
-
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss")
     private LocalDateTime gmtCreate;
-
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss")
     private LocalDateTime gmtModified;
 
 }

@@ -433,7 +433,6 @@ public class DataPackageUtils {
 					group = m.group();
 					return group;
 				} catch (Exception c) {
-					c.printStackTrace();
 					return msg;
 				}
 			}

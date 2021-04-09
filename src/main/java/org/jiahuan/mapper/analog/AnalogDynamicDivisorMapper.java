@@ -4,6 +4,8 @@ import org.apache.ibatis.annotations.Mapper;
 import org.jiahuan.entity.analog.AnalogDynamicDivisor;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
+import java.util.List;
+
 /**
  * <p>
  *  Mapper 接口
@@ -15,7 +17,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 @Mapper
 public interface AnalogDynamicDivisorMapper extends BaseMapper<AnalogDynamicDivisor> {
 
-    AnalogDynamicDivisor getDynamicDivisorByDeviceId(Integer deviceId);
+    List<AnalogDynamicDivisor> getDynamicDivisorByDeviceId(Integer deviceId);
 
     AnalogDynamicDivisor getDynamicDivisorById(Integer id);
 
