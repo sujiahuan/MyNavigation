@@ -300,6 +300,26 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
         endCalendar.setTime(analogDataType.getEndTime());
 
         int field = 13;
+        String dataTypeStr = "";
+
+        switch (dataType) {
+            case 1:
+                field = Calendar.SECOND;
+                dataTypeStr = "实时";
+                break;
+            case 2:
+                field = Calendar.MINUTE;
+                dataTypeStr = "分钟";
+                break;
+            case 3:
+                field = Calendar.HOUR;
+                dataTypeStr = "小时";
+                break;
+            case 4:
+                field = Calendar.DAY_OF_MONTH;
+                dataTypeStr = "日";
+                break;
+        }
 
         int count = 0;
         //时间遍历
