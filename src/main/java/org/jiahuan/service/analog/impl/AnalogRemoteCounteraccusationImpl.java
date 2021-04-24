@@ -2,7 +2,6 @@ package org.jiahuan.service.analog.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.jiahuan.common.config.CustomWebSocketConfig;
 import org.jiahuan.common.util.DataPackageUtils;
@@ -15,6 +14,7 @@ import org.jiahuan.service.analog.IAnalogDataTypeService;
 import org.jiahuan.service.analog.IAnalogRemoteCounteraccusationService;
 import org.jiahuan.service.analog.IConnectionObj;
 import org.jiahuan.service.sys.ISysDeviceService;
+import org.jiahuan.websocket.CustomWebSocketHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.TextMessage;

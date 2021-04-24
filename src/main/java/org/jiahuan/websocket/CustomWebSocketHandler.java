@@ -1,4 +1,4 @@
-package org.jiahuan.service.analog.impl;
+package org.jiahuan.websocket;
 
 import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.lang.StringUtils;
@@ -17,7 +17,7 @@ public class CustomWebSocketHandler extends TextWebSocketHandler implements WebS
     // 在线用户列表
     private static final Map<String, Set<WebSocketSession>> users;
     // 用户标识
-    private static final String CLIENT_ID = "mchNo";
+    private static final String CLIENT_ID = "deviceId";
 
     static {
         users = new HashMap<>();
@@ -100,7 +100,7 @@ public class CustomWebSocketHandler extends TextWebSocketHandler implements WebS
     /**
      * 发送信息给指定用户
      *
-     * @param mchNo 设备id
+     * @param deviceId 设备id
      * @param message
      * @return
      * @Title: sendMessageToUser
@@ -108,16 +108,16 @@ public class CustomWebSocketHandler extends TextWebSocketHandler implements WebS
      * @Date 2018年8月21日 上午11:01:08
      * @author OnlyMate
      */
-    public boolean sendMessageToUser(String mchNo, TextMessage message) {
-        if (users.get(mchNo) == null)
+    public boolean sendMessageToUser(String deviceId, TextMessage message) {
+        if (users.get(deviceId) == null)
             return false;
-        Set<WebSocketSession> webSocketSessions = users.get(mchNo);
+        Set<WebSocketSession> webSocketSessions = users.get(deviceId);
         Iterator<WebSocketSession> webSocketSessionIterator = webSocketSessions.iterator();
         try {
             while (webSocketSessionIterator.hasNext()) {
                 WebSocketSession webSocketSession = webSocketSessionIterator.next();
                 if (!webSocketSession.isOpen()) {
-                    logger.warn("客户端:{},已断开连接，发送消息失败", mchNo);
+                    logger.warn("客户端:{},已断开连接，发送消息失败", deviceId);
                     webSocketSessionIterator.remove();
                     continue;
                 }

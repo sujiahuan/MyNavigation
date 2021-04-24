@@ -1,7 +1,7 @@
 package org.jiahuan.common.config;
 
 import org.jiahuan.common.filter.CustomWebSocketInterceptorFilter;
-import org.jiahuan.service.analog.impl.CustomWebSocketHandler;
+import org.jiahuan.websocket.CustomWebSocketHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
