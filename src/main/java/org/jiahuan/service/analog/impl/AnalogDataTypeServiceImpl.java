@@ -4,7 +4,6 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.jiahuan.common.config.CustomWebSocketConfig;
 import org.jiahuan.common.util.DataPackageUtils;
@@ -16,16 +15,13 @@ import org.jiahuan.entity.analog.AnalogDataType;
 import org.jiahuan.entity.analog.AnalogDivisorParameter;
 import org.jiahuan.entity.sys.SysDevice;
 import org.jiahuan.mapper.analog.AnalogDataTypeMapper;
+import org.jiahuan.netty.NettyClient;
 import org.jiahuan.service.analog.*;
 import org.jiahuan.service.sys.ISysDeviceService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.TextMessage;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.net.Socket;
 import java.util.*;
 
 /**
@@ -40,8 +36,6 @@ import java.util.*;
 @Slf4j
 public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper, AnalogDataType> implements IAnalogDataTypeService {
 
-    private Map<Integer, Boolean> supplyAgainStatus = new HashMap<>();
-
     @Autowired
     private ISysDeviceService iSysDeviceService;
     @Autowired
@@ -53,7 +47,16 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
     @Autowired
     private CustomWebSocketConfig customWebSocketConfig;
     @Autowired
-    private IConnectionObj iConnectionObj;
+    private NettyClient nettyClient;
+    /**
+     * 补发状态map
+     */
+    private Map<Integer, Boolean> supplyAgainStatus = new HashMap<>();
+
+    @Override
+    public void setSupplyAgainStatus(Integer deviceId,boolean supplyStatus) {
+        supplyAgainStatus.put(deviceId, supplyStatus);
+    }
 
     @Override
     public boolean getSupplyAgainStatus(Integer deviceId) {
@@ -140,13 +143,13 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
                     divisorParameters.clear();
                     //获取实时数据包
                     String message = getRealTimeDataPackage(sysDevice, date, divisorParameterMap, pnum, pon, dataType);
-                    this.sendMessage(sysDevice.getId(), message,dataPack);
+                    this.sendMessage(sysDevice, message,dataPack);
                     pon++;
                 } else if (i == analogDivisorParameters.size()) {
                     HashMap<String, Map<String, String>> divisorParameterMap = getDivisorParameterMap(divisorParameters, false);
                     //获取实时数据包
                     String message = getRealTimeDataPackage(sysDevice, date, divisorParameterMap, pnum, pon, dataType);
-                    this.sendMessage(deviceId, message,dataPack);
+                    this.sendMessage(sysDevice, message,dataPack);
                 }
             }
         } else {
@@ -154,9 +157,10 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
             HashMap<String, Map<String, String>> divisorParameterMap = getDivisorParameterMap(divisorParameters, false);
             //获取实时数据包
             String message = getRealTimeDataPackage(sysDevice, date, divisorParameterMap, pnum, pon, dataType);
-            this.sendMessage(deviceId, message,dataPack);
+            this.sendMessage(sysDevice, message,dataPack);
         }
-        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage(dataPack.toString()));
+
+        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(sysDevice.getId(), new TextMessage(dataPack.toString()));
     }
 
     @Override
@@ -212,7 +216,7 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
         startCalendar.setTime(analogDataType.getStartTime());
         endCalendar.setTime(analogDataType.getEndTime());
 
-        supplyAgainStatus.put(deviceId, true);
+        this.setSupplyAgainStatus(deviceId, true);
 
         List<AnalogDivisorParameter> analogDivisorParameters = iAnalogDivisorParameterService.getDivisorParameterByDeviceId(deviceId);
 
@@ -230,7 +234,7 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
             }
         }
         //时间遍历
-        while (startCalendar.getTimeInMillis() - endCalendar.getTimeInMillis() <= 0 && supplyAgainStatus.get(deviceId)) {
+        while (startCalendar.getTimeInMillis() - endCalendar.getTimeInMillis() <= 0 && this.getSupplyAgainStatus(deviceId)) {
             for (int i = 1; i <= analogDivisorParameters.size(); i++) {
                 divisorParameters.add(analogDivisorParameters.get(i - 1));
                 //判断是否需要分包
@@ -242,7 +246,7 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
                         //获取补发数据包
                         String dataPackage = getSupplyAgainDataPackage(sysDevice, startCalendar.getTime(), divisorParameterMap, pnum, pon, analogDataType);
                         //发送消息
-                        this.sendMessage(deviceId, dataPackage,dataPacks);
+                        this.sendMessage(sysDevice, dataPackage,dataPacks);
                         pon++;
                         //最后一个包因子不足则直接发送
                     } else if (i == analogDivisorParameters.size()) {
@@ -251,7 +255,7 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
                         //获取补发数据包
                         String dataPackage = getSupplyAgainDataPackage(sysDevice, startCalendar.getTime(), divisorParameterMap, pnum, pon, analogDataType);
 //发送消息
-                        this.sendMessage(deviceId, dataPackage,dataPacks);
+                        this.sendMessage(sysDevice, dataPackage,dataPacks);
                     }
                 } else if (i == analogDivisorParameters.size()) {
                     HashMap<String, Map<String, String>> divisorParameterMap = getDivisorParameterMap(divisorParameters, false);
@@ -259,7 +263,7 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
                     //获取补发数据包
                     String dataPackage = getSupplyAgainDataPackage(sysDevice, startCalendar.getTime(), divisorParameterMap, pnum, pon, analogDataType);
                     //发送消息
-                    this.sendMessage(deviceId, dataPackage,dataPacks);
+                    this.sendMessage(sysDevice, dataPackage,dataPacks);
                 }
             }
             //添加时间
@@ -267,7 +271,7 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
             pon = 1;
             count++;
         }
-        supplyAgainStatus.put(deviceId, false);
+        this.setSupplyAgainStatus(deviceId, false);
         synchronized (deviceId){
             deviceId.notifyAll();
         }
@@ -275,19 +279,14 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
             dataPacks=dataPacks.subList(dataPacks.size()-30,dataPacks.size());
             dataPacks.add(0, "本次补发已超过30条，只保留最后30条数据");
         }
-        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage(dataPacks.toString()));
+        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(sysDevice.getId(), new TextMessage(dataPacks.toString()));
         if (supplyAgainStatus.get(deviceId)) {
-            customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("发送完成，本次共补发" + dataTypeStr + "数据：" + count + " 条"));
+            customWebSocketConfig.customWebSocketHandler().sendMessageToUser(sysDevice.getId(), new TextMessage("发送完成，本次共补发" + dataTypeStr + "数据：" + count + " 条\r\n"));
         } else {
-            customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("终止成功，本次共补发" + dataTypeStr + "数据：" + count + " 条"));
+            customWebSocketConfig.customWebSocketHandler().sendMessageToUser(sysDevice.getId(), new TextMessage("终止成功，本次共补发" + dataTypeStr + "数据：" + count + " 条"
+));
         }
 
-    }
-
-
-    @Override
-    public void cancelSupplyAgain(Integer deviceId)  {
-        supplyAgainStatus.put(deviceId, false);
     }
 
     @Override
@@ -336,23 +335,40 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
     public void sendParam3020(Integer deviceId, Integer dataType) throws Exception {
         String dataPackage = this.getDataPackage(deviceId, dataType);
         List<String> dataPacks = new ArrayList<>();
-        this.sendMessage(deviceId,dataPackage,dataPacks);
-        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(deviceId), new TextMessage(dataPacks.toString()));
+        this.sendMessage(iSysDeviceService.getById(deviceId),dataPackage,dataPacks);
+        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(deviceId, new TextMessage(dataPacks.toString()));
     }
 
     @Override
-    public void sendMessage(Integer deviceId, String message,List<String> dataPack) throws Exception {
+    public void sendMessage(SysDevice sysDevice, String message,List<String> dataPack) throws Exception {
+        if(!nettyClient.isConnection(sysDevice.getId())){
+            if(!sysDevice.isAutoConnection()){
+                throw new Exception("连接已断开，请连接");
+            }
+            if(!nettyClient.connection(sysDevice)){
+                throw new Exception("连接失败，请检查连接");
+            }
+        }
+
         if (message.indexOf("\r\n") == -1) {
             message += "\r\n";
         }
-        try {
-            iConnectionObj.getOutputStream(deviceId).write(message.getBytes());
+
+        if(nettyClient.sendMessage(sysDevice.getId(), message)){
             dataPack.add(message);
-        } catch (Exception e) {
-            iConnectionObj.cleanConnetion(deviceId, true);
-            supplyAgainStatus.put(deviceId, false);
-            throw e;
+        }else{
+            supplyAgainStatus.put(sysDevice.getId(), false);
+            throw new Exception("发送失败，请检查连接");
         }
+
+    }
+
+    @Override
+    public void sendCustomizeMessage(Integer deviceId, String message) throws Exception {
+        ArrayList<String> dataPack = new ArrayList<>();
+        SysDevice sysDevice = iSysDeviceService.getById(deviceId);
+        this.sendMessage(sysDevice,message,dataPack);
+        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(deviceId, new TextMessage(dataPack.toString()));
     }
 
     /**

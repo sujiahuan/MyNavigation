@@ -5,10 +5,10 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.jiahuan.entity.analog.AnalogDivisorParameter;
 import org.jiahuan.entity.sys.SysDevice;
 import org.jiahuan.mapper.sys.SysDeviceMapper;
+import org.jiahuan.netty.NettyClient;
 import org.jiahuan.service.analog.IAnalogDataTypeService;
 import org.jiahuan.service.analog.IAnalogDivisorParameterService;
 import org.jiahuan.service.analog.IAnalogRemoteCounteraccusationService;
-import org.jiahuan.service.analog.IConnectionObj;
 import org.jiahuan.service.sys.ISysDeviceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -36,9 +36,7 @@ public class SysDeviceServiceImpl extends ServiceImpl<SysDeviceMapper, SysDevice
     @Autowired
     private IAnalogRemoteCounteraccusationService iAnalogRemoteCounteraccusationService;
     @Autowired
-    private IConnectionObj iConnectionObj;
-    @Autowired
-    private SysDeviceMapper sysDeviceMapper;
+    private NettyClient nettyClient;
 
     @Transactional
     @Override
@@ -71,7 +69,7 @@ public class SysDeviceServiceImpl extends ServiceImpl<SysDeviceMapper, SysDevice
 
             iAnalogDivisorParameterService.saveBatch(divisorParameters);
         }
-        iConnectionObj.cleanConnetion(sysDevice.getId(),true);
+        nettyClient.closeConnection(sysDevice.getId());
     }
 
     @Transactional
@@ -81,5 +79,6 @@ public class SysDeviceServiceImpl extends ServiceImpl<SysDeviceMapper, SysDevice
         iAnalogDataTypeService.deleteByDeviceId(deviceId);
         iAnalogRemoteCounteraccusationService.deleteByDeviceId(deviceId);
         iSysDeviceService.removeById(deviceId);
+        nettyClient.closeConnection(deviceId);
     }
 }

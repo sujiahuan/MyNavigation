@@ -31,42 +31,13 @@ public class AnalogDataTypeController {
 
     @Autowired
     private IAnalogDataTypeService iAnalogDataTypeService;
-    @Autowired
-    private CustomWebSocketConfig customWebSocketConfig;
 
     @GetMapping("/sendRealTime")
     public RetMsgData<AnalogDataType> sendRealTime(@RequestParam Integer deviceId, @RequestParam Integer dataType) {
         RetMsgData<AnalogDataType> msgData = new RetMsgData<>();
         try {
             iAnalogDataTypeService.sendRealTime(deviceId, dataType);
-        } catch (ConnectException e) {
-            if (e.getMessage().equals("Connection timed out: connect") || e.getMessage().equals("Connection timed out (Connection timed out)")) {
-                msgData.setMsg(" 连接服务器超时，请检查服务器能否正常连接");
-            } else if (e.getMessage().equals("Connection refused: connect") || e.getMessage().equals("Connection refused (Connection refused)")) {
-                msgData.setMsg(" 连接服务器被拒绝，请检查服务器能否正常连接");
-            } else {
-                e.printStackTrace();
-                msgData.setMsg("没处理的异常：" + e.getMessage());
-            }
-        } catch (SocketException e) {
-            if (e.getMessage().equals("Software caused connection abort: socket write error")) {
-                msgData.setMsg("连接已断开，请重连");
-            } else if (e.getMessage().equals("Connection reset by peer: send")) {
-                msgData.setMsg("连接已断开，请重连");
-            } else if (e.getMessage().equals("Software caused connection abort: send")) {
-                msgData.setMsg("连接已断开，请重连");
-            } else {
-                e.printStackTrace();
-                msgData.setMsg("没处理的异常：" + e.getMessage());
-            }
-        } catch (SocketTimeoutException e) {
-            if (e.getMessage().equals("connect timed out")) {
-                msgData.setMsg("连接已超时，请检查该服务器是否能连上");
-            } else {
-                msgData.setMsg("没处理的异常：" + e.getMessage());
-            }
         } catch (Exception e) {
-            e.printStackTrace();
             msgData.setMsg(e.getMessage());
         } finally {
             return msgData;
@@ -78,34 +49,8 @@ public class AnalogDataTypeController {
         RetMsgData<AnalogDataType> msgData = new RetMsgData<>();
         try {
             iAnalogDataTypeService.sendParam3020(deviceId, dataType);
-        } catch (ConnectException e) {
-            if (e.getMessage().equals("Connection timed out: connect") || e.getMessage().equals("Connection timed out (Connection timed out)")) {
-                msgData.setMsg(" 连接服务器超时，请检查服务器能否正常连接");
-            } else if (e.getMessage().equals("Connection refused: connect") || e.getMessage().equals("Connection refused (Connection refused)")) {
-                msgData.setMsg(" 连接服务器被拒绝，请检查服务器能否正常连接");
-            } else {
-                e.printStackTrace();
-                msgData.setMsg("没处理的异常：" + e.getMessage());
-            }
-        } catch (SocketException e) {
-            if (e.getMessage().equals("Software caused connection abort: socket write error")) {
-                msgData.setMsg("连接已断开，请重连");
-            } else if (e.getMessage().equals("Connection reset by peer: send")) {
-                msgData.setMsg("连接已断开，请重连");
-            } else if (e.getMessage().equals("Software caused connection abort: send")) {
-                msgData.setMsg("连接已断开，请重连");
-            } else {
-                e.printStackTrace();
-                msgData.setMsg("没处理的异常：" + e.getMessage());
-            }
-        } catch (SocketTimeoutException e) {
-            if (e.getMessage().equals("connect timed out")) {
-                msgData.setMsg("连接已超时，请检查该服务器是否能连上");
-            } else {
-                msgData.setMsg("没处理的异常：" + e.getMessage());
-            }
         } catch (Exception e) {
-            e.printStackTrace();
+
             msgData.setMsg(e.getMessage());
         } finally {
             return msgData;
@@ -119,7 +64,7 @@ public class AnalogDataTypeController {
             String dataPackage = iAnalogDataTypeService.getDataPackage(deviceId, dataType);
             msgData.setData(dataPackage);
         } catch (Exception e) {
-            e.printStackTrace();
+
             msgData.setMsg(e.getMessage());
         } finally {
             return msgData;
@@ -137,7 +82,7 @@ public class AnalogDataTypeController {
             }
             msgData.setData(dataPackage);
         } catch (Exception e) {
-            e.printStackTrace();
+
             msgData.setMsg(e.getMessage());
         } finally {
             return msgData;
@@ -145,37 +90,10 @@ public class AnalogDataTypeController {
     }
 
     @GetMapping("/sendMessage")
-    public RetMsgData<AnalogDataType> sendMessage(@RequestParam Integer deviceId, @RequestParam String msg) {
+    public RetMsgData<AnalogDataType> sendCustomizeMessage(@RequestParam Integer deviceId, @RequestParam String msg) {
         RetMsgData<AnalogDataType> msgData = new RetMsgData<>();
         try {
-            ArrayList<String> dataPack = new ArrayList<>();
-            iAnalogDataTypeService.sendMessage(deviceId, msg, dataPack);
-            customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(deviceId), new TextMessage(dataPack.toString()));
-        } catch (ConnectException e) {
-            if (e.getMessage().equals("Connection timed out: connect") || e.getMessage().equals("Connection timed out (Connection timed out)")) {
-                msgData.setMsg(" 连接服务器超时，请检查");
-            } else if (e.getMessage().equals("Connection refused: connect") || e.getMessage().equals("Connection refused (Connection refused)")) {
-                msgData.setMsg(" 连接服务器被拒绝，请检查");
-            } else {
-                msgData.setMsg("没处理的异常：" + e.getMessage());
-            }
-        } catch (SocketException e) {
-            if (e.getMessage().equals("Software caused connection abort: socket write error")) {
-                msgData.setMsg("连接已断开，请重连");
-            } else if (e.getMessage().equals("Connection reset by peer: send")) {
-                msgData.setMsg("连接已断开，请重连");
-            } else if (e.getMessage().equals("Software caused connection abort: send")) {
-                msgData.setMsg("连接已断开，请重连");
-            } else {
-                e.printStackTrace();
-                msgData.setMsg("没处理的异常：" + e.getMessage());
-            }
-        } catch (SocketTimeoutException e) {
-            if (e.getMessage().equals("connect timed out")) {
-                msgData.setMsg("连接已超时，请检查该服务器是否能连上");
-            } else {
-                msgData.setMsg("没处理的异常：" + e.getMessage());
-            }
+            iAnalogDataTypeService.sendCustomizeMessage(deviceId, msg);
         } catch (Exception e) {
             msgData.setMsg(e.getMessage());
         } finally {
@@ -220,31 +138,6 @@ public class AnalogDataTypeController {
         RetMsgData<AnalogDataType> msgData = new RetMsgData<>();
         try {
             iAnalogDataTypeService.sendSupplyAgain(deviceId, dataType);
-        } catch (ConnectException e) {
-            if (e.getMessage().equals("Connection timed out: connect") || e.getMessage().equals("Connection timed out (Connection timed out)")) {
-                msgData.setMsg(" 连接服务器超时，请检查");
-            } else if (e.getMessage().equals("Connection refused: connect") || e.getMessage().equals("Connection refused (Connection refused)")) {
-                msgData.setMsg(" 连接服务器被拒绝，请检查");
-            } else {
-                msgData.setMsg("没处理的异常：" + e.getMessage());
-            }
-        } catch (SocketException e) {
-            if (e.getMessage().equals("Software caused connection abort: socket write error")) {
-                msgData.setMsg("连接已断开，请重连");
-            } else if (e.getMessage().equals("Connection reset by peer: send")) {
-                msgData.setMsg("连接已断开，请重连");
-            } else if (e.getMessage().equals("Software caused connection abort: send")) {
-                msgData.setMsg("连接已断开，请重连");
-            } else {
-                e.printStackTrace();
-                msgData.setMsg("没处理的异常：" + e.getMessage());
-            }
-        } catch (SocketTimeoutException e) {
-            if (e.getMessage().equals("connect timed out")) {
-                msgData.setMsg("连接已超时，请检查该服务器是否能连上");
-            } else {
-                msgData.setMsg("没处理的异常：" + e.getMessage());
-            }
         } catch (Exception e) {
             msgData.setMsg(e.getMessage());
         } finally {
@@ -255,7 +148,7 @@ public class AnalogDataTypeController {
     @GetMapping("/cancelSupplyAgain")
     public RetMsgData<AnalogDataType> cancelSupplyAgain(@RequestParam Integer deviceId) {
         RetMsgData<AnalogDataType> msgData = new RetMsgData<>();
-            iAnalogDataTypeService.cancelSupplyAgain(deviceId);
+            iAnalogDataTypeService.setSupplyAgainStatus(deviceId,false);
             return msgData;
     }
 
@@ -266,7 +159,6 @@ public class AnalogDataTypeController {
             List<AnalogDataType> analogDataTypes = iAnalogDataTypeService.getListCounDataTypeByDeviceId(deviceId);
             msgData.setData(analogDataTypes);
         } catch (Exception e) {
-            e.printStackTrace();
             msgData.setMsg(e.getMessage());
         } finally {
             return msgData;
@@ -279,7 +171,6 @@ public class AnalogDataTypeController {
         try {
             iAnalogDataTypeService.updateById(analogDataType);
         } catch (Exception e) {
-            e.printStackTrace();
             msgData.setMsg(e.getMessage());
         } finally {
             return msgData;

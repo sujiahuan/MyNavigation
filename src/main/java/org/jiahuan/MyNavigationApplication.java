@@ -1,6 +1,6 @@
 package org.jiahuan;
 
-import org.jiahuan.netty.Client;
+import org.jiahuan.netty.NettyClient;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -16,7 +16,7 @@ public class MyNavigationApplication implements CommandLineRunner {
 //public class MyNavigationApplication{
 
     @Autowired
-    private Client client;
+    private NettyClient nettyClient;
 
     public static void main(String[] args) {
         SpringApplication.run(MyNavigationApplication.class, args);
@@ -24,6 +24,6 @@ public class MyNavigationApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        client.init();
+        nettyClient.init();
     }
 }

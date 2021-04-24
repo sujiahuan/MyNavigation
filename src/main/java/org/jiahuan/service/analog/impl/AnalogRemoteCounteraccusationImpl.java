@@ -7,22 +7,20 @@ import org.jiahuan.common.config.CustomWebSocketConfig;
 import org.jiahuan.common.util.DataPackageUtils;
 import org.jiahuan.common.util.TimeUtil;
 import org.jiahuan.common.util.VerdictUtil;
+import org.jiahuan.entity.analog.AnalogDataType;
 import org.jiahuan.entity.analog.AnalogRemoteCounteraccusation;
 import org.jiahuan.entity.sys.SysDevice;
 import org.jiahuan.mapper.analog.AnalogRemoteCounteraccusationMapper;
+import org.jiahuan.netty.NettyClient;
 import org.jiahuan.service.analog.IAnalogDataTypeService;
 import org.jiahuan.service.analog.IAnalogRemoteCounteraccusationService;
-import org.jiahuan.service.analog.IConnectionObj;
 import org.jiahuan.service.sys.ISysDeviceService;
 import org.jiahuan.websocket.CustomWebSocketHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.TextMessage;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Date;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -43,280 +41,260 @@ public class AnalogRemoteCounteraccusationImpl extends ServiceImpl<AnalogRemoteC
     @Autowired
     private IAnalogDataTypeService iAnalogDataTypeService;
     @Autowired
-    private IAnalogRemoteCounteraccusationService iAnalogRemoteCounteraccusationService;
-    @Autowired
     private CustomWebSocketConfig customWebSocketConfig;
     @Autowired
-    private IConnectionObj iConnectionObj;
+    private NettyClient nettyClient;
+    /**
+     * 开启反控map
+     */
+    private Map<Integer, AnalogRemoteCounteraccusation> controlConnetionMap = new HashMap<>();
+    private Map<Integer, SysDevice> controlSysDeviceMap = new HashMap<>();
 
     @Override
     public AnalogRemoteCounteraccusation getCounCounterchargeByDeviceId(Integer deviceId) {
         QueryWrapper<org.jiahuan.entity.analog.AnalogRemoteCounteraccusation> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("device_id", deviceId);
-        org.jiahuan.entity.analog.AnalogRemoteCounteraccusation countercharge = iAnalogRemoteCounteraccusationService.getOne(queryWrapper);
-        countercharge.setConnetionStatus(iConnectionObj.isControlConnetion(deviceId));
+        org.jiahuan.entity.analog.AnalogRemoteCounteraccusation countercharge = this.getOne(queryWrapper);
+        countercharge.setConnetionStatus(this.isControlConnection(deviceId));
         return countercharge;
     }
 
     @Override
-    public void openSocketConnetion(Integer deviceId) throws IOException {
-        SysDevice sysDevice = iSysDeviceService.getById(deviceId);
-        iConnectionObj.openConnetion(sysDevice);
-    }
-
-    @Override
-    public void colseSocketConnetion(Integer deviceId) {
-        iConnectionObj.cleanConnetion(deviceId,true);
-    }
-
-    @Override
-    public boolean getSocketConnetionStatus(Integer deviceId) {
-        if(iConnectionObj.isSocketConnetion(deviceId)){
-            return true;
-        };
-        return false;
-    }
-
-    @Override
-    public void openControlConnection(Integer deviceId) throws Exception {
-        CustomWebSocketHandler customWebSocketHandler = customWebSocketConfig.customWebSocketHandler();
-
-        if (iConnectionObj.getControlConnetionPoll().size() > 5) {
-            throw new Exception("当前远程反控设备数已有5个了，请关闭部分后再来");
-        }
-
-        SysDevice sysDevice = iSysDeviceService.getById(deviceId);
-
-        AnalogRemoteCounteraccusation counteraccusation = iAnalogRemoteCounteraccusationService.getCounCounterchargeByDeviceId(deviceId);
-        //获取输入流和输出流
-        OutputStream outputStream = iConnectionObj.getOutputStream(deviceId);
-        BufferedReader bufferedReader = iConnectionObj.getBuffReader(deviceId);
-        customWebSocketHandler.sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("连接成功\r\n\r\n"));
-
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    while (true) {
-                        //获取一条实时数据包
-                        iAnalogDataTypeService.sendRealTime(sysDevice.getId(), 2);
-                        //发送
-                        Thread.sleep(1000 * 60 * 10);
-                    }
-                } catch (Exception e) {
-                    log.info("已停止");
-                }
-
-            }
-        };
-        Thread thread = new Thread(runnable);
-        thread.start();
-
-
-        //修改连接状态
-        iConnectionObj.setControlConnetionPoll(counteraccusation);
-
-
-        Runnable runnable1 = new Runnable() {
-            @Override
-            public void run() {
-                try{
-                    while (iConnectionObj.isControlConnetion(deviceId)) {
-                        StringBuffer stringBuffer = new StringBuffer();
-
-                        while (bufferedReader.ready() != false) {
-                            stringBuffer.append(bufferedReader.readLine());
-                        }
-
-                        //判断是否取到平台命令
-                        if ("".equals(stringBuffer.toString())) {
-                            Thread.sleep(2000);
-                            continue;
-                        }
-
-                        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("获取到平台下发的反控命令：" + stringBuffer.toString() + "\r\n\r\n"));
-
-                        AnalogRemoteCounteraccusation countercharge = iConnectionObj.getControlConnetion(deviceId);
-
-                        //是否校验平台命令
-                        if (countercharge.getVerifyPlatformCommand() == 1) {
-                            switch (sysDevice.getAgreement()) {
-                                case "05":
-                                    if (!check05ControlCommand(sysDevice, stringBuffer.toString())) {
-                                        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("校验平台05命令格式失败：" + stringBuffer.toString() + "\r\n\r\n"));
-                                        continue;
-                                    }
-                                    break;
-                                case "17":
-                                    if (!check17ControlCommand(sysDevice, stringBuffer.toString())) {
-                                        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("校验平台17命令格式失败：" + stringBuffer.toString() + "\r\n\r\n"));
-                                        continue;
-                                    }
-                                    break;
-                            }
-                            customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("校验平台下发的命令格式正确：" + stringBuffer.toString() + "\r\n\r\n"));
-                        }else{
-                            log.info("设置了不校验平台命令");
-                        }
-
-
-                        //校验CN号
-                        if (VerdictUtil.isNotNull(countercharge.getVerifyCn())) {
-                            if (!getLinkConstant("CN", stringBuffer.toString()).equals(countercharge.getVerifyCn())) {
-                                customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("校验CN号失败：" + countercharge.getVerifyCn() + "\r\n\r\n"));
-                                continue;
-                            }
-                            customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("校验指定CN号成功：" + countercharge.getVerifyCn() + "\r\n\r\n"));
-                        } else {
-//                        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("不需要校验CN号：" + countercharge.getVerifyCn() + "\r\n\r\n"));
-                            log.info("不需要校验CN号：" + countercharge.getVerifyCn());
-                        }
-
-                        switch (sysDevice.getAgreement()) {
-                            case "05":
-
-                                if ("2012".equals(getLinkConstant("CN", stringBuffer.toString())) || "2022".equals(getLinkConstant("CN", stringBuffer.toString() + "\r\n\r\n"))) {
-                                    String agreement9013ControlCommand = get05Agreement9013ControlCommand(stringBuffer.toString());
-                                    if (!"".equals(agreement9013ControlCommand)) {
-                                        outputStream.write(agreement9013ControlCommand.getBytes());
-                                        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("发送9013成功：" + agreement9013ControlCommand + "\r\n"));
-                                    } else {
-                                        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("9013命令为空：" + agreement9013ControlCommand + "\r\n"));
-                                    }
-                                    break;
-                                }
-
-                                if (countercharge.getResponseParameter() == 9011) {
-                                    String agreement9011ControlCommand = get05Agreement9011ControlCommand(stringBuffer.toString(), countercharge.getResponseStatus());
-                                    if (!"".equals(agreement9011ControlCommand)) {
-                                        outputStream.write(agreement9011ControlCommand.getBytes());
-                                        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("发送9011命令成功：" + agreement9011ControlCommand + "\r\n"));
-                                    } else {
-                                        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("获取9011反控命令为空：" + stringBuffer.toString() + "\r\n\r\n"));
-                                    }
-                                } else if (countercharge.getResponseParameter() == 9012) {
-                                    String agreement9011ControlCommand = get05Agreement9011ControlCommand(stringBuffer.toString(), 1);
-                                    String agreementDataReportedCommand = get05AgreementDataReportedCommand(stringBuffer.toString());
-                                    String agreement9012ControlCommand = get05Agreement9012ControlCommand(stringBuffer.toString(), countercharge.getResponseStatus());
-
-
-                                    if (!"".equals(agreement9011ControlCommand)) {
-                                        outputStream.write(agreement9011ControlCommand.getBytes());
-                                        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("发送9011成功：" + agreement9011ControlCommand + "\r\n"));
-                                    } else {
-                                        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("获取9011命令为空：" + agreement9011ControlCommand + "\r\n"));
-                                    }
-
-                                    if (!"".equals(agreementDataReportedCommand) && 1 == countercharge.getResponseStatus()) {
-                                        outputStream.write(agreementDataReportedCommand.getBytes());
-                                        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("发送提取数据成功：" + agreementDataReportedCommand + "\r\n"));
-                                    } else if (1 != countercharge.getResponseStatus()) {
-                                        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("9012状态不等于1，不发送提取数据：" + agreementDataReportedCommand + "\r\n"));
-                                    } else {
-                                        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("本次为设置反控，所以没有提取数据，请核对：" + agreementDataReportedCommand + "\r\n"));
-                                    }
-
-                                    if (!"".equals(agreement9012ControlCommand)) {
-                                        outputStream.write(agreement9012ControlCommand.getBytes());
-                                        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("发送9012成功：" + agreement9012ControlCommand + "\r\n"));
-                                    } else {
-                                        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("9012命令为空：" + agreement9012ControlCommand + "\r\n"));
-                                    }
-
-                                } else {
-                                    customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("传的RequestResponseCommand参数有问题，请核对：" + countercharge.getResponseParameter() + "\r\n\r\n"));
-                                }
-                                break;
-
-                            case "17":
-
-                                if ("2012".equals(getLinkConstant("CN", stringBuffer.toString())) || "2022".equals(getLinkConstant("CN", stringBuffer.toString()))) {
-                                    String agreement9013ControlCommand = get17Agreement9013ControlCommand(stringBuffer.toString());
-                                    if (!"".equals(agreement9013ControlCommand)) {
-                                        outputStream.write(agreement9013ControlCommand.getBytes());
-                                        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("发送9013成功：" + agreement9013ControlCommand));
-                                    } else {
-                                        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("9013命令为空：" + agreement9013ControlCommand));
-                                    }
-                                    break;
-                                }
-
-                                if (countercharge.getResponseParameter() == 9011) {
-                                    String agreement9011ControlCommand = get17Agreement9011ControlCommand(stringBuffer.toString(), countercharge.getResponseStatus());
-                                    if (!"".equals(agreement9011ControlCommand)) {
-                                        outputStream.write(agreement9011ControlCommand.getBytes());
-                                        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("发送9011命令成功：" + agreement9011ControlCommand + "\r\n"));
-                                    } else {
-                                        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("获取9011反控命令为空：" + stringBuffer.toString() + "\r\n\r\n"));
-                                    }
-                                } else if (countercharge.getResponseParameter() == 9012) {
-                                    String agreement9011ControlCommand = get17Agreement9011ControlCommand(stringBuffer.toString(), 1);
-                                    String agreementDataReportedCommand = get17AgreementDataReportedCommand(stringBuffer.toString());
-                                    String agreement9012ControlCommand = get17Agreement9012ControlCommand(stringBuffer.toString(), countercharge.getResponseStatus());
-
-                                    if (!"".equals(agreement9011ControlCommand)) {
-                                        outputStream.write(agreement9011ControlCommand.getBytes());
-                                        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("发送9011成功：" + agreement9011ControlCommand + "\r\n"));
-                                    } else {
-                                        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("获取9011命令为空：" + agreement9011ControlCommand + "\r\n"));
-                                    }
-
-                                    if (!"".equals(agreementDataReportedCommand) && 1 == countercharge.getResponseStatus()) {
-                                        outputStream.write(agreementDataReportedCommand.getBytes());
-                                        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("发送提取数据成功：" + agreementDataReportedCommand + "\r\n"));
-                                    } else if (1 != countercharge.getResponseStatus()) {
-                                        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("9012状态不等于1，不发送提取数据：" + agreementDataReportedCommand + "\r\n"));
-                                    } else {
-                                        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("本次为设置反控，所以没有提取数据，请核对：" + agreementDataReportedCommand + "\r\n"));
-                                    }
-
-                                    if (!"".equals(agreement9012ControlCommand)) {
-                                        outputStream.write(agreement9012ControlCommand.getBytes());
-                                        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("发送9012成功：" + agreement9012ControlCommand + "\r\n"));
-                                    } else {
-                                        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("9012命令为空：" + agreement9012ControlCommand + "\r\n"));
-                                    }
-
-                                } else {
-                                    customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("传的RequestResponseCommand参数有问题，请核对：" + countercharge.getResponseParameter() + "\r\n\r\n"));
-                                }
-                                break;
-                        }
-                    }
-                }catch (Exception e){
-                    customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("报异常了，请检查发送的报文有没有按国标来，异常内容是：" + e.getMessage() + "\r\n\r\n"));
-                }
-
-                thread.interrupt();
-                customWebSocketHandler.sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("断开成功\r\n"));
-            }
-        };
-        new Thread(runnable1).start();
-    }
-
-    @Override
-    public void colseControlConnection(Integer deviceId) {
-        iConnectionObj.cleanConnetion(deviceId, false);
-    }
-
-    @Override
     public void addInitByDeviceId(Integer deviceId) {
-        AnalogRemoteCounteraccusation analogRemoteCounteraccusation = new org.jiahuan.entity.analog.AnalogRemoteCounteraccusation(deviceId, 1, "", 9012, 1);
-        iAnalogRemoteCounteraccusationService.save(analogRemoteCounteraccusation);
+        AnalogRemoteCounteraccusation analogRemoteCounteraccusation = new AnalogRemoteCounteraccusation(deviceId, 1, "", 9012, 1);
+        this.save(analogRemoteCounteraccusation);
+    }
+
+    @Override
+    public void updateCounCountercharge(AnalogRemoteCounteraccusation analogRemoteCounteraccusation) {
+        this.updateById(analogRemoteCounteraccusation);
+        if (controlConnetionMap.containsKey(analogRemoteCounteraccusation.getDeviceId())) {
+            controlConnetionMap.put(analogRemoteCounteraccusation.getDeviceId(), analogRemoteCounteraccusation);
+        }
     }
 
     @Override
     public void deleteByDeviceId(Integer deviceId) {
         QueryWrapper<AnalogRemoteCounteraccusation> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("device_id", deviceId);
-        iAnalogRemoteCounteraccusationService.remove(queryWrapper);
+        this.remove(queryWrapper);
     }
 
     @Override
-    public void updateCounCountercharge(AnalogRemoteCounteraccusation analogRemoteCounteraccusation) {
-        iAnalogRemoteCounteraccusationService.updateById(analogRemoteCounteraccusation);
-        if(iConnectionObj.isControlConnetion(analogRemoteCounteraccusation.getDeviceId())){
-            iConnectionObj.setControlConnetionPoll(analogRemoteCounteraccusation);
+    public boolean openSocketConnetion(Integer deviceId) {
+        SysDevice sysDevice = iSysDeviceService.getById(deviceId);
+        return nettyClient.connection(sysDevice);
+    }
+
+    @Override
+    public void colseSocketConnetion(Integer deviceId) {
+        nettyClient.closeConnection(deviceId);
+    }
+
+    @Override
+    public boolean getSocketConnetionStatus(Integer deviceId) {
+        return nettyClient.isConnection(deviceId);
+    }
+
+    @Override
+    public void openControlConnection(Integer deviceId) throws Exception {
+        SysDevice sysDevice = iSysDeviceService.getById(deviceId);
+        if (!nettyClient.isConnection(deviceId) && !sysDevice.isAutoConnection()) {
+            throw new Exception("连接已断开，请链接");
+        }
+        CustomWebSocketHandler customWebSocketHandler = customWebSocketConfig.customWebSocketHandler();
+
+        AnalogDataType counDataTypeByDeviceId = iAnalogDataTypeService.getCounDataTypeByDeviceId(deviceId, 2);
+        AnalogRemoteCounteraccusation counteraccusation = this.getCounCounterchargeByDeviceId(deviceId);
+        //获取输入流和输出流
+        customWebSocketHandler.sendMessageToUser(sysDevice.getId(), new TextMessage("开启成功\r\n\r\n"));
+
+        iAnalogDataTypeService.sendRealTime(deviceId, 1);
+
+        //将反控对象放到反控池
+        controlConnetionMap.put(deviceId, counteraccusation);
+        controlSysDeviceMap.put(deviceId, sysDevice);
+
+    }
+
+    @Override
+    public void colseControlConnection(Integer deviceId) {
+        controlConnetionMap.remove(deviceId);
+        controlSysDeviceMap.remove(deviceId);
+    }
+
+    @Override
+    public boolean isControlConnection(Integer deviceId) {
+        if (controlConnetionMap.containsKey(deviceId)) {
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public Set<Integer> getAllControlDeviceId() {
+        List<Integer> list = new ArrayList<>(controlConnetionMap.keySet());
+        return controlConnetionMap.keySet();
+    }
+
+    @Override
+    public void processMessage(Integer deviceId, String message) {
+        if (!this.isControlConnection(deviceId)) {
+            return;
+        }
+        try {
+            CustomWebSocketHandler webSocketHandler = customWebSocketConfig.customWebSocketHandler();
+
+            webSocketHandler.sendMessageToUser(deviceId, new TextMessage("获取到平台下发的反控命令：" + message + "\r\n\r\n"));
+
+            AnalogRemoteCounteraccusation analogRemoteCounteraccusation = controlConnetionMap.get(deviceId);
+            SysDevice sysDevice = controlSysDeviceMap.get(deviceId);
+            //是否校验平台命令
+            if (analogRemoteCounteraccusation.getVerifyPlatformCommand() == 1) {
+                switch (sysDevice.getAgreement()) {
+                    case "05":
+                        if (!check05ControlCommand(sysDevice, message)) {
+                            webSocketHandler.sendMessageToUser(sysDevice.getId(), new TextMessage("校验平台05命令格式失败：" + message + "\r\n\r\n"));
+                            return;
+                        }
+                        break;
+                    case "17":
+                        if (!check17ControlCommand(sysDevice, message)) {
+                            webSocketHandler.sendMessageToUser(sysDevice.getId(), new TextMessage("校验平台17命令格式失败：" + message + "\r\n\r\n"));
+                            return;
+                        }
+                        break;
+                }
+                webSocketHandler.sendMessageToUser(sysDevice.getId(), new TextMessage("校验平台下发的命令格式正确：" + message + "\r\n\r\n"));
+            } else {
+                log.info("设置了不校验平台命令");
+            }
+
+            //校验CN号
+            if (VerdictUtil.isNotNull(analogRemoteCounteraccusation.getVerifyCn())) {
+                if (!getLinkConstant("CN", message).equals(analogRemoteCounteraccusation.getVerifyCn())) {
+                    webSocketHandler.sendMessageToUser(sysDevice.getId(), new TextMessage("校验CN号失败：" + analogRemoteCounteraccusation.getVerifyCn() + "\r\n\r\n"));
+                    return;
+                }
+                webSocketHandler.sendMessageToUser(sysDevice.getId(), new TextMessage("校验指定CN号成功：" + analogRemoteCounteraccusation.getVerifyCn() + "\r\n\r\n"));
+            } else {
+//                        webSocketHandler.sendMessageToUser(String.valueOf(counDevice.getId()), new TextMessage("不需要校验CN号：" + analogRemoteCounteraccusation.getVerifyCn() + "\r\n\r\n"));
+                log.info("不需要校验CN号：" + analogRemoteCounteraccusation.getVerifyCn());
+            }
+
+
+            switch (sysDevice.getAgreement()) {
+                case "05":
+                    if ("2012".equals(getLinkConstant("CN", message)) || "2022".equals(getLinkConstant("CN", message + "\r\n\r\n"))) {
+                        String agreement9013ControlCommand = get05Agreement9013ControlCommand(message);
+                        if (!"".equals(agreement9013ControlCommand)) {
+                            nettyClient.sendMessage(deviceId, agreement9013ControlCommand);
+                            webSocketHandler.sendMessageToUser(sysDevice.getId(), new TextMessage("发送9013成功：" + agreement9013ControlCommand + "\r\n"));
+                        } else {
+                            webSocketHandler.sendMessageToUser(sysDevice.getId(), new TextMessage("9013命令为空：" + agreement9013ControlCommand + "\r\n"));
+                        }
+                        break;
+                    }
+
+                    if (analogRemoteCounteraccusation.getResponseParameter() == 9011) {
+                        String agreement9011ControlCommand = get05Agreement9011ControlCommand(message, analogRemoteCounteraccusation.getResponseStatus());
+                        if (!"".equals(agreement9011ControlCommand)) {
+                            nettyClient.sendMessage(deviceId, agreement9011ControlCommand);
+                            webSocketHandler.sendMessageToUser(sysDevice.getId(), new TextMessage("发送9011命令成功：" + agreement9011ControlCommand + "\r\n"));
+                        } else {
+                            webSocketHandler.sendMessageToUser(sysDevice.getId(), new TextMessage("获取9011反控命令为空：" + message + "\r\n\r\n"));
+                        }
+                    } else if (analogRemoteCounteraccusation.getResponseParameter() == 9012) {
+                        String agreement9011ControlCommand = get05Agreement9011ControlCommand(message, 1);
+                        String agreementDataReportedCommand = get05AgreementDataReportedCommand(message);
+                        String agreement9012ControlCommand = get05Agreement9012ControlCommand(message, analogRemoteCounteraccusation.getResponseStatus());
+
+
+                        if (!"".equals(agreement9011ControlCommand)) {
+                            nettyClient.sendMessage(deviceId, agreement9011ControlCommand);
+                            webSocketHandler.sendMessageToUser(sysDevice.getId(), new TextMessage("发送9011成功：" + agreement9011ControlCommand + "\r\n"));
+                        } else {
+                            webSocketHandler.sendMessageToUser(sysDevice.getId(), new TextMessage("获取9011命令为空：" + agreement9011ControlCommand + "\r\n"));
+                        }
+
+                        if (!"".equals(agreementDataReportedCommand) && 1 == analogRemoteCounteraccusation.getResponseStatus()) {
+                            nettyClient.sendMessage(deviceId, agreementDataReportedCommand);
+                            webSocketHandler.sendMessageToUser(sysDevice.getId(), new TextMessage("发送提取数据成功：" + agreementDataReportedCommand + "\r\n"));
+                        } else if (1 != analogRemoteCounteraccusation.getResponseStatus()) {
+                            webSocketHandler.sendMessageToUser(sysDevice.getId(), new TextMessage("9012状态不等于1，不发送提取数据：" + agreementDataReportedCommand + "\r\n"));
+                        } else {
+                            webSocketHandler.sendMessageToUser(sysDevice.getId(), new TextMessage("本次为设置反控，所以没有提取数据，请核对：" + agreementDataReportedCommand + "\r\n"));
+                        }
+
+                        if (!"".equals(agreement9012ControlCommand)) {
+                            nettyClient.sendMessage(deviceId, agreement9012ControlCommand);
+                            webSocketHandler.sendMessageToUser(sysDevice.getId(), new TextMessage("发送9012成功：" + agreement9012ControlCommand + "\r\n"));
+                        } else {
+                            webSocketHandler.sendMessageToUser(sysDevice.getId(), new TextMessage("9012命令为空：" + agreement9012ControlCommand + "\r\n"));
+                        }
+
+                    } else {
+                        webSocketHandler.sendMessageToUser(sysDevice.getId(), new TextMessage("传的RequestResponseCommand参数有问题，请核对：" + analogRemoteCounteraccusation.getResponseParameter() + "\r\n\r\n"));
+                    }
+                    break;
+
+                case "17":
+
+                    if ("2012".equals(getLinkConstant("CN", message)) || "2022".equals(getLinkConstant("CN", message))) {
+                        String agreement9013ControlCommand = get17Agreement9013ControlCommand(message);
+                        if (!"".equals(agreement9013ControlCommand)) {
+                            nettyClient.sendMessage(deviceId, agreement9013ControlCommand);
+                            webSocketHandler.sendMessageToUser(sysDevice.getId(), new TextMessage("发送9013成功：" + agreement9013ControlCommand));
+                        } else {
+                            webSocketHandler.sendMessageToUser(sysDevice.getId(), new TextMessage("9013命令为空：" + agreement9013ControlCommand));
+                        }
+                        break;
+                    }
+
+                    if (analogRemoteCounteraccusation.getResponseParameter() == 9011) {
+                        String agreement9011ControlCommand = get17Agreement9011ControlCommand(message, analogRemoteCounteraccusation.getResponseStatus());
+                        if (!"".equals(agreement9011ControlCommand)) {
+                            nettyClient.sendMessage(deviceId, agreement9011ControlCommand);
+                            webSocketHandler.sendMessageToUser(sysDevice.getId(), new TextMessage("发送9011命令成功：" + agreement9011ControlCommand + "\r\n"));
+                        } else {
+                            webSocketHandler.sendMessageToUser(sysDevice.getId(), new TextMessage("获取9011反控命令为空：" + message + "\r\n\r\n"));
+                        }
+                    } else if (analogRemoteCounteraccusation.getResponseParameter() == 9012) {
+                        String agreement9011ControlCommand = get17Agreement9011ControlCommand(message, 1);
+                        String agreementDataReportedCommand = get17AgreementDataReportedCommand(message);
+                        String agreement9012ControlCommand = get17Agreement9012ControlCommand(message, analogRemoteCounteraccusation.getResponseStatus());
+
+                        if (!"".equals(agreement9011ControlCommand)) {
+                            nettyClient.sendMessage(deviceId, agreement9011ControlCommand);
+                            webSocketHandler.sendMessageToUser(sysDevice.getId(), new TextMessage("发送9011成功：" + agreement9011ControlCommand + "\r\n"));
+                        } else {
+                            webSocketHandler.sendMessageToUser(sysDevice.getId(), new TextMessage("获取9011命令为空：" + agreement9011ControlCommand + "\r\n"));
+                        }
+
+                        if (!"".equals(agreementDataReportedCommand) && 1 == analogRemoteCounteraccusation.getResponseStatus()) {
+                            nettyClient.sendMessage(deviceId, agreementDataReportedCommand);
+                            webSocketHandler.sendMessageToUser(sysDevice.getId(), new TextMessage("发送提取数据成功：" + agreementDataReportedCommand + "\r\n"));
+                        } else if (1 != analogRemoteCounteraccusation.getResponseStatus()) {
+                            webSocketHandler.sendMessageToUser(sysDevice.getId(), new TextMessage("9012状态不等于1，不发送提取数据：" + agreementDataReportedCommand + "\r\n"));
+                        } else {
+                            webSocketHandler.sendMessageToUser(sysDevice.getId(), new TextMessage("本次为设置反控，所以没有提取数据，请核对：" + agreementDataReportedCommand + "\r\n"));
+                        }
+
+                        if (!"".equals(agreement9012ControlCommand)) {
+                            nettyClient.sendMessage(deviceId, agreement9012ControlCommand);
+                            webSocketHandler.sendMessageToUser(sysDevice.getId(), new TextMessage("发送9012成功：" + agreement9012ControlCommand + "\r\n"));
+                        } else {
+                            webSocketHandler.sendMessageToUser(sysDevice.getId(), new TextMessage("9012命令为空：" + agreement9012ControlCommand + "\r\n"));
+                        }
+
+                    } else {
+                        webSocketHandler.sendMessageToUser(sysDevice.getId(), new TextMessage("传的RequestResponseCommand参数有问题，请核对：" + analogRemoteCounteraccusation.getResponseParameter() + "\r\n\r\n"));
+                    }
+                    break;
+            }
+
+        } catch (Exception e) {
+            customWebSocketConfig.customWebSocketHandler().sendMessageToUser(deviceId, new TextMessage("报异常了，请检查发送的报文有没有按国标来，异常内容是：" + e.getMessage() + "\r\n\r\n"));
         }
     }
 
@@ -403,7 +381,7 @@ public class AnalogRemoteCounteraccusationImpl extends ServiceImpl<AnalogRemoteC
             Pattern p = Pattern.compile(regex);
             Matcher m = p.matcher(datagram);
             if (!m.find()) {
-                customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("当前正则为：" + regex + "\r\n"));
+                customWebSocketConfig.customWebSocketHandler().sendMessageToUser(sysDevice.getId(), new TextMessage("当前正则为：" + regex + "\r\n"));
                 return false;
             }
             return true;
@@ -505,7 +483,7 @@ public class AnalogRemoteCounteraccusationImpl extends ServiceImpl<AnalogRemoteC
             Pattern p = Pattern.compile(regex);
             Matcher m = p.matcher(datagram);
             if (!m.find()) {
-                customWebSocketConfig.customWebSocketHandler().sendMessageToUser(String.valueOf(sysDevice.getId()), new TextMessage("当前正则为：" + regex + "\r\n"));
+                customWebSocketConfig.customWebSocketHandler().sendMessageToUser(sysDevice.getId(), new TextMessage("当前正则为：" + regex + "\r\n"));
                 return false;
             }
             return true;
@@ -586,7 +564,7 @@ public class AnalogRemoteCounteraccusationImpl extends ServiceImpl<AnalogRemoteC
         String msg = "";
         switch (getLinkConstant("CN", datagram)) {
             case "1011":
-                msg = "ST=" + getLinkConstant("ST", datagram) + ";CN=1011;PW=123456;MN=" + getLinkConstant("MN", datagram) + ";Flag=4;CP=&&QN=" + getLinkConstant("QN", datagram) + ";SystemTime=" + TimeUtil.getFormatCurrentTime(new Date(),"second", 0) + "&&";
+                msg = "ST=" + getLinkConstant("ST", datagram) + ";CN=1011;PW=123456;MN=" + getLinkConstant("MN", datagram) + ";Flag=4;CP=&&QN=" + getLinkConstant("QN", datagram) + ";SystemTime=" + TimeUtil.getFormatCurrentTime(new Date(), "second", 0) + "&&";
                 break;
             case "1021":
                 msg = "ST=" + getLinkConstant("ST", datagram) + ";CN=1021;PW=123456;MN=" + getLinkConstant("MN", datagram) + ";Flag=4;CP=&&QN=" + getLinkConstant("QN", datagram) + ";" + getLinkConstant("PolId", datagram) + "-LowValue=1.1," + getLinkConstant("PolId", datagram) + "-UpValue=9.9&&";
@@ -633,7 +611,7 @@ public class AnalogRemoteCounteraccusationImpl extends ServiceImpl<AnalogRemoteC
         switch (getLinkConstant("CN", datagram)) {
             //参数命令
             case "1011":
-                msg = "QN=" + getLinkConstant("QN", datagram) + ";ST=" + getLinkConstant("ST", datagram) + ";CN=1011;PW=123456;MN=" + getLinkConstant("MN", datagram) + ";Flag=4;CP=&&" + (null != getLinkConstant("PolId", datagram) ? "PolId=" + getLinkConstant("PolId", datagram) + ";" : "") + "SystemTime=" + TimeUtil.getFormatCurrentTime(new Date(),"second", 0) + "&&";
+                msg = "QN=" + getLinkConstant("QN", datagram) + ";ST=" + getLinkConstant("ST", datagram) + ";CN=1011;PW=123456;MN=" + getLinkConstant("MN", datagram) + ";Flag=4;CP=&&" + (null != getLinkConstant("PolId", datagram) ? "PolId=" + getLinkConstant("PolId", datagram) + ";" : "") + "SystemTime=" + TimeUtil.getFormatCurrentTime(new Date(), "second", 0) + "&&";
                 break;
             case "1061":
                 msg = "QN=" + getLinkConstant("QN", datagram) + ";ST=" + getLinkConstant("ST", datagram) + ";CN=1061;PW=123456;MN=" + getLinkConstant("MN", datagram) + ";Flag=4;CP=&&RtdInterval=30&&";
@@ -656,7 +634,7 @@ public class AnalogRemoteCounteraccusationImpl extends ServiceImpl<AnalogRemoteC
                 break;
             //控制命令
             case "3015":
-                msg = "QN=" + getLinkConstant("QN", datagram) + ";ST=" + getLinkConstant("ST", datagram) + ";CN=3015;PW=123456;MN=" + getLinkConstant("MN", datagram) + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatCurrentTime(new Date(),"second", 0) + ";VaseNo=1&&";
+                msg = "QN=" + getLinkConstant("QN", datagram) + ";ST=" + getLinkConstant("ST", datagram) + ";CN=3015;PW=123456;MN=" + getLinkConstant("MN", datagram) + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatCurrentTime(new Date(), "second", 0) + ";VaseNo=1&&";
                 break;
             case "3017":
                 msg = "QN=" + getLinkConstant("QN", datagram) + ";ST=" + getLinkConstant("ST", datagram) + ";CN=3017;PW=123456;MN=" + getLinkConstant("MN", datagram) + ";Flag=4;CP=&&PolId=" + getLinkConstant("PolId", datagram) + ";CstartTime=060606;CTime=6&&";

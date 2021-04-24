@@ -33,11 +33,11 @@ public class CustomWebSocketInterceptorFilter implements HandshakeInterceptor {
             HttpServletRequest httpServletRequest = ((ServletServerHttpRequest) request).getServletRequest();
             HttpSession session = httpServletRequest.getSession(true);
 
-            logger.info("mchNo：{}", httpServletRequest.getParameter("mchNo"));
+            logger.info("mchNo：{}", httpServletRequest.getParameter("deviceId"));
             if (session != null) {
 
                 map.put("sessionId",session.getId());
-                map.put("mchNo", httpServletRequest.getParameter("mchNo"));
+                map.put("deviceId", httpServletRequest.getParameter("deviceId"));
             }
         }
         return true;

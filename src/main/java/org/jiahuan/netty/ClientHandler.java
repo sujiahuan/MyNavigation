@@ -1,36 +1,93 @@
 package org.jiahuan.netty;
 
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelId;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import lombok.extern.slf4j.Slf4j;
+import org.jiahuan.entity.sys.SysDevice;
+import org.jiahuan.service.analog.IAnalogDataTypeService;
+import org.jiahuan.service.analog.IAnalogRemoteCounteraccusationService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
-import java.util.Map;
+import javax.annotation.PostConstruct;
 
 @Slf4j
+@Component
 public class ClientHandler extends ChannelInboundHandlerAdapter {
 
-    @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) {
+    private static ClientHandler clientHandler;
 
+    @PostConstruct
+    public void init() {
+        clientHandler = this;
     }
 
+    @Autowired
+    private IAnalogRemoteCounteraccusationService iAnalogRemoteCounteraccusationService;
+    @Autowired
+    private IAnalogDataTypeService iAnalogDataTypeService ;
+
+    @Override
+    public void channelRegistered(ChannelHandlerContext ctx){
+        System.out.println("开始注册");
+        ctx.fireChannelRegistered();
+    }
+
+    @Override
+    public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
+        System.out.println("注册失败");
+        synchronized (ctx.channel()){
+            ctx.channel().notifyAll();
+        }
+    }
+
+    @Override
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        System.out.println("注册成功");
+        synchronized (ctx.channel()){
+            ctx.channel().notifyAll();
+        }
+    }
+
+    /**
+     * 收到服务器返回的消息
+     * @param ctx
+     * @param msg
+     */
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) {
+        SysDevice sysDevice = NettyClient.ctxIdDeviceIdMap.get(ctx.channel().id());
+        clientHandler.iAnalogRemoteCounteraccusationService.processMessage(sysDevice.getId(), msg.toString());
+    }
+
+    /**
+     * 正常关闭连接
+     * @param ctx
+     * @throws Exception
+     */
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         ctx.close();
-        Integer deviceId = Client.ctxIdDeviceIdMap.get(ctx.channel().id()).getId();
-        Client.deviceIdChannelMap.remove(deviceId);
-        Client.ctxIdDeviceIdMap.remove(ctx.channel().id());
+        Integer deviceId = NettyClient.ctxIdDeviceIdMap.get(ctx.channel().id()).getId();
+        clientHandler.iAnalogRemoteCounteraccusationService.colseControlConnection(deviceId);
+        clientHandler.iAnalogDataTypeService.setSupplyAgainStatus(deviceId, false);
+        NettyClient.deviceIdChannelMap.remove(deviceId);
+        NettyClient.ctxIdDeviceIdMap.remove(ctx.channel().id());
     }
 
+    /**
+     * 异常关闭连接
+     * @param ctx
+     * @param cause
+     */
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         ctx.close();
-        Integer deviceId = Client.ctxIdDeviceIdMap.get(ctx.channel().id()).getId();
-        Client.deviceIdChannelMap.remove(deviceId);
-        Client.ctxIdDeviceIdMap.remove(ctx.channel().id());
+        Integer deviceId = NettyClient.ctxIdDeviceIdMap.get(ctx.channel().id()).getId();
+        clientHandler.iAnalogRemoteCounteraccusationService.colseControlConnection(deviceId);
+        clientHandler.iAnalogDataTypeService.setSupplyAgainStatus(deviceId, false);
+        NettyClient.deviceIdChannelMap.remove(deviceId);
+        NettyClient.ctxIdDeviceIdMap.remove(ctx.channel().id());
     }
 
 

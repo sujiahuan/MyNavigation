@@ -15,7 +15,7 @@ import java.util.*;
 public class CustomWebSocketHandler extends TextWebSocketHandler implements WebSocketHandler {
     private Logger logger = LoggerFactory.getLogger(CustomWebSocketHandler.class);
     // 在线用户列表
-    private static final Map<String, Set<WebSocketSession>> users;
+    private static final Map<Integer, Set<WebSocketSession>> users;
     // 用户标识
     private static final String CLIENT_ID = "deviceId";
 
@@ -26,26 +26,26 @@ public class CustomWebSocketHandler extends TextWebSocketHandler implements WebS
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         logger.info("已与后台建立socket连接");
-        String mchNo = getMchNo(session);
-        if (StringUtils.isNotEmpty(mchNo)) {
-            if (!users.containsKey(mchNo)) {
+        Integer deviceId = getDeviceId(session);
+        if (null!=deviceId) {
+            if (!users.containsKey(deviceId)) {
                 HashSet<WebSocketSession> webSocketSessions = new HashSet<>();
                 webSocketSessions.add(session);
-                users.put(mchNo, webSocketSessions);
+                users.put(deviceId, webSocketSessions);
             } else {
-                Set<WebSocketSession> webSocketSessions = users.get(mchNo);
+                Set<WebSocketSession> webSocketSessions = users.get(deviceId);
                 webSocketSessions.add(session);
             }
 
 //            session.sendMessage(new TextMessage("成功建立websocket-spring连接\r\n"));
-            logger.info("用户标识：{}，Session：{}", mchNo, session.toString());
+            logger.info("用户标识：{}，Session：{}", deviceId, session.toString());
         }
     }
 
     @Override
     public void handleTextMessage(WebSocketSession session, TextMessage message) {
         logger.info("收到客户端消息：{}", message.getPayload());
-        String to = getMchNo(session);
+        Integer to = getDeviceId(session);
         String msg = message.getPayload();
         WebSocketMessage<?> webSocketMessageServer = new TextMessage("服务器收到客户端发的消息内容:" +message.getPayload());
         try {
@@ -61,20 +61,20 @@ public class CustomWebSocketHandler extends TextWebSocketHandler implements WebS
             session.close();
         }
         logger.info("连接出错");
-        Set<WebSocketSession> webSocketSessions = users.get(getMchNo(session));
+        Set<WebSocketSession> webSocketSessions = users.get(getDeviceId(session));
         webSocketSessions.remove(session);
         if (webSocketSessions.size() == 0) {
-            users.remove(getMchNo(session));
+            users.remove(getDeviceId(session));
         }
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         logger.info("连接已关闭：" + status);
-        Set<WebSocketSession> webSocketSessions = users.get(getMchNo(session));
+        Set<WebSocketSession> webSocketSessions = users.get(getDeviceId(session));
         webSocketSessions.remove(session);
         if (webSocketSessions.size() == 0) {
-            users.remove(getMchNo(session));
+            users.remove(getDeviceId(session));
         }
     }
 
@@ -86,15 +86,15 @@ public class CustomWebSocketHandler extends TextWebSocketHandler implements WebS
     public void sendMessage(String jsonData) {
         logger.info("收到客户端消息sendMessage：{}", jsonData);
         //{mchNo:3,to:"all",msg:"内容"}
-        JSONObject msgJson = JSONObject.parseObject(jsonData);
-        String mchNo = StringUtils.isEmpty(msgJson.getString(CLIENT_ID)) ? "陌生人" : msgJson.getString(CLIENT_ID);
-        String to = msgJson.getString("to");
-        String msg = msgJson.getString("msg");
-        if ("all".equals(to.toLowerCase())) {
-            sendMessageToAllUsers(new TextMessage(mchNo + ":" + msg));
-        } else {
-            sendMessageToUser(to, new TextMessage(mchNo + ":" + msg));
-        }
+//        JSONObject msgJson = JSONObject.parseObject(jsonData);
+//        String mchNo = StringUtils.isEmpty(msgJson.getString(CLIENT_ID)) ? "陌生人" : msgJson.getString(CLIENT_ID);
+//        String to = msgJson.getString("to");
+//        String msg = msgJson.getString("msg");
+//        if ("all".equals(to.toLowerCase())) {
+//            sendMessageToAllUsers(new TextMessage(mchNo + ":" + msg));
+//        } else {
+//            sendMessageToUser(to, new TextMessage(mchNo + ":" + msg));
+//        }
     }
 
     /**
@@ -108,7 +108,7 @@ public class CustomWebSocketHandler extends TextWebSocketHandler implements WebS
      * @Date 2018年8月21日 上午11:01:08
      * @author OnlyMate
      */
-    public boolean sendMessageToUser(String deviceId, TextMessage message) {
+    public boolean sendMessageToUser(Integer deviceId, TextMessage message) {
         if (users.get(deviceId) == null)
             return false;
         Set<WebSocketSession> webSocketSessions = users.get(deviceId);
@@ -142,15 +142,15 @@ public class CustomWebSocketHandler extends TextWebSocketHandler implements WebS
      */
     public boolean sendMessageToAllUsers(TextMessage message) {
         boolean allSendSuccess = true;
-        Set<String> mchNos = users.keySet();
-        for (String mchNo : mchNos) {
+        Set<Integer> deviceIds = users.keySet();
+        for (Integer deviceId : deviceIds) {
             try {
-                Set<WebSocketSession> webSocketSessions = users.get(mchNo);
+                Set<WebSocketSession> webSocketSessions = users.get(deviceId);
                 Iterator<WebSocketSession> iterator = webSocketSessions.iterator();
                 while (iterator.hasNext()) {
                     WebSocketSession webSocketSession = iterator.next();
                     if (!webSocketSession.isOpen()) {
-                        logger.info("客户端:{},已断开连接，发送消息失败", mchNo);
+                        logger.info("客户端:{},已断开连接，发送消息失败", deviceId);
                         iterator.remove();
                         continue;
                     }
@@ -169,14 +169,14 @@ public class CustomWebSocketHandler extends TextWebSocketHandler implements WebS
      *
      * @param session
      * @return
-     * @Title: getMchNo
+     * @Title: getDeviceId
      * @Description: TODO
      * @Date 2018年8月21日 上午11:01:01
      * @author OnlyMate
      */
-    private String getMchNo(WebSocketSession session) {
+    private Integer getDeviceId(WebSocketSession session) {
         try {
-            String mchNo = session.getAttributes().get(CLIENT_ID).toString();
+            Integer mchNo = Integer.parseInt(session.getAttributes().get(CLIENT_ID).toString());
             return mchNo;
         } catch (Exception e) {
             return null;

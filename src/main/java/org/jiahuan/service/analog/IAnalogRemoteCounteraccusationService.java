@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import org.jiahuan.entity.analog.AnalogRemoteCounteraccusation;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Set;
 
 /**
  * <p>
@@ -17,7 +19,13 @@ public interface IAnalogRemoteCounteraccusationService extends IService<AnalogRe
 
     AnalogRemoteCounteraccusation getCounCounterchargeByDeviceId(Integer deviceId);
 
-    void openSocketConnetion(Integer deviceId) throws IOException;
+    void addInitByDeviceId(Integer deviceId);
+
+    void updateCounCountercharge(AnalogRemoteCounteraccusation analogRemoteCounteraccusation);
+
+    void deleteByDeviceId(Integer deviceId);
+
+    boolean openSocketConnetion(Integer deviceId) ;
 
     void colseSocketConnetion(Integer deviceId);
 
@@ -27,10 +35,10 @@ public interface IAnalogRemoteCounteraccusationService extends IService<AnalogRe
 
     void colseControlConnection(Integer deviceId);
 
-    void addInitByDeviceId(Integer deviceId);
+    boolean isControlConnection(Integer deviceId);
 
-    void deleteByDeviceId(Integer deviceId);
+    Set<Integer> getAllControlDeviceId();
 
-    void updateCounCountercharge(AnalogRemoteCounteraccusation analogRemoteCounteraccusation);
+    void processMessage(Integer deviceId,String message);
 
 }

@@ -2,6 +2,7 @@ package org.jiahuan.service.analog;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.jiahuan.entity.analog.AnalogDataType;
+import org.jiahuan.entity.sys.SysDevice;
 
 import java.io.IOException;
 import java.util.List;
@@ -15,6 +16,13 @@ import java.util.List;
  * @since 2020-08-02
  */
 public interface IAnalogDataTypeService extends IService<AnalogDataType> {
+
+    /**
+     * 设置补发状态，将会影响到是否继续补发
+     * @param deviceId
+     * @param supplyStatus
+     */
+    void setSupplyAgainStatus(Integer deviceId,boolean supplyStatus);
 
     /**
      * 获取补发数据状态
@@ -32,8 +40,8 @@ public interface IAnalogDataTypeService extends IService<AnalogDataType> {
 
     /**
      * 获取该设备的某一个数据类型
-     * @param deviceId
-     * @param dataType
+     * @param deviceId 设备id
+     * @param dataType 数据类型，1实时/2分钟/3小时/4日
      * @return
      */
     AnalogDataType getCounDataTypeByDeviceId(Integer deviceId, Integer dataType);
@@ -79,14 +87,6 @@ public interface IAnalogDataTypeService extends IService<AnalogDataType> {
     void sendSupplyAgain(Integer deviceId,Integer dataType) throws Exception;
 
     /**
-     * 终止补发
-     * @param deviceId
-     * @throws IOException
-     */
-    void cancelSupplyAgain(Integer deviceId)  ;
-
-
-    /**
      * 获取补发统计的数据
      * @param deviceId
      * @param dataType
@@ -103,10 +103,18 @@ public interface IAnalogDataTypeService extends IService<AnalogDataType> {
 
     /**
      * 发送组装好的数据包
-     * @param deviceId 设备对象
+     * @param sysDevice 设备对象
      * @param message 数据包
      * @throws IOException
      */
-    void sendMessage(Integer deviceId, String message,List<String> dataPack) throws Exception;
+    void sendMessage(SysDevice sysDevice, String message, List<String> dataPack) throws Exception;
+
+    /**
+     * 发送自定义数据
+     * @param deviceId 设备id
+     * @param message 消息
+     * @throws Exception
+     */
+    void sendCustomizeMessage(Integer deviceId, String message) throws Exception;
 
 }

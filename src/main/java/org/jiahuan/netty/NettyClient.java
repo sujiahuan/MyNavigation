@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class Client {
+public class NettyClient {
 
     /**
      * 设备id与通道绑定map
@@ -26,11 +26,7 @@ public class Client {
     /**
      * 通道id与设备id绑定map
      */
-    public static Map<ChannelId,SysDevice> ctxIdDeviceIdMap = new HashMap<>();
-    /**
-     * 开启反控map
-     */
-    private Map<Integer, AnalogRemoteCounteraccusation> controlConnetionMap = new HashMap<>();
+    public static Map<ChannelId, SysDevice> ctxIdDeviceIdMap = new HashMap<>();
     /**
      * netty连接对象
      */
@@ -41,7 +37,6 @@ public class Client {
      */
     public void init() {
         EventLoopGroup group = new NioEventLoopGroup();
-        try {
             b.group(group)
                     .channel(NioSocketChannel.class)
                     .option(ChannelOption.TCP_NODELAY, true)
@@ -54,20 +49,28 @@ public class Client {
                             p.addLast(new ClientHandler());
                         }
                     });
-        } finally {
-            group.shutdownGracefully();
-        }
     }
 
     /**
      * 建立连接
+     *
      * @param device 设备对象
      * @throws InterruptedException
      */
     public boolean connection(SysDevice device) {
-        Channel channel = b.connect(device.getIp(),device.getPort()).channel();
-        if(channel.isActive()){
-            deviceIdChannelMap.put(device.getId(),channel);
+        if(deviceIdChannelMap.containsKey(device.getId())){
+            this.closeConnection(device.getId());
+        }
+        Channel channel = b.connect(device.getIp(), device.getPort()).channel();
+        synchronized (channel){
+            try {
+                channel.wait(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        if (channel.isActive()) {
+            deviceIdChannelMap.put(device.getId(), channel);
             ctxIdDeviceIdMap.put(channel.id(),device);
             return true;
         }
@@ -75,33 +78,47 @@ public class Client {
     }
 
     /**
-     * 发送消息
+     * 判断连接状态
+     *
      * @param deviceId 设备id
-     * @param message 需发送的消息
+     * @return true 连接 / false 断开
+     */
+    public boolean isConnection(Integer deviceId) {
+        return deviceIdChannelMap.containsKey(deviceId);
+    }
+
+    /**
+     * 关闭连接
+     * @param deviceId 设备id
+     */
+    public void closeConnection(Integer deviceId) {
+        if (deviceIdChannelMap.containsKey(deviceId)) {
+            Channel channel = deviceIdChannelMap.get(deviceId);
+            channel.close();
+            synchronized (channel){
+                try {
+                    channel.wait(5000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    /**
+     * 发送消息
+     *
+     * @param deviceId 设备id
+     * @param message  需发送的消息
      * @return 成功true，否则false
      */
-    public boolean sendMessage(Integer deviceId,String message){
-        if(deviceIdChannelMap.containsKey(deviceId)){
+    public boolean sendMessage(Integer deviceId, String message) {
+        if (deviceIdChannelMap.containsKey(deviceId)) {
             deviceIdChannelMap.get(deviceId).writeAndFlush(message);
             return true;
         }
         return false;
     }
 
-    /**
-     * 判断连接状态
-     * @param deviceId 设备id
-     * @param type 1 netty状态/2 反控状态
-     * @return true 连接 / false 断开
-     */
-    public boolean isConnection(Integer deviceId,Integer type){
-        switch (type){
-            case 1:
-                return deviceIdChannelMap.containsKey(deviceId);
-            case 2:
-                return controlConnetionMap.containsKey(deviceId);
-        }
-        return false;
-    }
 
 }
