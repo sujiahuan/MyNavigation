@@ -60,6 +60,8 @@ public class SysDevice extends Model<SysDevice> {
 
     private Integer subpackageNumber;
 
+    private Integer analogNumber;
+
     private LocalDateTime gmtCreate;
 
     private LocalDateTime gmtModified;

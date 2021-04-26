@@ -36,4 +36,21 @@ public class AnalogDataTypeServiceImplTest {
         System.out.println("第二执行："+executorService.isTerminated()  );
     }
 
+    @Test
+    public void testName2() throws Exception {
+
+//        String format = String.format("%0" + 4 + "d", Integer.parseInt("10000") + 1);
+//        System.out.println(format);
+
+        Integer a=5;
+        for (int i = 0; i < a; i++) {
+            if(a==5){
+                System.out.println("等于三啦");
+            }
+            if(a.equals(5)){
+                System.out.println("哈哈 等于三啦");
+            }
+        }
+    }
+
 }

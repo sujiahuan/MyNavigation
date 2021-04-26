@@ -54,13 +54,13 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
     private Map<Integer, Boolean> supplyAgainStatus = new HashMap<>();
 
     @Override
-    public void setSupplyAgainStatus(Integer deviceId,boolean supplyStatus) {
+    public void setSupplyAgainStatus(Integer deviceId, boolean supplyStatus) {
         supplyAgainStatus.put(deviceId, supplyStatus);
     }
 
     @Override
     public boolean getSupplyAgainStatus(Integer deviceId) {
-        if(supplyAgainStatus.containsKey(deviceId)&&supplyAgainStatus.get(deviceId)){
+        if (supplyAgainStatus.containsKey(deviceId) && supplyAgainStatus.get(deviceId)) {
             return true;
         }
         return false;
@@ -68,10 +68,10 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
 
     @Override
     public void waitForTheReissueToComplete(Integer deviceId) throws InterruptedException {
-        if(supplyAgainStatus.get(deviceId)){
-          synchronized (deviceId){
-              deviceId.wait();
-          }
+        if (supplyAgainStatus.get(deviceId)) {
+            synchronized (deviceId) {
+                deviceId.wait();
+            }
         }
     }
 
@@ -115,52 +115,63 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
 
     @Override
     public void sendRealTime(Integer deviceId, Integer dataType) throws Exception {
-        List<String> dataPack=new ArrayList<>();
+        List<String> dataPacks = new ArrayList<>();
         SysDevice sysDevice = iSysDeviceService.getById(deviceId);
         List<AnalogDivisorParameter> analogDivisorParameters = iAnalogDivisorParameterService.getDivisorParameterByDeviceId(deviceId);
-
-        List<Object> divisorParameters = new ArrayList<>();
-        int pnum = 1;
-        int pon = 1;
-        Date date = new Date();
-        //判断是否需要包头
-        if (sysDevice.getSubpackage() == 1) {
-            if (analogDivisorParameters.size() % sysDevice.getSubpackageNumber() == 0) {
-                pnum = analogDivisorParameters.size() / sysDevice.getSubpackageNumber();
-            } else {
-                pnum = analogDivisorParameters.size() / sysDevice.getSubpackageNumber() + 1;
+        String beforeMN = sysDevice.getMn();
+        Integer analogNumber = sysDevice.getAnalogNumber();
+        for (int number = 1; number <= analogNumber; number++) {
+            String mn = String.format("%0" + analogNumber.toString().length() + "d", number);
+            if (!analogNumber.equals(1)) {
+                sysDevice.setMn(beforeMN + mn);
             }
-        }
 
-        //判断是否需要分包
-        if (sysDevice.getSubpackage() != 0) {
-
-            for (int i = 1; i <= analogDivisorParameters.size(); i++) {
-                divisorParameters.add(analogDivisorParameters.get(i - 1));
-                //判断是否满足分包数
-                if (i % sysDevice.getSubpackageNumber() == 0) {
-                    HashMap<String, Map<String, String>> divisorParameterMap = getDivisorParameterMap(divisorParameters, false);
-                    divisorParameters.clear();
-                    //获取实时数据包
-                    String message = getRealTimeDataPackage(sysDevice, date, divisorParameterMap, pnum, pon, dataType);
-                    this.sendMessage(sysDevice, message,dataPack);
-                    pon++;
-                } else if (i == analogDivisorParameters.size()) {
-                    HashMap<String, Map<String, String>> divisorParameterMap = getDivisorParameterMap(divisorParameters, false);
-                    //获取实时数据包
-                    String message = getRealTimeDataPackage(sysDevice, date, divisorParameterMap, pnum, pon, dataType);
-                    this.sendMessage(sysDevice, message,dataPack);
+            List<Object> divisorParameters = new ArrayList<>();
+            int pnum = 1;
+            int pon = 1;
+            Date date = new Date();
+            //判断是否需要包头
+            if (sysDevice.getSubpackage() == 1) {
+                if (analogDivisorParameters.size() % sysDevice.getSubpackageNumber() == 0) {
+                    pnum = analogDivisorParameters.size() / sysDevice.getSubpackageNumber();
+                } else {
+                    pnum = analogDivisorParameters.size() / sysDevice.getSubpackageNumber() + 1;
                 }
             }
-        } else {
-            divisorParameters = new ArrayList<>(analogDivisorParameters);
-            HashMap<String, Map<String, String>> divisorParameterMap = getDivisorParameterMap(divisorParameters, false);
-            //获取实时数据包
-            String message = getRealTimeDataPackage(sysDevice, date, divisorParameterMap, pnum, pon, dataType);
-            this.sendMessage(sysDevice, message,dataPack);
-        }
 
-        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(sysDevice.getId(), new TextMessage(dataPack.toString()));
+            //判断是否需要分包
+            if (sysDevice.getSubpackage() != 0) {
+
+                for (int i = 1; i <= analogDivisorParameters.size(); i++) {
+                    divisorParameters.add(analogDivisorParameters.get(i - 1));
+                    //判断是否满足分包数
+                    if (i % sysDevice.getSubpackageNumber() == 0) {
+                        HashMap<String, Map<String, String>> divisorParameterMap = getDivisorParameterMap(divisorParameters, false);
+                        divisorParameters.clear();
+                        //获取实时数据包
+                        String message = getRealTimeDataPackage(sysDevice, date, divisorParameterMap, pnum, pon, dataType);
+                        this.sendMessage(sysDevice, message, dataPacks);
+                        pon++;
+                    } else if (i == analogDivisorParameters.size()) {
+                        HashMap<String, Map<String, String>> divisorParameterMap = getDivisorParameterMap(divisorParameters, false);
+                        //获取实时数据包
+                        String message = getRealTimeDataPackage(sysDevice, date, divisorParameterMap, pnum, pon, dataType);
+                        this.sendMessage(sysDevice, message, dataPacks);
+                    }
+                }
+            } else {
+                divisorParameters = new ArrayList<>(analogDivisorParameters);
+                HashMap<String, Map<String, String>> divisorParameterMap = getDivisorParameterMap(divisorParameters, false);
+                //获取实时数据包
+                String message = getRealTimeDataPackage(sysDevice, date, divisorParameterMap, pnum, pon, dataType);
+                this.sendMessage(sysDevice, message, dataPacks);
+            }
+        }
+        if (dataPacks.size() > 30) {
+            dataPacks = dataPacks.subList(dataPacks.size() - 30, dataPacks.size());
+            dataPacks.add(0, "本次发送的数据已超过30条，只保留最后30条数据");
+        }
+        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(sysDevice.getId(), new TextMessage(dataPacks.toString()));
     }
 
     @Override
@@ -168,13 +179,13 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
         List<Object> divisorParameters;
         SysDevice sysDevice = iSysDeviceService.getById(deviceId);
         HashMap<String, Map<String, String>> divisorParameterMap;
-        if(dataType<=4){
+        if (dataType <= 4) {
             List<AnalogDivisorParameter> analogDivisorParameters = iAnalogDivisorParameterService.getDivisorParameterByDeviceId(deviceId);
             divisorParameters = new ArrayList<>(analogDivisorParameters);
             divisorParameterMap = getDivisorParameterMap(divisorParameters, false);
-        }else{
-            List<AnalogDynamicParameter> analogDynamicParameters = iAnalogDynamicParameterService.getDynamicParameterByDeviceId(deviceId,dataType-4);
-            divisorParameters=new ArrayList<>(analogDynamicParameters);
+        } else {
+            List<AnalogDynamicParameter> analogDynamicParameters = iAnalogDynamicParameterService.getDynamicParameterByDeviceId(deviceId, dataType - 4);
+            divisorParameters = new ArrayList<>(analogDynamicParameters);
             divisorParameterMap = getDivisorParameterMap(divisorParameters, true);
         }
 
@@ -186,7 +197,7 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
 
     @Override
     public void sendSupplyAgain(Integer deviceId, Integer dataType) throws Exception {
-        List<String> dataPacks=new ArrayList<>();
+        List<String> dataPacks = new ArrayList<>();
         AnalogDataType analogDataType = this.getCounDataTypeByDeviceId(deviceId, dataType);
         SysDevice sysDevice = iSysDeviceService.getById(deviceId);
         int field = 13;
@@ -218,73 +229,89 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
 
         this.setSupplyAgainStatus(deviceId, true);
 
-        List<AnalogDivisorParameter> analogDivisorParameters = iAnalogDivisorParameterService.getDivisorParameterByDeviceId(deviceId);
+        try {
 
-        List<Object> divisorParameters = new ArrayList<>();
-        int pnum = 1;
-        int pon = 1;
-        int count = 0;
+            List<AnalogDivisorParameter> analogDivisorParameters = iAnalogDivisorParameterService.getDivisorParameterByDeviceId(deviceId);
 
-        //计算总包数
-        if (sysDevice.getSubpackage() == 1) {
-            if (analogDivisorParameters.size() % sysDevice.getSubpackageNumber() == 0) {
-                pnum = analogDivisorParameters.size() / sysDevice.getSubpackageNumber();
-            } else {
-                pnum = analogDivisorParameters.size() / sysDevice.getSubpackageNumber() + 1;
-            }
-        }
-        //时间遍历
-        while (startCalendar.getTimeInMillis() - endCalendar.getTimeInMillis() <= 0 && this.getSupplyAgainStatus(deviceId)) {
-            for (int i = 1; i <= analogDivisorParameters.size(); i++) {
-                divisorParameters.add(analogDivisorParameters.get(i - 1));
-                //判断是否需要分包
-                if (sysDevice.getSubpackage() != 0) {
-                    //判断是否满足分包数
-                    if (i % sysDevice.getSubpackageNumber() == 0) {
-                        HashMap<String, Map<String, String>> divisorParameterMap = getDivisorParameterMap(divisorParameters, false);
-                        divisorParameters.clear();
-                        //获取补发数据包
-                        String dataPackage = getSupplyAgainDataPackage(sysDevice, startCalendar.getTime(), divisorParameterMap, pnum, pon, analogDataType);
-                        //发送消息
-                        this.sendMessage(sysDevice, dataPackage,dataPacks);
-                        pon++;
-                        //最后一个包因子不足则直接发送
-                    } else if (i == analogDivisorParameters.size()) {
-                        HashMap<String, Map<String, String>> divisorParameterMap = getDivisorParameterMap(divisorParameters, false);
-                        divisorParameters.clear();
-                        //获取补发数据包
-                        String dataPackage = getSupplyAgainDataPackage(sysDevice, startCalendar.getTime(), divisorParameterMap, pnum, pon, analogDataType);
-//发送消息
-                        this.sendMessage(sysDevice, dataPackage,dataPacks);
-                    }
-                } else if (i == analogDivisorParameters.size()) {
-                    HashMap<String, Map<String, String>> divisorParameterMap = getDivisorParameterMap(divisorParameters, false);
-                    divisorParameters.clear();
-                    //获取补发数据包
-                    String dataPackage = getSupplyAgainDataPackage(sysDevice, startCalendar.getTime(), divisorParameterMap, pnum, pon, analogDataType);
-                    //发送消息
-                    this.sendMessage(sysDevice, dataPackage,dataPacks);
+            List<Object> divisorParameters = new ArrayList<>();
+
+            int pnum = 1;
+            int pon = 1;
+            int count = 0;
+
+            //计算总包数
+            if (sysDevice.getSubpackage() == 1) {
+                if (analogDivisorParameters.size() % sysDevice.getSubpackageNumber() == 0) {
+                    pnum = analogDivisorParameters.size() / sysDevice.getSubpackageNumber();
+                } else {
+                    pnum = analogDivisorParameters.size() / sysDevice.getSubpackageNumber() + 1;
                 }
             }
-            //添加时间
-            startCalendar.add(field, analogDataType.getDateInterval());
-            pon = 1;
-            count++;
-        }
-        this.setSupplyAgainStatus(deviceId, false);
-        synchronized (deviceId){
-            deviceId.notifyAll();
-        }
-        if(dataPacks.size()>30){
-            dataPacks=dataPacks.subList(dataPacks.size()-30,dataPacks.size());
-            dataPacks.add(0, "本次补发已超过30条，只保留最后30条数据");
-        }
-        customWebSocketConfig.customWebSocketHandler().sendMessageToUser(sysDevice.getId(), new TextMessage(dataPacks.toString()));
-        if (supplyAgainStatus.get(deviceId)) {
-            customWebSocketConfig.customWebSocketHandler().sendMessageToUser(sysDevice.getId(), new TextMessage("发送完成，本次共补发" + dataTypeStr + "数据：" + count + " 条\r\n"));
-        } else {
-            customWebSocketConfig.customWebSocketHandler().sendMessageToUser(sysDevice.getId(), new TextMessage("终止成功，本次共补发" + dataTypeStr + "数据：" + count + " 条"
-));
+
+            String beforeMN = sysDevice.getMn();
+            Integer analogNumber = sysDevice.getAnalogNumber();
+
+            //时间遍历
+            while (startCalendar.getTimeInMillis() - endCalendar.getTimeInMillis() <= 0 && this.getSupplyAgainStatus(deviceId)) {
+                for (int number = 1; number <= analogNumber; number++) {
+                    String mn = String.format("%0" + analogNumber.toString().length() + "d", number);
+                    if (!analogNumber.equals(1)) {
+                        sysDevice.setMn(beforeMN + mn);
+                    }
+                    for (int i = 1; i <= analogDivisorParameters.size(); i++) {
+                        divisorParameters.add(analogDivisorParameters.get(i - 1));
+                        //判断是否需要分包
+                        if (sysDevice.getSubpackage() != 0) {
+                            //判断是否满足分包数
+                            if (i % sysDevice.getSubpackageNumber() == 0) {
+                                HashMap<String, Map<String, String>> divisorParameterMap = getDivisorParameterMap(divisorParameters, false);
+                                divisorParameters.clear();
+                                //获取补发数据包
+                                String dataPackage = getSupplyAgainDataPackage(sysDevice, startCalendar.getTime(), divisorParameterMap, pnum, pon, analogDataType);
+                                //发送消息
+                                this.sendMessage(sysDevice, dataPackage, dataPacks);
+                                pon++;
+                                //最后一个包因子不足则直接发送
+                            } else if (i == analogDivisorParameters.size()) {
+                                HashMap<String, Map<String, String>> divisorParameterMap = getDivisorParameterMap(divisorParameters, false);
+                                divisorParameters.clear();
+                                //获取补发数据包
+                                String dataPackage = getSupplyAgainDataPackage(sysDevice, startCalendar.getTime(), divisorParameterMap, pnum, pon, analogDataType);
+//发送消息
+                                this.sendMessage(sysDevice, dataPackage, dataPacks);
+                            }
+                        } else if (i == analogDivisorParameters.size()) {
+                            HashMap<String, Map<String, String>> divisorParameterMap = getDivisorParameterMap(divisorParameters, false);
+                            divisorParameters.clear();
+                            //获取补发数据包
+                            String dataPackage = getSupplyAgainDataPackage(sysDevice, startCalendar.getTime(), divisorParameterMap, pnum, pon, analogDataType);
+                            //发送消息
+                            this.sendMessage(sysDevice, dataPackage, dataPacks);
+                        }
+                    }
+                }
+                //添加时间
+                startCalendar.add(field, analogDataType.getDateInterval());
+                pon = 1;
+                count++;
+            }
+
+            if (dataPacks.size() > 30) {
+                dataPacks = dataPacks.subList(dataPacks.size() - 30, dataPacks.size());
+                dataPacks.add(0, "本次补发已超过30条，只保留最后30条数据");
+            }
+            customWebSocketConfig.customWebSocketHandler().sendMessageToUser(sysDevice.getId(), new TextMessage(dataPacks.toString()));
+            if (supplyAgainStatus.get(deviceId)) {
+                customWebSocketConfig.customWebSocketHandler().sendMessageToUser(sysDevice.getId(), new TextMessage("发送完成，本次补发" + analogNumber + "个设备的" + dataTypeStr + "数据，每个设备补发：" + count + " 条数据，每条数据分：" + pnum + " 包，最终发送了：" + analogNumber * count * pnum + "条数据\r\n"));
+            } else {
+                customWebSocketConfig.customWebSocketHandler().sendMessageToUser(sysDevice.getId(), new TextMessage("终止成功，本次补发" + analogNumber + "个设备的" + dataTypeStr + "数据，每个设备补发：" + count + " 条数据，每条数据分：" + pnum + " 包，最终发送了：" + analogNumber * count * pnum + "条数据\r\n"
+                ));
+            }
+        } finally {
+            this.setSupplyAgainStatus(deviceId, false);
+            synchronized (deviceId) {
+                deviceId.notifyAll();
+            }
         }
 
     }
@@ -335,17 +362,17 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
     public void sendParam3020(Integer deviceId, Integer dataType) throws Exception {
         String dataPackage = this.getDataPackage(deviceId, dataType);
         List<String> dataPacks = new ArrayList<>();
-        this.sendMessage(iSysDeviceService.getById(deviceId),dataPackage,dataPacks);
+        this.sendMessage(iSysDeviceService.getById(deviceId), dataPackage, dataPacks);
         customWebSocketConfig.customWebSocketHandler().sendMessageToUser(deviceId, new TextMessage(dataPacks.toString()));
     }
 
     @Override
-    public void sendMessage(SysDevice sysDevice, String message,List<String> dataPack) throws Exception {
-        if(!nettyClient.isConnection(sysDevice.getId())){
-            if(!sysDevice.isAutoConnection()){
+    public void sendMessage(SysDevice sysDevice, String message, List<String> dataPack) throws Exception {
+        if (!nettyClient.isConnection(sysDevice.getId())) {
+            if (!sysDevice.isAutoConnection()) {
                 throw new Exception("连接已断开，请连接");
             }
-            if(!nettyClient.connection(sysDevice)){
+            if (!nettyClient.connection(sysDevice)) {
                 throw new Exception("连接失败，请检查连接");
             }
         }
@@ -354,9 +381,9 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
             message += "\r\n";
         }
 
-        if(nettyClient.sendMessage(sysDevice.getId(), message)){
+        if (nettyClient.sendMessage(sysDevice.getId(), message)) {
             dataPack.add(message);
-        }else{
+        } else {
             supplyAgainStatus.put(sysDevice.getId(), false);
             throw new Exception("发送失败，请检查连接");
         }
@@ -367,7 +394,7 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
     public void sendCustomizeMessage(Integer deviceId, String message) throws Exception {
         ArrayList<String> dataPack = new ArrayList<>();
         SysDevice sysDevice = iSysDeviceService.getById(deviceId);
-        this.sendMessage(sysDevice,message,dataPack);
+        this.sendMessage(sysDevice, message, dataPack);
         customWebSocketConfig.customWebSocketHandler().sendMessageToUser(deviceId, new TextMessage(dataPack.toString()));
     }
 
@@ -385,12 +412,12 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
             List<AnalogDynamicParameter> analogDynamicParameters = new ArrayList(parameters);
             HashMap<String, String> property = new HashMap<>();
             for (AnalogDynamicParameter analogDynamicParameter : analogDynamicParameters) {
-                    property.put(analogDynamicParameter.getDivisorCode(), RandomUtil.getRandomString(4, analogDynamicParameter.getValueMin(),analogDynamicParameter.getValueMax()));
+                property.put(analogDynamicParameter.getDivisorCode(), RandomUtil.getRandomString(4, analogDynamicParameter.getValueMin(), analogDynamicParameter.getValueMax()));
             }
-            if(analogDynamicParameters.size()!=0){
+            if (analogDynamicParameters.size() != 0) {
                 AnalogDynamicDivisor analogDynamicDivisor = iAnalogDynamicDivisorService.getDynamicDivisorByDeviceId(analogDynamicParameters.get(0).getDeviceId());
                 divisorParameter.put(analogDynamicDivisor.getDivisorCode(), property);
-            }else{
+            } else {
                 divisorParameter.put("null", property);
             }
         } else {
@@ -454,7 +481,7 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
                 polId = divisorParameter.keySet().iterator().next();
                 link = "##0171QN=" + TimeUtil.getFormatCurrentTime(new Date(), "millisecond", 0) + ";ST=" + sysDevice.getMonitoringType() + ";CN=3020;PW=123456;MN="
                         + sysDevice.getMn() + ";Flag=4;CP=&&DataTime=" + TimeUtil.getFormatCurrentTime(date, "second", 0) + ";PolId=" + polId + ";"
-                        + getParameterPackage(divisorParameter, "dynamic",null) + "&&B381";
+                        + getParameterPackage(divisorParameter, "dynamic", null) + "&&B381";
                 break;
 //            case 6:
 //                //获取编码，只考虑一个的情况
@@ -481,9 +508,9 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
     /**
      * 获取补发报文内容
      *
-     * @param sysDevice 设备对象
-     * @param date      补发时间
-     * @param analogDataType  数据类型对象
+     * @param sysDevice      设备对象
+     * @param date           补发时间
+     * @param analogDataType 数据类型对象
      * @return 返回组装好的数据包
      */
     private String getSupplyAgainDataPackage(SysDevice sysDevice, Date date, HashMap<String, Map<String, String>> divisorParameter, Integer pnum, Integer pno, AnalogDataType analogDataType) {
@@ -654,13 +681,13 @@ public class AnalogDataTypeServiceImpl extends ServiceImpl<AnalogDataTypeMapper,
                 keySet = stringStringMap.keySet();
                 Iterator<String> iterator = keySet.iterator();
                 //遍历因子编码
-                while (iterator.hasNext()){
+                while (iterator.hasNext()) {
                     String parameterKey = iterator.next();
                     String parameterValue = stringStringMap.get(parameterKey);
-                    buffer.append(parameterKey+"-Info=" + parameterValue+";");
+                    buffer.append(parameterKey + "-Info=" + parameterValue + ";");
                 }
-                if(buffer.length()!=0){
-                    buffer.deleteCharAt(buffer.length()-1);
+                if (buffer.length() != 0) {
+                    buffer.deleteCharAt(buffer.length() - 1);
                 }
 
 
