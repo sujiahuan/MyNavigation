@@ -2,14 +2,13 @@ package org.jiahuan.controller.analog;
 
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
 import org.jiahuan.common.model.RetMsgData;
 import org.jiahuan.common.util.VerdictUtil;
-import org.jiahuan.entity.analog.AnalogDynamicParameter;
-import org.jiahuan.service.analog.IAnalogDynamicParameterService;
+import org.jiahuan.entity.analog.AnDynamicParameter;
+import org.jiahuan.service.analog.IAnDynamicParameterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,19 +26,19 @@ import java.util.List;
 @RestController
 @RequestMapping("/dynamicParameter")
 @Slf4j
-public class AnalogDynamicParameterController {
+public class AnDynamicParameterController {
 
     @Autowired
-    private IAnalogDynamicParameterService iAnalogDynamicParameterService;
+    private IAnDynamicParameterService iAnDynamicParameterService;
 
     @PostMapping("/addOrUpdate")
-    public RetMsgData<List<AnalogDynamicParameter>> add(@RequestBody List<AnalogDynamicParameter> objs){
-        RetMsgData<List<AnalogDynamicParameter>> msgData = new RetMsgData<>();
+    public RetMsgData<List<AnDynamicParameter>> add(@RequestBody List<AnDynamicParameter> objs){
+        RetMsgData<List<AnDynamicParameter>> msgData = new RetMsgData<>();
 
         objs.forEach(obj->obj.setGmtCreate(LocalDateTime.now()));
 
         try{
-            iAnalogDynamicParameterService.saveOrUpdateBatch(objs);
+            iAnDynamicParameterService.saveOrUpdateBatch(objs);
             msgData.setData(objs);
             return msgData;
         }catch (Exception e){
@@ -50,14 +49,14 @@ public class AnalogDynamicParameterController {
     }
 
     @DeleteMapping("/deleteById")
-    public RetMsgData<AnalogDynamicParameter> delete(@RequestParam Integer id){
-        RetMsgData<AnalogDynamicParameter> msgData = new RetMsgData<>();
+    public RetMsgData<AnDynamicParameter> delete(@RequestParam Integer id){
+        RetMsgData<AnDynamicParameter> msgData = new RetMsgData<>();
         if(VerdictUtil.isNull(id)){
             msgData.setMsg("id为空");
         }
 
         try{
-            iAnalogDynamicParameterService.removeById(id);
+            iAnDynamicParameterService.removeById(id);
             return msgData;
         }catch (Exception e){
             msgData.setMsg(e.getMessage());
@@ -67,13 +66,13 @@ public class AnalogDynamicParameterController {
     }
 
     @GetMapping("/getList")
-    public RetMsgData<List<AnalogDynamicParameter>> get(@RequestParam Integer deviceId,Integer type){
-        RetMsgData<List<AnalogDynamicParameter>> msgData = new RetMsgData<>();
+    public RetMsgData<List<AnDynamicParameter>> get(@RequestParam Integer deviceId, Integer type){
+        RetMsgData<List<AnDynamicParameter>> msgData = new RetMsgData<>();
         if(VerdictUtil.isNull(deviceId)){
             msgData.setMsg("设备id为空");
         }
         try{
-            msgData.setData(iAnalogDynamicParameterService.getDynamicParameterByDeviceId(deviceId,type));
+            msgData.setData(iAnDynamicParameterService.getDynamicParameterByDeviceId(deviceId,type));
             return msgData;
         }catch (Exception e){
             msgData.setMsg(e.getMessage());
@@ -83,15 +82,15 @@ public class AnalogDynamicParameterController {
     }
 
     @GetMapping("/getPage")
-    public RetMsgData<IPage<AnalogDynamicParameter>> getPage(@RequestParam Integer page, @RequestParam Integer size, @RequestParam(required=false)String name){
-        RetMsgData<IPage<AnalogDynamicParameter>> msgData = new RetMsgData<>();
-        Page<AnalogDynamicParameter> page1 = new Page<>(page, size);
-        QueryWrapper<AnalogDynamicParameter> queryWrapper = new QueryWrapper<>();
+    public RetMsgData<IPage<AnDynamicParameter>> getPage(@RequestParam Integer page, @RequestParam Integer size, @RequestParam(required=false)String name){
+        RetMsgData<IPage<AnDynamicParameter>> msgData = new RetMsgData<>();
+        Page<AnDynamicParameter> page1 = new Page<>(page, size);
+        QueryWrapper<AnDynamicParameter> queryWrapper = new QueryWrapper<>();
         if(VerdictUtil.isNotNull(name)){
             queryWrapper.like("name",name);
         }
         try{
-            msgData.setData(iAnalogDynamicParameterService.page(page1, queryWrapper));
+            msgData.setData(iAnDynamicParameterService.page(page1, queryWrapper));
             return msgData;
         }catch (Exception e){
             msgData.setMsg(e.getMessage());

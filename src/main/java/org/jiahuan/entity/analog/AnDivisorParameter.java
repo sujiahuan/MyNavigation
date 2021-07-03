@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
  * @author wj
  * @since 2020-07-26
  */
-public class AnalogDivisorParameter extends Model<AnalogDivisorParameter> {
+public class AnDivisorParameter extends Model<AnDivisorParameter> {
 
     private static final long serialVersionUID = 1L;
 

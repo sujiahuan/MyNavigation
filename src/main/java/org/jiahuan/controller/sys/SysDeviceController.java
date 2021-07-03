@@ -84,7 +84,7 @@ public class SysDeviceController {
     public RetMsgData<SysDevice> getById(@RequestParam Integer id){
         RetMsgData<SysDevice> msgData = new RetMsgData<>();
         try{
-            msgData.setData(iSysDeviceService.getById(id));
+            msgData.setData(iSysDeviceService.getSysDeviceById(id));
             return msgData;
         }catch (Exception e){
             msgData.setMsg(e.getMessage());
@@ -95,9 +95,8 @@ public class SysDeviceController {
     @GetMapping("/getAll")
     public RetMsgData<List<SysDevice>> getAll(){
         RetMsgData<List<SysDevice>> msgData = new RetMsgData<>();
-        QueryWrapper<SysDevice> queryWrapper = new QueryWrapper<>();
         try{
-            msgData.setData(iSysDeviceService.list(queryWrapper));
+            msgData.setData(iSysDeviceService.getListSysDevice());
             return msgData;
         }catch (Exception e){
             msgData.setMsg(e.getMessage());

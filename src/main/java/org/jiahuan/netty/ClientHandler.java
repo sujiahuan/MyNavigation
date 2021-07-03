@@ -4,8 +4,8 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import lombok.extern.slf4j.Slf4j;
 import org.jiahuan.entity.sys.SysDevice;
-import org.jiahuan.service.analog.IAnalogDataTypeService;
-import org.jiahuan.service.analog.IAnalogRemoteCounteraccusationService;
+import org.jiahuan.service.analog.IAnDataTypeService;
+import org.jiahuan.service.analog.IAnRemoteControlService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -23,9 +23,9 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
     }
 
     @Autowired
-    private IAnalogRemoteCounteraccusationService iAnalogRemoteCounteraccusationService;
+    private IAnRemoteControlService iAnRemoteControlService;
     @Autowired
-    private IAnalogDataTypeService iAnalogDataTypeService ;
+    private IAnDataTypeService iAnDataTypeService;
 
     @Override
     public void channelRegistered(ChannelHandlerContext ctx){
@@ -57,7 +57,7 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         SysDevice sysDevice = NettyClient.ctxIdDeviceIdMap.get(ctx.channel().id());
-        clientHandler.iAnalogRemoteCounteraccusationService.processMessage(sysDevice.getId(), msg.toString());
+        clientHandler.iAnRemoteControlService.processMessage(sysDevice.getId(), msg.toString());
     }
 
     /**
@@ -69,8 +69,8 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         ctx.close();
         Integer deviceId = NettyClient.ctxIdDeviceIdMap.get(ctx.channel().id()).getId();
-        clientHandler.iAnalogRemoteCounteraccusationService.colseControlConnection(deviceId);
-        clientHandler.iAnalogDataTypeService.setSupplyAgainStatus(deviceId, false);
+        clientHandler.iAnRemoteControlService.colseControlConnection(deviceId);
+        clientHandler.iAnDataTypeService.setSupplyAgainStatus(deviceId, false);
         NettyClient.deviceIdChannelMap.remove(deviceId);
         NettyClient.ctxIdDeviceIdMap.remove(ctx.channel().id());
     }
@@ -84,8 +84,8 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         ctx.close();
         Integer deviceId = NettyClient.ctxIdDeviceIdMap.get(ctx.channel().id()).getId();
-        clientHandler.iAnalogRemoteCounteraccusationService.colseControlConnection(deviceId);
-        clientHandler.iAnalogDataTypeService.setSupplyAgainStatus(deviceId, false);
+        clientHandler.iAnRemoteControlService.colseControlConnection(deviceId);
+        clientHandler.iAnDataTypeService.setSupplyAgainStatus(deviceId, false);
         NettyClient.deviceIdChannelMap.remove(deviceId);
         NettyClient.ctxIdDeviceIdMap.remove(ctx.channel().id());
     }

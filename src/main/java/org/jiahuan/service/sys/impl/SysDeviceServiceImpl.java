@@ -2,18 +2,22 @@ package org.jiahuan.service.sys.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import org.jiahuan.entity.analog.AnalogDivisorParameter;
+import org.jiahuan.entity.analog.AnDivisorParameter;
 import org.jiahuan.entity.sys.SysDevice;
+import org.jiahuan.entity.sys.SysNavigation;
 import org.jiahuan.mapper.sys.SysDeviceMapper;
 import org.jiahuan.netty.NettyClient;
-import org.jiahuan.service.analog.IAnalogDataTypeService;
-import org.jiahuan.service.analog.IAnalogDivisorParameterService;
-import org.jiahuan.service.analog.IAnalogRemoteCounteraccusationService;
+import org.jiahuan.service.analog.IAnDataTypeService;
+import org.jiahuan.service.analog.IAnDivisorParameterService;
+import org.jiahuan.service.analog.IAnRemoteControlService;
+import org.jiahuan.service.sys.ISysDeviceNavigationService;
 import org.jiahuan.service.sys.ISysDeviceService;
+import org.jiahuan.service.sys.ISysNavigationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.Resource;
 import java.util.List;
 
 /**
@@ -28,57 +32,80 @@ import java.util.List;
 public class SysDeviceServiceImpl extends ServiceImpl<SysDeviceMapper, SysDevice> implements ISysDeviceService {
 
     @Autowired
-    private ISysDeviceService iSysDeviceService;
+    private IAnDivisorParameterService iAnDivisorParameterService;
     @Autowired
-    private IAnalogDivisorParameterService iAnalogDivisorParameterService;
+    private IAnDataTypeService iAnDataTypeService;
     @Autowired
-    private IAnalogDataTypeService iAnalogDataTypeService;
+    private IAnRemoteControlService iAnRemoteControlService;
     @Autowired
-    private IAnalogRemoteCounteraccusationService iAnalogRemoteCounteraccusationService;
+    private ISysNavigationService iSysNavigationService;
+    @Autowired
+    private ISysDeviceNavigationService iSysDeviceNavigationService;
     @Autowired
     private NettyClient nettyClient;
+    @Resource
+    private SysDeviceMapper sysDeviceMapper;
+
+    @Override
+    public SysDevice getSysDeviceById(Integer id) {
+        return sysDeviceMapper.getSysDeviceById(id);
+    }
+
+    @Override
+    public List<SysDevice> getListSysDevice() {
+        return sysDeviceMapper.getAllSysDevice();
+    }
+
 
     @Transactional
     @Override
     public void addInitCounDevice(SysDevice counDvice) {
-         iSysDeviceService.save(counDvice);
+         this.save(counDvice);
+         //复制设备因子
         if(null!=counDvice.getCopyDeviceId()){
-            List<AnalogDivisorParameter> divisorParameters = iAnalogDivisorParameterService.getDivisorParameterByDeviceId(counDvice.getCopyDeviceId());
-            for (AnalogDivisorParameter divisorParameter : divisorParameters) {
+            List<AnDivisorParameter> divisorParameters = iAnDivisorParameterService.getDivisorParameterByDeviceId(counDvice.getCopyDeviceId());
+            for (AnDivisorParameter divisorParameter : divisorParameters) {
                 divisorParameter.setDeviceId(counDvice.getId());
             }
-            iAnalogDivisorParameterService.saveBatch(divisorParameters);
+            iAnDivisorParameterService.saveBatch(divisorParameters);
         }
         //初始化数据类型
-        iAnalogDataTypeService.addInitByDeviceId(counDvice.getId());
+        iAnDataTypeService.addInitByDeviceId(counDvice.getId());
         //初始化反控
-        iAnalogRemoteCounteraccusationService.addInitByDeviceId(counDvice.getId());
+        iAnRemoteControlService.addInitByDeviceId(counDvice.getId());
+        //添加使用的因子分类
+        iSysDeviceNavigationService.udpate(counDvice);
     }
 
     @Override
     public void updateCounDevice(SysDevice sysDevice)  {
-        iSysDeviceService.updateById(sysDevice);
+        this.updateById(sysDevice);
+        //复制设备因子
         if(null!=sysDevice.getCopyDeviceId()){
-            QueryWrapper<AnalogDivisorParameter> queryWrapper = new QueryWrapper<>();
+            QueryWrapper<AnDivisorParameter> queryWrapper = new QueryWrapper<>();
             queryWrapper.eq("device_id", sysDevice.getId());
-            iAnalogDivisorParameterService.remove(queryWrapper);
-            List<AnalogDivisorParameter> divisorParameters = iAnalogDivisorParameterService.getDivisorParameterByDeviceId(sysDevice.getCopyDeviceId());
-            for (AnalogDivisorParameter divisorParameter : divisorParameters) {
+            iAnDivisorParameterService.remove(queryWrapper);
+            List<AnDivisorParameter> divisorParameters = iAnDivisorParameterService.getDivisorParameterByDeviceId(sysDevice.getCopyDeviceId());
+            for (AnDivisorParameter divisorParameter : divisorParameters) {
                 divisorParameter.setDeviceId(sysDevice.getId());
             }
 
-            iAnalogDivisorParameterService.saveBatch(divisorParameters);
+            iAnDivisorParameterService.saveBatch(divisorParameters);
         }
+        //断开socket连接
         nettyClient.closeConnection(sysDevice.getId());
+        //更新设备因子类型
+        iSysDeviceNavigationService.udpate(sysDevice);
     }
 
     @Transactional
     @Override
     public void deleteInitById(Integer deviceId) {
-        iAnalogDivisorParameterService.deleteByDeviceId(deviceId);
-        iAnalogDataTypeService.deleteByDeviceId(deviceId);
-        iAnalogRemoteCounteraccusationService.deleteByDeviceId(deviceId);
-        iSysDeviceService.removeById(deviceId);
+        iAnDivisorParameterService.deleteByDeviceId(deviceId);
+        iSysDeviceNavigationService.deleteByDeviceId(deviceId);
+        iAnDataTypeService.deleteByDeviceId(deviceId);
+        iAnRemoteControlService.deleteByDeviceId(deviceId);
+        this.removeById(deviceId);
         nettyClient.closeConnection(deviceId);
     }
 }

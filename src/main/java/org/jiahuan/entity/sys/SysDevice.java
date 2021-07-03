@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.activerecord.Model;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * <p>
@@ -51,6 +52,7 @@ public class SysDevice extends Model<SysDevice> {
      */
     private String agreement;
 
+
     /**
      * 自动连接 0否/1是
      */
@@ -68,5 +70,8 @@ public class SysDevice extends Model<SysDevice> {
 
     @TableField(exist = false)
     private Integer copyDeviceId;
+
+    @TableField(exist = false)
+    private String sysNavigations;
 
 }

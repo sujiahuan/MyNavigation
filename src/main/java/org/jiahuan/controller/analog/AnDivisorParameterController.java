@@ -8,8 +8,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
 import org.jiahuan.common.model.RetMsgData;
 import org.jiahuan.common.util.VerdictUtil;
-import org.jiahuan.entity.analog.AnalogDivisorParameter;
-import org.jiahuan.service.analog.IAnalogDivisorParameterService;
+import org.jiahuan.entity.analog.AnDivisorParameter;
+import org.jiahuan.service.analog.IAnDivisorParameterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,21 +27,21 @@ import java.util.List;
 @RestController
 @RequestMapping("/counDivisor")
 @Slf4j
-public class AnalogDivisorParameterController {
+public class AnDivisorParameterController {
 
     @Autowired
-    private IAnalogDivisorParameterService iAnalogDivisorParameterService;
+    private IAnDivisorParameterService iAnDivisorParameterService;
 
     @PostMapping("/add")
-    public RetMsgData<List<AnalogDivisorParameter>> add(@RequestBody List<AnalogDivisorParameter> divisorParameters){
-        RetMsgData<List<AnalogDivisorParameter>> msgData = new RetMsgData<>();
+    public RetMsgData<List<AnDivisorParameter>> add(@RequestBody List<AnDivisorParameter> divisorParameters){
+        RetMsgData<List<AnDivisorParameter>> msgData = new RetMsgData<>();
 
         divisorParameters.forEach(divisorParameter -> {
             divisorParameter.setGmtCreate(LocalDateTime.now());
         });
 
         try{
-            iAnalogDivisorParameterService.saveOrUpdateBatch(divisorParameters);
+            iAnDivisorParameterService.saveOrUpdateBatch(divisorParameters);
             msgData.setData(divisorParameters);
             return msgData;
         }catch (Exception e){
@@ -52,8 +52,8 @@ public class AnalogDivisorParameterController {
     }
 
     @DeleteMapping("/deleteById")
-    public RetMsgData<AnalogDivisorParameter> delete(@RequestParam Integer id){
-        RetMsgData<AnalogDivisorParameter> msgData = new RetMsgData<>();
+    public RetMsgData<AnDivisorParameter> delete(@RequestParam Integer id){
+        RetMsgData<AnDivisorParameter> msgData = new RetMsgData<>();
         if(VerdictUtil.isNull(id)){
             msgData.setMsg("id为空");
         }
@@ -67,7 +67,7 @@ public class AnalogDivisorParameterController {
 //        }
 
         try{
-            iAnalogDivisorParameterService.removeById(id);
+            iAnDivisorParameterService.removeById(id);
             return msgData;
         }catch (Exception e){
             msgData.setMsg(e.getMessage());
@@ -77,13 +77,13 @@ public class AnalogDivisorParameterController {
     }
 
     @GetMapping("/getById")
-    public RetMsgData<AnalogDivisorParameter> get(@RequestParam Integer id){
-        RetMsgData<AnalogDivisorParameter> msgData = new RetMsgData<>();
+    public RetMsgData<AnDivisorParameter> get(@RequestParam Integer id){
+        RetMsgData<AnDivisorParameter> msgData = new RetMsgData<>();
         if(VerdictUtil.isNull(id)){
             msgData.setMsg("id为空");
         }
         try{
-            msgData.setData(iAnalogDivisorParameterService.getById(id));
+            msgData.setData(iAnDivisorParameterService.getById(id));
             return msgData;
         }catch (Exception e){
             msgData.setMsg(e.getMessage());
@@ -92,12 +92,12 @@ public class AnalogDivisorParameterController {
     }
 
     @GetMapping("/getListByDeviceId")
-    public RetMsgData<List<AnalogDivisorParameter>> getAll(@RequestParam Integer deviceId){
-        RetMsgData<List<AnalogDivisorParameter>> msgData = new RetMsgData<>();
-        QueryWrapper<AnalogDivisorParameter> queryWrapper = new QueryWrapper<>();
+    public RetMsgData<List<AnDivisorParameter>> getAll(@RequestParam Integer deviceId){
+        RetMsgData<List<AnDivisorParameter>> msgData = new RetMsgData<>();
+        QueryWrapper<AnDivisorParameter> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("device_id",deviceId);
         try{
-            msgData.setData(iAnalogDivisorParameterService.list(queryWrapper));
+            msgData.setData(iAnDivisorParameterService.list(queryWrapper));
             return msgData;
         }catch (Exception e){
             msgData.setMsg(e.getMessage());
@@ -106,14 +106,14 @@ public class AnalogDivisorParameterController {
     }
 
     @GetMapping("/getPage")
-    public RetMsgData<IPage<AnalogDivisorParameter>> getPage(@RequestParam Integer page, @RequestParam Integer size, @RequestParam Integer deviceId){
-        RetMsgData<IPage<AnalogDivisorParameter>> msgData = new RetMsgData<>();
-        Page<AnalogDivisorParameter> page1 = new Page<>(page, size);
-        QueryWrapper<AnalogDivisorParameter> queryWrapper = new QueryWrapper<>();
+    public RetMsgData<IPage<AnDivisorParameter>> getPage(@RequestParam Integer page, @RequestParam Integer size, @RequestParam Integer deviceId){
+        RetMsgData<IPage<AnDivisorParameter>> msgData = new RetMsgData<>();
+        Page<AnDivisorParameter> page1 = new Page<>(page, size);
+        QueryWrapper<AnDivisorParameter> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("device_id",deviceId);
         queryWrapper.orderByDesc("gmt_create");
         try{
-            msgData.setData(iAnalogDivisorParameterService.page(page1, queryWrapper));
+            msgData.setData(iAnDivisorParameterService.page(page1, queryWrapper));
             return msgData;
         }catch (Exception e){
             msgData.setMsg(e.getMessage());
@@ -122,10 +122,10 @@ public class AnalogDivisorParameterController {
     }
 
     @PostMapping("/update")
-    public RetMsgData<IPage<AnalogDivisorParameter>> update(@RequestBody AnalogDivisorParameter obj){
-        RetMsgData<IPage<AnalogDivisorParameter>> msgData = new RetMsgData<>();
+    public RetMsgData<IPage<AnDivisorParameter>> update(@RequestBody AnDivisorParameter obj){
+        RetMsgData<IPage<AnDivisorParameter>> msgData = new RetMsgData<>();
 
-        AnalogDivisorParameter byId = iAnalogDivisorParameterService.getById(obj.getId());
+        AnDivisorParameter byId = iAnDivisorParameterService.getById(obj.getId());
         if(VerdictUtil.isNull(byId)){
             msgData.setMsg("找不到要修改的信息");
             return msgData;
@@ -135,13 +135,13 @@ public class AnalogDivisorParameterController {
 //            msgData.setMsg("name为空");
 //            return msgData;
 //        }
-        UpdateWrapper<AnalogDivisorParameter> updateWrapper = new UpdateWrapper<>();
+        UpdateWrapper<AnDivisorParameter> updateWrapper = new UpdateWrapper<>();
         updateWrapper.eq("id",obj.getId());
 
         obj.setGmtModified(LocalDateTime.now());
 
         try{
-            iAnalogDivisorParameterService.update(obj,updateWrapper);
+            iAnDivisorParameterService.update(obj,updateWrapper);
             return msgData;
         }catch (Exception e){
             msgData.setMsg(e.getMessage());

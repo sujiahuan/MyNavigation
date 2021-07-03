@@ -24,6 +24,8 @@ public class SysDivisor extends Model<SysDivisor> {
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
 
+    private int navigationId;
+
     private String name;
 
     private String code;

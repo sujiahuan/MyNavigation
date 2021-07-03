@@ -14,4 +14,7 @@
         <result column="gmt_modified" property="gmtModified" />
     </resultMap>
 
+    <select id="getByDeviceId" resultType="org.jiahuan.entity.sys.SysNavigation">
+        select t1.* from sys_navigation t1 RIGHT JOIN sys_device_navigation t2 on t1.id=t2.navigation_id where t2.device_id=#{deviceId}
+    </select>
 </mapper>

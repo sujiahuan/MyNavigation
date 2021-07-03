@@ -1,6 +1,6 @@
 package org.jiahuan.mapper.analog;
 
-import org.jiahuan.entity.analog.AnalogDynamicParameter;
+import org.jiahuan.entity.analog.AnDynamicParameter;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 import java.util.List;
@@ -13,9 +13,9 @@ import java.util.List;
  * @author wj
  * @since 2020-07-26
  */
-public interface AnalogDynamicParameterMapper extends BaseMapper<AnalogDynamicParameter> {
+public interface AnDynamicParameterMapper extends BaseMapper<AnDynamicParameter> {
 
-    AnalogDynamicParameter getDynamicParameterById(Integer id);
+    AnDynamicParameter getDynamicParameterById(Integer id);
 
     /**
      * 通过设备获取动态因子
@@ -23,6 +23,6 @@ public interface AnalogDynamicParameterMapper extends BaseMapper<AnalogDynamicPa
      * @param type 类型：0全部/1参数/2状态
      * @return
      */
-    List<AnalogDynamicParameter> getDynamicParameterByDeviceId(Integer deviceId, Integer type);
+    List<AnDynamicParameter> getDynamicParameterByDeviceId(Integer deviceId, Integer type);
 
 }

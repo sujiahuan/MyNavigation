@@ -1,7 +1,7 @@
 package org.jiahuan.service.analog;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import org.jiahuan.entity.analog.AnalogDataType;
+import org.jiahuan.entity.analog.AnDataType;
 import org.jiahuan.entity.sys.SysDevice;
 
 import java.io.IOException;
@@ -15,7 +15,7 @@ import java.util.List;
  * @author wj
  * @since 2020-08-02
  */
-public interface IAnalogDataTypeService extends IService<AnalogDataType> {
+public interface IAnDataTypeService extends IService<AnDataType> {
 
     /**
      * 设置补发状态，将会影响到是否继续补发
@@ -44,14 +44,14 @@ public interface IAnalogDataTypeService extends IService<AnalogDataType> {
      * @param dataType 数据类型，1实时/2分钟/3小时/4日
      * @return
      */
-    AnalogDataType getCounDataTypeByDeviceId(Integer deviceId, Integer dataType);
+    AnDataType getCounDataTypeByDeviceId(Integer deviceId, Integer dataType);
 
     /**
      *获取该设备的所有数据类型
      * @param deviceId
      * @return
      */
-    List<AnalogDataType> getListCounDataTypeByDeviceId(Integer deviceId);
+    List<AnDataType> getListCounDataTypeByDeviceId(Integer deviceId);
 
     /**
      * 添加初始化的

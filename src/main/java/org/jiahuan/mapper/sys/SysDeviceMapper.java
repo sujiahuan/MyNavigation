@@ -3,6 +3,8 @@ package org.jiahuan.mapper.sys;
 import org.jiahuan.entity.sys.SysDevice;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
+import java.util.List;
+
 /**
  * <p>
  *  Mapper 接口
@@ -13,5 +15,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  */
 public interface SysDeviceMapper extends BaseMapper<SysDevice> {
 
-    Integer insertReturnId(SysDevice sysDevice);
+    SysDevice getSysDeviceById(Integer id);
+
+    List<SysDevice>  getAllSysDevice();
 }

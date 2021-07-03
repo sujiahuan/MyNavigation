@@ -1,6 +1,6 @@
 package org.jiahuan.mapper.analog;
 
-import org.jiahuan.entity.analog.AnalogRemoteCounteraccusation;
+import org.jiahuan.entity.analog.AnRemoteControl;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**
@@ -11,6 +11,6 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  * @author jh
  * @since 2020-08-07
  */
-public interface AnalogRemoteCounteraccusationMapper extends BaseMapper<AnalogRemoteCounteraccusation> {
+public interface AnRemoteControlMapper extends BaseMapper<AnRemoteControl> {
 
 }

@@ -16,5 +16,9 @@ import java.util.List;
  */
 public interface ISysNavigationService extends IService<SysNavigation> {
 
+    List<SysNavigation> getByDeviceId(Integer deviceId);
+
     List<SysNavigation> getNavigations(QueryWrapper<SysNavigation> queryWrapper);
+
+    void deleteById(Integer id) throws Exception;
 }

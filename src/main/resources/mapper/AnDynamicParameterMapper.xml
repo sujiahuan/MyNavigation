@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="org.jiahuan.mapper.analog.AnalogDynamicParameterMapper">
+<mapper namespace="org.jiahuan.mapper.analog.AnDynamicParameterMapper">
 
     <!-- 通用查询映射结果 -->
-    <resultMap id="BaseResultMap" type="org.jiahuan.entity.analog.AnalogDynamicParameter">
+    <resultMap id="BaseResultMap" type="org.jiahuan.entity.analog.AnDynamicParameter">
         <id column="id" property="id"/>
         <result column="device_id" property="deviceId"/>
         <result column="divisorId" property="divisorId"/>
@@ -14,15 +14,15 @@
         <result column="gmt_modify" property="gmtModified"/>
     </resultMap>
 
-    <select id="getDynamicParameterById" resultType="org.jiahuan.entity.analog.AnalogDynamicParameter">
-         select t1.*,t2.name as divisor_name,t2.code as divisor_code from analog_dynamic_parameter t1
+    <select id="getDynamicParameterById" resultType="org.jiahuan.entity.analog.AnDynamicParameter">
+         select t1.*,t2.name as divisor_name,t2.code as divisor_code from an_dynamic_parameter t1
         left join sys_divisor t2 on t2.id=t1.divisor_id
         where t1.id=#{id}
     </select>
 
 
-    <select id="getDynamicParameterByDeviceId" resultType="org.jiahuan.entity.analog.AnalogDynamicParameter">
-        select t1.*,t2.name as divisor_name,t2.code as divisor_code from analog_dynamic_parameter t1
+    <select id="getDynamicParameterByDeviceId" resultType="org.jiahuan.entity.analog.AnDynamicParameter">
+        select t1.*,t2.name as divisor_name,t2.code as divisor_code from an_dynamic_parameter t1
         left join sys_divisor t2 on t2.id=t1.divisor_id
         where t1.device_id=#{deviceId}
             <if test="type gt 0">

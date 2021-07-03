@@ -13,7 +13,7 @@ import lombok.Data;
  * @since 2020-08-05
  */
 @Data
-public class AnalogDynamicDivisor extends Model<AnalogDynamicDivisor> {
+public class AnDynamicDivisor extends Model<AnDynamicDivisor> {
 
     private static final long serialVersionUID = 1L;
 

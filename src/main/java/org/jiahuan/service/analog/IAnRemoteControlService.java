@@ -1,10 +1,8 @@
 package org.jiahuan.service.analog;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import org.jiahuan.entity.analog.AnalogRemoteCounteraccusation;
+import org.jiahuan.entity.analog.AnRemoteControl;
 
-import java.io.IOException;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -15,13 +13,13 @@ import java.util.Set;
  * @author jh
  * @since 2020-08-07
  */
-public interface IAnalogRemoteCounteraccusationService extends IService<AnalogRemoteCounteraccusation> {
+public interface IAnRemoteControlService extends IService<AnRemoteControl> {
 
-    AnalogRemoteCounteraccusation getCounCounterchargeByDeviceId(Integer deviceId);
+    AnRemoteControl getCounCounterchargeByDeviceId(Integer deviceId);
 
     void addInitByDeviceId(Integer deviceId);
 
-    void updateCounCountercharge(AnalogRemoteCounteraccusation analogRemoteCounteraccusation);
+    void updateCounCountercharge(AnRemoteControl anRemoteControl);
 
     void deleteByDeviceId(Integer deviceId);
 

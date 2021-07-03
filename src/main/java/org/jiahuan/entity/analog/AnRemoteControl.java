@@ -13,7 +13,7 @@ import java.io.Serializable;
  * @author jh
  * @since 2020-08-07
  */
-public class AnalogRemoteCounteraccusation extends Model<AnalogRemoteCounteraccusation> {
+public class AnRemoteControl extends Model<AnRemoteControl> {
 
     private static final long serialVersionUID = 1L;
 
@@ -45,10 +45,10 @@ public class AnalogRemoteCounteraccusation extends Model<AnalogRemoteCounteraccu
         @TableField(exist = false)
         private boolean connetionStatus;
 
-    public AnalogRemoteCounteraccusation() {
+    public AnRemoteControl() {
     }
 
-    public AnalogRemoteCounteraccusation(Integer deviceId, Integer verifyPlatformCommand, String verifyCn, Integer responseParameter, Integer responseStatus) {
+    public AnRemoteControl(Integer deviceId, Integer verifyPlatformCommand, String verifyCn, Integer responseParameter, Integer responseStatus) {
         this.deviceId = deviceId;
         this.verifyPlatformCommand = verifyPlatformCommand;
         this.verifyCn = verifyCn;

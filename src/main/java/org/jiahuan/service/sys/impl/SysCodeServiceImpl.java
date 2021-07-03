@@ -1,10 +1,10 @@
 package org.jiahuan.service.sys.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import org.jiahuan.entity.analog.AnalogDivisorParameter;
+import org.jiahuan.entity.analog.AnDivisorParameter;
 import org.jiahuan.entity.sys.SysDivisor;
 import org.jiahuan.mapper.sys.SysDivisorMapper;
-import org.jiahuan.service.analog.IAnalogDivisorParameterService;
+import org.jiahuan.service.analog.IAnDivisorParameterService;
 import org.jiahuan.service.sys.ISysDivisorService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,13 +26,13 @@ public class SysCodeServiceImpl extends ServiceImpl<SysDivisorMapper, SysDivisor
     @Autowired
     private ISysDivisorService iSysDivisorService;
     @Autowired
-    private IAnalogDivisorParameterService counDivisorService;
+    private IAnDivisorParameterService counDivisorService;
 
     @Override
     public void deleteById(Integer id) throws Exception {
-        QueryWrapper<AnalogDivisorParameter> queryWrapper = new QueryWrapper<>();
+        QueryWrapper<AnDivisorParameter> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("divisor_id", id);
-        List<AnalogDivisorParameter> divisors = counDivisorService.list(queryWrapper);
+        List<AnDivisorParameter> divisors = counDivisorService.list(queryWrapper);
 
         if(divisors.size()!=0){
             throw new Exception("当前因子已被使用，请删除关联");

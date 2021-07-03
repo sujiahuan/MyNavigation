@@ -1,6 +1,6 @@
 package org.jiahuan.service.analog;
 
-import org.jiahuan.entity.analog.AnalogDivisorParameter;
+import org.jiahuan.entity.analog.AnDivisorParameter;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import java.util.List;
@@ -13,9 +13,9 @@ import java.util.List;
  * @author wj
  * @since 2020-07-26
  */
-public interface IAnalogDivisorParameterService extends IService<AnalogDivisorParameter> {
+public interface IAnDivisorParameterService extends IService<AnDivisorParameter> {
 
-    List<AnalogDivisorParameter> getDivisorParameterByDeviceId(Integer deviceId);
+    List<AnDivisorParameter> getDivisorParameterByDeviceId(Integer deviceId);
 
     void deleteByDeviceId(Integer deviceId);
 }

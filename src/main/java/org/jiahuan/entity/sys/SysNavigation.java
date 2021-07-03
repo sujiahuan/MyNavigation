@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
+import lombok.Data;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
  * @author wj
  * @since 2020-06-16
  */
+@Data
 public class SysNavigation extends Model<SysNavigation> {
 
     private static final long serialVersionUID = 1L;
@@ -39,72 +41,10 @@ public class SysNavigation extends Model<SysNavigation> {
      */
     private String name;
 
+    private Integer type;
+
     private LocalDateTime gmtCreate;
 
     private LocalDateTime gmtModified;
 
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public Integer getIcomId() {
-        return icomId;
-    }
-
-    public void setIcomId(Integer icomId) {
-        this.icomId = icomId;
-    }
-
-    public String getIcomName() {
-        return icomName;
-    }
-
-    public void setIcomName(String icomName) {
-        this.icomName = icomName;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public LocalDateTime getGmtCreate() {
-        return gmtCreate;
-    }
-
-    public void setGmtCreate(LocalDateTime gmtCreate) {
-        this.gmtCreate = gmtCreate;
-    }
-
-    public LocalDateTime getGmtModified() {
-        return gmtModified;
-    }
-
-    public void setGmtModified(LocalDateTime gmtModified) {
-        this.gmtModified = gmtModified;
-    }
-
-    @Override
-    protected Serializable pkVal() {
-        return this.id;
-    }
-
-    @Override
-    public String toString() {
-        return "Navigation{" +
-                "id=" + id +
-                ", icomId=" + icomId +
-                ", icomName='" + icomName + '\'' +
-                ", name='" + name + '\'' +
-                ", gmtCreate=" + gmtCreate +
-                ", gmtModified=" + gmtModified +
-                '}';
-    }
 }

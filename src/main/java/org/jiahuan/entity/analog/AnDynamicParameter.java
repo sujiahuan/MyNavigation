@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
  */
 
 @Data
-public class AnalogDynamicParameter extends Model<AnalogDynamicParameter> {
+public class AnDynamicParameter extends Model<AnDynamicParameter> {
 
     private static final long serialVersionUID = 1L;
 

@@ -14,7 +14,7 @@ import java.util.Date;
  * @author wj
  * @since 2020-08-02
  */
-public class AnalogDataType extends Model<AnalogDataType> {
+public class AnDataType extends Model<AnDataType> {
 
     private static final long serialVersionUID = 1L;
 
@@ -51,10 +51,10 @@ public class AnalogDataType extends Model<AnalogDataType> {
     @JsonFormat(locale="zh", timezone="GMT+8", pattern="yyyy-MM-dd HH:mm:ss")
     private Date endTime;
 
-    public AnalogDataType() {
+    public AnDataType() {
     }
 
-    public AnalogDataType(Integer deviceId, Integer dataType, Integer isTiming, String zs, Integer dateInterval, Date startTime, Date endTime) {
+    public AnDataType(Integer deviceId, Integer dataType, Integer isTiming, String zs, Integer dateInterval, Date startTime, Date endTime) {
         this.deviceId = deviceId;
         this.dataType = dataType;
         this.isTiming = isTiming;

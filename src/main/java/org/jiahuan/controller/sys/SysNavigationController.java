@@ -36,8 +36,6 @@ public class SysNavigationController {
     @Autowired
     private ISysNavigationService iNavigationService;
     @Autowired
-    private ISysBookmarkService iBookmarkService;
-    @Autowired
     private ISysIcomService iIcomService;
 
     @PostMapping("/add")
@@ -64,8 +62,7 @@ public class SysNavigationController {
             msgData.setMsg("id为空");
         }
         try{
-            iBookmarkService.deleteByParentId(id);
-            iNavigationService.removeById(id);
+            iNavigationService.deleteById(id);
             return msgData;
         }catch (Exception e){
             msgData.setMsg(e.getMessage());
@@ -74,10 +71,11 @@ public class SysNavigationController {
         }
     }
 
-    @GetMapping("/getAll")
-    public RetMsgData<List<SysNavigation>> getAll(){
+    @GetMapping("/getByType")
+    public RetMsgData<List<SysNavigation>> getAll(@RequestParam Integer type){
         RetMsgData<List<SysNavigation>> msgData = new RetMsgData<>();
         QueryWrapper<SysNavigation> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("type",type);
         try{
             List<SysNavigation> navigations = iNavigationService.getNavigations(queryWrapper);
             msgData.setData(navigations);
@@ -104,20 +102,23 @@ public class SysNavigationController {
     }
 
     @GetMapping("/getPage")
-    public RetMsgData<IPage<SysNavigation>> getPageIcom(@RequestParam Integer page, @RequestParam Integer size, @RequestParam(required=false)String name){
+    public RetMsgData<IPage<SysNavigation>> getPageIcom(@RequestParam Integer page, @RequestParam Integer size, @RequestParam Integer type, @RequestParam(required=false)String name){
         RetMsgData<IPage<SysNavigation>> msgData = new RetMsgData<>();
         Page<SysNavigation> navigationPage = new Page<>(page, size);
         QueryWrapper<SysNavigation> queryWrapper = new QueryWrapper<>();
         if(VerdictUtil.isNotNull(name)){
             queryWrapper.like("name",name);
         }
+        queryWrapper.eq("type", type);
         queryWrapper.orderByDesc("gmt_create");
         try{
             IPage<SysNavigation> page1 = iNavigationService.page(navigationPage, queryWrapper);
             for (SysNavigation navigation:page1.getRecords()
             ) {
-                SysIcom icom = iIcomService.getById(navigation.getIcomId());
-                navigation.setIcomName(icom.getName());
+                if(navigation.getType()==1){
+                    SysIcom icom = iIcomService.getById(navigation.getIcomId());
+                    navigation.setIcomName(icom.getName());
+                }
             }
             msgData.setData(page1);
             return msgData;

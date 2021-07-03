@@ -3,6 +3,8 @@ package org.jiahuan.mapper.sys;
 import org.jiahuan.entity.sys.SysNavigation;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
+import java.util.List;
+
 /**
  * <p>
  *  Mapper 接口
@@ -13,4 +15,5 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  */
 public interface SysNavigationMapper extends BaseMapper<SysNavigation> {
 
+    List<SysNavigation> getByDeviceId(Integer deviceId);
 }

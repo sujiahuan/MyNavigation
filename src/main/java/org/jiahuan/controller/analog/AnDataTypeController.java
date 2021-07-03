@@ -1,20 +1,14 @@
 package org.jiahuan.controller.analog;
 
 
-import org.jiahuan.common.config.CustomWebSocketConfig;
 import org.jiahuan.common.model.RetMsgData;
 import org.jiahuan.common.util.DataPackageUtils;
 import org.jiahuan.common.util.VerdictUtil;
-import org.jiahuan.entity.analog.AnalogDataType;
-import org.jiahuan.service.analog.IAnalogDataTypeService;
+import org.jiahuan.entity.analog.AnDataType;
+import org.jiahuan.service.analog.IAnDataTypeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.socket.TextMessage;
 
-import java.net.ConnectException;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -27,16 +21,16 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/counDataType")
-public class AnalogDataTypeController {
+public class AnDataTypeController {
 
     @Autowired
-    private IAnalogDataTypeService iAnalogDataTypeService;
+    private IAnDataTypeService iAnDataTypeService;
 
     @GetMapping("/sendRealTime")
-    public RetMsgData<AnalogDataType> sendRealTime(@RequestParam Integer deviceId, @RequestParam Integer dataType) {
-        RetMsgData<AnalogDataType> msgData = new RetMsgData<>();
+    public RetMsgData<AnDataType> sendRealTime(@RequestParam Integer deviceId, @RequestParam Integer dataType) {
+        RetMsgData<AnDataType> msgData = new RetMsgData<>();
         try {
-            iAnalogDataTypeService.sendRealTime(deviceId, dataType);
+            iAnDataTypeService.sendRealTime(deviceId, dataType);
         } catch (Exception e) {
             msgData.setMsg(e.getMessage());
         } finally {
@@ -45,10 +39,10 @@ public class AnalogDataTypeController {
     }
 
     @GetMapping("/sendParam3020")
-    public RetMsgData<AnalogDataType> sendParam3020(@RequestParam Integer deviceId, @RequestParam Integer dataType) {
-        RetMsgData<AnalogDataType> msgData = new RetMsgData<>();
+    public RetMsgData<AnDataType> sendParam3020(@RequestParam Integer deviceId, @RequestParam Integer dataType) {
+        RetMsgData<AnDataType> msgData = new RetMsgData<>();
         try {
-            iAnalogDataTypeService.sendParam3020(deviceId, dataType);
+            iAnDataTypeService.sendParam3020(deviceId, dataType);
         } catch (Exception e) {
 
             msgData.setMsg(e.getMessage());
@@ -61,7 +55,7 @@ public class AnalogDataTypeController {
     public RetMsgData<String> getDataPackage(@RequestParam Integer deviceId, @RequestParam Integer dataType) {
         RetMsgData<String> msgData = new RetMsgData<>();
         try {
-            String dataPackage = iAnalogDataTypeService.getDataPackage(deviceId, dataType);
+            String dataPackage = iAnDataTypeService.getDataPackage(deviceId, dataType);
             msgData.setData(dataPackage);
         } catch (Exception e) {
 
@@ -90,10 +84,10 @@ public class AnalogDataTypeController {
     }
 
     @GetMapping("/sendMessage")
-    public RetMsgData<AnalogDataType> sendCustomizeMessage(@RequestParam Integer deviceId, @RequestParam String msg) {
-        RetMsgData<AnalogDataType> msgData = new RetMsgData<>();
+    public RetMsgData<AnDataType> sendCustomizeMessage(@RequestParam Integer deviceId, @RequestParam String msg) {
+        RetMsgData<AnDataType> msgData = new RetMsgData<>();
         try {
-            iAnalogDataTypeService.sendCustomizeMessage(deviceId, msg);
+            iAnDataTypeService.sendCustomizeMessage(deviceId, msg);
         } catch (Exception e) {
             msgData.setMsg(e.getMessage());
         } finally {
@@ -105,7 +99,7 @@ public class AnalogDataTypeController {
     public RetMsgData<Integer> getSupplyAgainCount(@RequestParam Integer deviceId, @RequestParam Integer dataType) {
         RetMsgData<Integer> msgData = new RetMsgData<>();
         try {
-            Integer supplyAgainCount = iAnalogDataTypeService.getSupplyAgainCount(deviceId, dataType);
+            Integer supplyAgainCount = iAnDataTypeService.getSupplyAgainCount(deviceId, dataType);
             msgData.setData(supplyAgainCount);
         } catch (Exception e) {
             msgData.setMsg(e.getMessage());
@@ -117,7 +111,7 @@ public class AnalogDataTypeController {
     @GetMapping("/getSupplyAgainStatus")
     public RetMsgData<Boolean> getSupplyAgainStatus(@RequestParam Integer deviceId) {
         RetMsgData<Boolean> msgData = new RetMsgData<>();
-        msgData.setData(iAnalogDataTypeService.getSupplyAgainStatus(deviceId));
+        msgData.setData(iAnDataTypeService.getSupplyAgainStatus(deviceId));
         return msgData;
     }
 
@@ -125,7 +119,7 @@ public class AnalogDataTypeController {
     public RetMsgData<Boolean> waitForTheReissueToComplete(@RequestParam Integer deviceId) {
         RetMsgData<Boolean> msgData = new RetMsgData<>();
         try {
-            iAnalogDataTypeService.waitForTheReissueToComplete(deviceId);
+            iAnDataTypeService.waitForTheReissueToComplete(deviceId);
         } catch (Exception e) {
             msgData.setMsg(e.getMessage());
         } finally {
@@ -134,10 +128,10 @@ public class AnalogDataTypeController {
     }
 
     @GetMapping("/sendSupplyAgain")
-    public RetMsgData<AnalogDataType> sendSupplyAgain(@RequestParam Integer deviceId, @RequestParam Integer dataType) {
-        RetMsgData<AnalogDataType> msgData = new RetMsgData<>();
+    public RetMsgData<AnDataType> sendSupplyAgain(@RequestParam Integer deviceId, @RequestParam Integer dataType) {
+        RetMsgData<AnDataType> msgData = new RetMsgData<>();
         try {
-            iAnalogDataTypeService.sendSupplyAgain(deviceId, dataType);
+            iAnDataTypeService.sendSupplyAgain(deviceId, dataType);
         } catch (Exception e) {
             msgData.setMsg(e.getMessage());
         } finally {
@@ -146,18 +140,18 @@ public class AnalogDataTypeController {
     }
 
     @GetMapping("/cancelSupplyAgain")
-    public RetMsgData<AnalogDataType> cancelSupplyAgain(@RequestParam Integer deviceId) {
-        RetMsgData<AnalogDataType> msgData = new RetMsgData<>();
-            iAnalogDataTypeService.setSupplyAgainStatus(deviceId,false);
+    public RetMsgData<AnDataType> cancelSupplyAgain(@RequestParam Integer deviceId) {
+        RetMsgData<AnDataType> msgData = new RetMsgData<>();
+            iAnDataTypeService.setSupplyAgainStatus(deviceId,false);
             return msgData;
     }
 
     @GetMapping("/getListByDeviceId")
-    public RetMsgData<List<AnalogDataType>> getListCounDataTypeByDeviceId(@RequestParam Integer deviceId) {
-        RetMsgData<List<AnalogDataType>> msgData = new RetMsgData<>();
+    public RetMsgData<List<AnDataType>> getListCounDataTypeByDeviceId(@RequestParam Integer deviceId) {
+        RetMsgData<List<AnDataType>> msgData = new RetMsgData<>();
         try {
-            List<AnalogDataType> analogDataTypes = iAnalogDataTypeService.getListCounDataTypeByDeviceId(deviceId);
-            msgData.setData(analogDataTypes);
+            List<AnDataType> anDataTypes = iAnDataTypeService.getListCounDataTypeByDeviceId(deviceId);
+            msgData.setData(anDataTypes);
         } catch (Exception e) {
             msgData.setMsg(e.getMessage());
         } finally {
@@ -166,10 +160,10 @@ public class AnalogDataTypeController {
     }
 
     @PostMapping("/update")
-    public RetMsgData<AnalogDataType> updateCounDataType(@RequestBody AnalogDataType analogDataType) {
-        RetMsgData<AnalogDataType> msgData = new RetMsgData<>();
+    public RetMsgData<AnDataType> updateCounDataType(@RequestBody AnDataType anDataType) {
+        RetMsgData<AnDataType> msgData = new RetMsgData<>();
         try {
-            iAnalogDataTypeService.updateById(analogDataType);
+            iAnDataTypeService.updateById(anDataType);
         } catch (Exception e) {
             msgData.setMsg(e.getMessage());
         } finally {

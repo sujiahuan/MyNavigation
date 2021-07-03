@@ -57,7 +57,7 @@ public class SysIcomController {
     }
 
     @DeleteMapping("/deleteById")
-    public RetMsgData<SysIcom> deleteIcom(@RequestParam Integer id){
+    public RetMsgData<SysIcom> deleteIcom(@RequestParam Integer id,@RequestParam Integer type){
         RetMsgData<SysIcom> msgData = new RetMsgData<>();
         if(VerdictUtil.isNull(id)){
             msgData.setMsg("id为空");
