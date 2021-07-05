@@ -16,5 +16,4 @@ import java.util.List;
  */
 public interface SysDeviceNavigationMapper extends BaseMapper<SysDeviceNavigation> {
 
-    List<SysDeviceNavigation> getListByDeviceId(Integer deviceId);
 }
